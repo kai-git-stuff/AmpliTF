@@ -23,7 +23,7 @@ def integral(pdf):
     Return the graph for the integral of the PDF
       pdf : PDF
     """
-    return tf.reduce_mean(pdf)
+    return atfi.reduce_mean(pdf)
 
 
 @atfi.function
@@ -33,7 +33,7 @@ def weighted_integral(pdf, weight_func):
       pdf : PDF
       weight_func : weight function
     """
-    return tf.reduce_mean(pdf * weight_func)
+    return atfi.reduce_mean(pdf * weight_func)
 
 
 @atfi.function
@@ -43,7 +43,7 @@ def unbinned_nll(pdf, integral):
       pdf      : PDF
       integral : precalculated integral
     """
-    return -tf.reduce_sum(atfi.log(pdf / integral))
+    return -atfi.reduce_sum(atfi.log(pdf / integral))
 
 
 @atfi.function
@@ -54,4 +54,4 @@ def unbinned_weighted_nll(pdf, integral, weight_func):
       integral    : precalculated integral
       weight_func : weight function
     """
-    return -tf.reduce_sum(atfi.log(pdf / integral) * weight_func)
+    return -atfi.reduce_sum(atfi.log(pdf / integral) * weight_func)

@@ -49,7 +49,7 @@ class Baryonic3BodyPhaseSpace(DalitzPhaseSpace):
         return sample[..., 4]
 
     @atfi.function
-    def inside(self, x):
+    def inside(self, x) -> bool:
         """
         Check if the point x=(m2ab, m2bc, cos_theta_a, phi_a, phi_bc) is inside the phase space
         """

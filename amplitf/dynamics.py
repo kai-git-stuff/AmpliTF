@@ -14,6 +14,7 @@
 # ==============================================================================
 
 import tensorflow as tf
+import amplitf.constants as constants
 import amplitf.interface as atfi
 import amplitf.kinematics as atfk
 
