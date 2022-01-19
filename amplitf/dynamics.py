@@ -14,7 +14,7 @@
 # ==============================================================================
 
 import tensorflow as tf
-import amplitf.constants as constants
+from amplitf.constants import spin as spin_constant
 import amplitf.interface as atfi
 import amplitf.kinematics as atfk
 
@@ -44,15 +44,15 @@ def helicity_amplitude(x, spin):
       x    : cos(helicity angle)
       spin : spin of the resonance
     """
-    if spin == 0:
+    if spin == spin_constant.SPIN_0:
         return atfi.complex(atfi.const(1.0), atfi.const(0.0))
-    if spin == 1:
+    if spin == spin_constant.SPIN_HALF:
         return atfi.complex(x, atfi.const(0.0))
-    if spin == 2:
+    if spin == spin_constant.SPIN_1:
         return atfi.complex((3.0 * x ** 2 - 1.0) / 2.0, atfi.const(0.0))
-    if spin == 3:
+    if spin == spin_constant.SPIN_3HALF:
         return atfi.complex((5.0 * x ** 3 - 3.0 * x) / 2.0, atfi.const(0.0))
-    if spin == 4:
+    if spin == spin_constant.SPIN_2:
         return atfi.complex(
             (35.0 * x ** 4 - 30.0 * x ** 2 + 3.0) / 8.0, atfi.const(0.0)
         )
@@ -83,17 +83,17 @@ def blatt_weisskopf_ff(q, q0, d, l):
     z0 = q0 * d
 
     def hankel1(x):
-        if l == 0:
+        if l == spin_constant.SPIN_0:
             return atfi.const(1.0)
-        if l == 1:
+        if l == spin_constant.SPIN_HALF:
             return 1 + x * x
-        if l == 2:
+        if l == spin_constant.SPIN_1:
             x2 = x * x
             return 9 + x2 * (3.0 + x2)
-        if l == 3:
+        if l == spin_constant.SPIN_3HALF:
             x2 = x * x
             return 225 + x2 * (45 + x2 * (6 + x2))
-        if l == 4:
+        if l == spin_constant.SPIN_2:
             x2 = x * x
             return 11025.0 + x2 * (1575.0 + x2 * (135.0 + x2 * (10.0 + x2)))
 
@@ -105,17 +105,17 @@ def blatt_weisskopf_ff_squared(q_squared, d, l_orbit):
     z = q_squared * d * d
 
     def _bw_ff_squared(x):
-        if l_orbit == 0:
+        if l_orbit == spin_constant.SPIN_0:
             return atfi.const(1.0)
-        if l_orbit == 1:
+        if l_orbit == spin_constant.SPIN_HALF:
             return (2 * x) / (x + 1)
-        if l_orbit == 2:
+        if l_orbit == spin_constant.SPIN_1:
             return (13 * x * x) / ((x - 3) * (x - 3) + 9 * x)
-        if l_orbit == 3:
+        if l_orbit == spin_constant.SPIN_3HALF:
             return (277 * x * x * x) / (
                 x * (x - 15) * (x - 15) + 9 * (2 * x - 5) * (2 * x - 5)
             )
-        if l_orbit == 4:
+        if l_orbit == spin_constant.SPIN_2:
             return (12746 * x * x * x * x) / (
                 (x * x - 45 * x + 105) * (x * x - 45 * x + 105)
                 + 25 * x * (2 * x - 21) * (2 * x - 21)
@@ -129,13 +129,13 @@ def mass_dependent_width(m, m0, gamma0, p, p0, ff, l):
     """
     mass-dependent width for BW amplitude
     """
-    if l == 0:
+    if l == spin_constant.SPIN_0:
         return gamma0 * (p / p0) * (m0 / m) * (ff * ff)
-    if l == 1:
+    if l == spin_constant.SPIN_HALF:
         return gamma0 * ((p / p0) ** 3) * (m0 / m) * (ff * ff)
-    if l == 2:
+    if l == spin_constant.SPIN_1:
         return gamma0 * ((p / p0) ** 5) * (m0 / m) * (ff * ff)
-    if l >= 3:
+    if l >= spin_constant.SPIN_3HALF:
         return gamma0 * ((p / p0) ** (2 * l + 1)) * (m0 / m) * (ff ** 2)
 
 
@@ -144,11 +144,11 @@ def orbital_barrier_factor(p, p0, l):
     """
     Orbital barrier factor
     """
-    if l == 0:
+    if l == spin_constant.SPIN_0:
         return atfi.ones(p)
-    if l == 1:
+    if l == spin_constant.SPIN_HALF:
         return p / p0
-    if l >= 2:
+    if l >= spin_constant.SPIN_1:
         return (p / p0) ** l
 
 

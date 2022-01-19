@@ -99,6 +99,8 @@ _interface_dict = {
     "shape": "tf.shape",
     "reduce_mean":"tf.reduce_mean",
     "reduce_sum":"tf.reduce_sum",
+    "range":"tf.range",
+    "linspace":"tf.linspace",
 }
 
 
