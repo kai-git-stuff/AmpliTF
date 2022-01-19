@@ -17,19 +17,19 @@ import math
 import numpy as np
 import tensorflow as tf
 import amplitf.interface as atfi
+from amplitf.phasespace.base_phasespace import BasePhaseSpace
 
 
-class LambdaPhaseSpace:
+class LambdaPhaseSpace(BasePhaseSpace):
     """
     Accept/Veto an area over the "origin" phase space based on a boolean lambda function
     """
 
-    def __init__(self, phsp, func):
+
+    def __init__(self, phsp:BasePhaseSpace, func):
         self.phsp = phsp
         self.func = func
-
-    def dimensionality(self):
-        return self.phsp.dimensionality()
+        super().__init__(self.phsp.dimensionality())
 
     def inside(self, x):
         return tf.logical_and(self.phsp.inside(x), self.func(x))
@@ -63,3 +63,10 @@ class LambdaPhaseSpace:
 
     def bounds(self):
         return self.phsp.bounds()
+
+        
+    def VaribaleMapping(self):
+        return self.phsp.VaribableMapping()
+        
+    def VaribaleMapping(self):
+        return self.phsp.VaribaleMapping()

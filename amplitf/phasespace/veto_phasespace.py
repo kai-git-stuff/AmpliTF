@@ -17,20 +17,19 @@ import math
 import numpy as np
 import tensorflow as tf
 import amplitf.interface as atfi
+from amplitf.phasespace.base_phasespace import BasePhaseSpace, PhaseSpaceSample
 
 
-class VetoPhaseSpace:
+class VetoPhaseSpace(BasePhaseSpace):
     """
     Veto a range of values in 1D projection of the other phase space
     """
 
-    def __init__(self, phsp, axis, bounds):
+    def __init__(self, phsp:BasePhaseSpace, axis, bounds):
         self.phsp = phsp
         self.axis = axis
         self.veto_bounds = bounds
-
-    def dimensionality(self):
-        return self.phsp.dimensionality()
+        super().__init__(phsp.dimensionality())
 
     @atfi.function
     def inside(self, x):

@@ -17,9 +17,10 @@ import math
 import numpy as np
 import tensorflow as tf
 import amplitf.interface as atfi
+from amplitf.phasespace.base_phasespace import BasePhaseSpace
 
 
-class RectangularPhaseSpace:
+class RectangularPhaseSpace(BasePhaseSpace):
     """
     Class for rectangular phase space in n dimensions
     """
@@ -29,6 +30,7 @@ class RectangularPhaseSpace:
         Constructor
         """
         self.ranges = ranges
+        super().__init__(len(self.ranges))
 
     @atfi.function
     def inside(self, x):
@@ -100,9 +102,11 @@ class RectangularPhaseSpace:
         Return coordinate number n from the input sample
         """
         return sample[..., n]
-
-    def dimensionality(self):
-        return len(self.ranges)
+    
+    def VaribaleMapping(self):
+        # variable names do not need be string
+        # in this case it is simply the index itself
+        return {i:i for i in range(self.dimensionality())}
 
     def bounds(self):
         return list(self.ranges)

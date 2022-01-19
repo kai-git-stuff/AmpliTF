@@ -17,9 +17,10 @@ import math
 import numpy as np
 import tensorflow as tf
 import amplitf.interface as atfi
+from amplitf.phasespace.base_phasespace import BasePhaseSpace
 
 
-class FourBodyAngularPhaseSpace:
+class FourBodyAngularPhaseSpace(BasePhaseSpace):
     """
     Class for angular phase space of 4-body X->(AB)(CD) decay (3D).
     """
@@ -28,7 +29,7 @@ class FourBodyAngularPhaseSpace:
         """
         Constructor
         """
-        pass
+        super().__init__(3)
 
     @atfi.function
     def inside(self, x):
@@ -138,8 +139,10 @@ class FourBodyAngularPhaseSpace:
         """
         return sample[..., 2]
 
-    def dimensionality(self):
-        return 3
+    def VaribaleMapping(self):
+        return {"cos_theta1":0,
+                "cos_theta2":1,
+                "phi":2}
 
     def bounds(self):
         return [(-1.0, 1.0), (-1.0, 1.0), (0.0, 2.0 * math.pi)]

@@ -13,6 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 
+from amplitf.phasespace.base_phasespace import *
 from amplitf.phasespace.rectangular_phasespace import *
 from amplitf.phasespace.dalitz_phasespace import *
 from amplitf.phasespace.combined_phasespace import *
@@ -21,3 +22,5 @@ from amplitf.phasespace.baryonic_3body_phasespace import *
 from amplitf.phasespace.four_body_helicity_phasespace import *
 from amplitf.phasespace.veto_phasespace import *
 from amplitf.phasespace.lambda_phasespace import *
+
+

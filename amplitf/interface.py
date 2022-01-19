@@ -67,7 +67,7 @@ _interface_dict = {
     "abs": "tf.abs",
     "max": "tf.maximum",
     "min": "tf.minimum",
-    "conjugate": "tf.conj",
+   "conjugate": "tf.math.conj", 
     "real": "tf.math.real",
     "imaginary": "tf.math.imag",
     "sqrt": "tf.sqrt",
@@ -96,18 +96,24 @@ _interface_dict = {
     "less": "tf.less",
     "greater_equal": "tf.greater_equal",
     "less_equal": "tf.less_equal",
+    "shape": "tf.shape",
+    "reduce_mean":"tf.reduce_mean",
+    "reduce_sum":"tf.reduce_sum",
 }
 
+
+    
 # Load functions from _interface_dict into module locals()
+def __get_func__(v):
+    submodules = v.split(".")
+    attr = tf
+    for module in submodules:
+        attr = getattr(attr,module)
+    return attr
+
 m = sys.modules[__name__]
 for k, v in _interface_dict.items():
-    fun = exec(
-        f"""
-def {k}(*args) : 
-  return {v}(*args)
-  """
-    )
-    m.__dict__[k] = locals()[f"{k}"]
+    m.__dict__[k] = __get_func__(v.replace("tf.","")) 
 
 # @function
 def complex(re, im):

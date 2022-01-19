@@ -19,19 +19,17 @@ import math
 import numpy as np
 import tensorflow as tf
 import amplitf.interface as atfi
+from  amplitf.phasespace.base_phasespace import BasePhaseSpace
 
-
-class CombinedPhaseSpace:
+class CombinedPhaseSpace(BasePhaseSpace):
     """
     Combination (direct product) of two phase spaces
     """
 
-    def __init__(self, phsp1, phsp2):
+    def __init__(self, phsp1:BasePhaseSpace, phsp2:BasePhaseSpace):
         self.phsp1 = phsp1
         self.phsp2 = phsp2
-
-    def dimensionality(self):
-        return self.phsp1.dimensionality() + self.phsp2.dimensionality()
+        super().__init__(self,self.phsp1.dimensionality() + self.phsp2.dimensionality())
 
     @atfi.function
     def data1(self, x):
@@ -81,3 +79,10 @@ class CombinedPhaseSpace:
 
     def bounds(self):
         return self.phsp1.bounds() + self.phsp2.bounds()
+
+    def VaribaleMapping(self):
+        dtc1 = {"phsp1_%s"%k:i for k,i in self.phsp1.VaribaleMapping().items()}
+        dtc2 = {"phsp2_%s"%k:i+len(dtc1) for k,i in self.phsp2.VaribaleMapping().items()}
+        dtc1.update(dtc2)
+        return dtc1
+

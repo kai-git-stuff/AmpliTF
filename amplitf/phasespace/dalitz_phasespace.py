@@ -18,9 +18,10 @@ import numpy as np
 import tensorflow as tf
 import amplitf.interface as atfi
 import amplitf.kinematics as atfk
+from amplitf.phasespace.base_phasespace import BasePhaseSpace
 
 
-class DalitzPhaseSpace:
+class DalitzPhaseSpace(BasePhaseSpace):
     """
     Class for Dalitz plot (2D) phase space for the 3-body decay D->ABC
     """
@@ -43,6 +44,8 @@ class DalitzPhaseSpace:
           mc - C mass
           md - D (mother) mass
         """
+
+        super().__init__(2) # 2 dimensional
         self.ma = ma
         self.mb = mb
         self.mc = mc
@@ -235,6 +238,11 @@ class DalitzPhaseSpace:
         Return m2bc variable (vector) for the input sample
         """
         return sample[..., 1]
+
+    def VaribaleMapping(self):
+        """returns a dictionary of names and indices for the different variables"""
+        return {"m2ab":0, "m2bc":1}
+    
 
     @atfi.function
     def m2ac(self, sample):
@@ -493,6 +501,3 @@ class DalitzPhaseSpace:
             atfi.sqrt(p_c ** 2 + self.mc2),
         )
         return (p4a, p4b, p4c)
-
-    def dimensionality(self):
-        return 2

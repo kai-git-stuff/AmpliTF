@@ -18,9 +18,10 @@ import numpy as np
 import tensorflow as tf
 import amplitf.interface as atfi
 import amplitf.kinematics as atfk
+from amplitf.phasespace.base_phasespace import BasePhaseSpace
 
 
-class FourBodyHelicityPhaseSpace:
+class FourBodyHelicityPhaseSpace(BasePhaseSpace):
     """
     Class for 4-body decay phase space D->(A1 A2)(B1 B2) expressed as:
       ma   : invariant mass of the A1 A2 combination
@@ -47,6 +48,7 @@ class FourBodyHelicityPhaseSpace:
         """
         Constructor
         """
+        super().__init__(5)
         self.ma1 = ma1
         self.ma2 = ma2
         self.mb1 = mb1
@@ -250,6 +252,13 @@ class FourBodyHelicityPhaseSpace:
         """
         return sample[..., 4]
 
+    def VaribaleMapping(self):
+        return {"m_a1a2":0,
+                "m_b1b2":1,
+                "cos_helicity_a":2,
+                "cos_helicity_b":3,
+                "phi":4}
+
     @atfi.function
     def final_state_momenta(self, x):
         """
@@ -296,5 +305,3 @@ class FourBodyHelicityPhaseSpace:
 
         return (p4A1, p4A2, p4B1, p4B2)
 
-    def dimensionality(self):
-        return 5
