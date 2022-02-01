@@ -6,3 +6,10 @@ class spin:
     SPIN_3HALF = 3
     SPIN_2 = 4 
 
+class angular:
+    L_0 = 0
+    L_1 = 1
+    L_2 = 2
+    L_3 = 3
+    L_4 = 4 
+

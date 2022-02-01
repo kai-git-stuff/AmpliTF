@@ -60,7 +60,7 @@ class PhaseSpaceSample:
             return self.sample[:,index]
         if name is not None:
             index = self.variable_map[name]
-            return self.sample[:,index]
+            return self.sample[...,index]
         raise ValueError("Either variable Name or Index must be specified!")
 
     def ChangePhaseSpace(self,phasespace:BasePhaseSpace) -> None:
@@ -80,5 +80,4 @@ class PhaseSpaceSample:
     def __len__(self):
         if self.sample is None:
             return 0
-
         return len(self.sample)

@@ -237,12 +237,7 @@ class DalitzPhaseSpace(BasePhaseSpace):
         """
         Return m2bc variable (vector) for the input sample
         """
-        return sample[..., 1]
-
-    def VaribaleMapping(self):
-        """returns a dictionary of names and indices for the different variables"""
-        return {"m2ab":0, "m2bc":1}
-    
+        return sample[..., 1]    
 
     @atfi.function
     def m2ac(self, sample):
@@ -251,6 +246,10 @@ class DalitzPhaseSpace(BasePhaseSpace):
         It is calculated from m2ab and m2bc
         """
         return self.msqsum - self.m2ab(sample) - self.m2bc(sample)
+    
+    def VaribaleMapping(self):
+        """returns a dictionary of names and indices for the different variables"""
+        return {"m2ab":0, "m2bc":1}
 
     @atfi.function
     def cos_helicity_ab(self, sample):

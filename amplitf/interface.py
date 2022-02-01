@@ -101,6 +101,7 @@ _interface_dict = {
     "reduce_sum":"tf.reduce_sum",
     "range":"tf.range",
     "linspace":"tf.linspace",
+    "reduce_prod": "tf.math.reduce_prod",
 }
 
 

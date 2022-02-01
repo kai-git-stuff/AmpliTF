@@ -866,7 +866,7 @@ def wigner_capital_d(phi, theta, psi, j, m1, m2):
       phi,
       theta,
       psi  : Rotation angles
-      j : spin (in units of 1/2, e.g. 1 for spin=1/2)
+      j : spin (in units of 1/2, e.g. 1 for spin=1/2) best to use the constants for this
       m1 and m2 : spin projections (in units of 1/2, e.g. 1 for projection 1/2)
 
     :param phi:
@@ -904,7 +904,8 @@ def wigner_small_d(theta, j, m1, m2):
     from sympy.physics.quantum.spin import Rotation as Wigner
 
     d = Wigner.d(Rational(j, 2), Rational(m1, 2), Rational(m2, 2), x).doit().evalf()
-    return lambdify(x, d, "tensorflow")(theta)
+    # cast_complex is nescesarry for some reason, as otherwise tensorflow expects the result to be real
+    return lambdify(x, d, "tensorflow")(atfi.cast_complex( theta))
 
 
 @atfi.function
@@ -1041,8 +1042,7 @@ def helicity_couplings_from_ls(ja, jb, jc, lb, lc, bls):
     a = 0.0
     # print("%d %d %d %d %d" % (ja, jb, jc, lb, lc))
     for ls, b in bls.items():
-        l = ls[0]
-        s = ls[1]
+        l,s = ls
         coeff = (
             math.sqrt((l + 1) / (ja + 1))
             * clebsch(jb, lb, jc, -lc, s, lb - lc)
