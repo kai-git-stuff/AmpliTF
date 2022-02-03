@@ -176,9 +176,9 @@ def breit_wigner_lineshape(
     """
     m = atfi.sqrt(m2)
     q = atfk.two_body_momentum(md, m, mc)
-    q0 = atfk.two_body_momentum(md if md0 is None else md0, m0, mc)
+    q0 = atfi.cast_real(atfk.two_body_momentum(md if md0 is None else md0, m0, mc))
     p = atfk.two_body_momentum(m, ma, mb)
-    p0 = atfk.two_body_momentum(m0, ma if ma0 is None else ma0, mb)
+    p0 = atfi.cast_real(atfk.two_body_momentum(m0, ma if ma0 is None else ma0, mb))
     ffr = blatt_weisskopf_ff(p, p0, dr, lr)
     ffd = blatt_weisskopf_ff(q, q0, dd, ld)
     width = mass_dependent_width(m, m0, gamma0, p, p0, ffr, lr)

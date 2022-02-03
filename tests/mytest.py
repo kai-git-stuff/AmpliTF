@@ -65,7 +65,7 @@ def coupling_options(J,s1,s2,P,p1,p2):
         for s in range(s_min,s_max+1,2):
             for l in range(0,J+s+1,2):
                 if J <= l+s and J >= abs(l-s)  and P == p1*p2*(-1)**l:
-                    bls[(l,s)] = 1
+                    bls[(l,s)] = 0.03
     return bls
 
 
@@ -123,21 +123,30 @@ def three_body_decay(smp,phsp:DalitzPhaseSpace):
     # channel 1
     # L_b - > 
     ampl = atfi.zeros_tensor(phsp.m2ab(smp).shape,atfi.ctype())
-    helicities_L_b_L_c = [(1,1),(1,-1),(1,0),(0,0),(0,1),(0,-1),(-1,-1),(-1,0),(-1,1)]
+    helicities_L_b_L_c = [(1,1),(1,0),(1,-1),(0,1),(0,0),(0,-1),(-1,1),(-1,0),(-1,-1)]
     for la, ld in helicities_L_b_L_c:
         # channel 1
         # L_b - > A k : A -> lambda_c Dbar
         theta = atfi.acos(cos_theta_12(md, ma, mb, mc, sgma1, sgma2, sgma3))
+        
         # A does not have definite Spin 
         # assume A has spin half first
         # we will add the different Amplitudes
         sA = sp.SPIN_HALF
         pA = -1
-        bls = coupling_options(sd,sA,sc,P,pc,pA)
-        H_A_c = angular_distribution_multiple_channels_d(theta,sd,sA,sc,ld,0,bls)
-        ampl += H_A_c
-    return ampl
+        bls = coupling_options(sd,sA,sc,pd,pc,pA)
 
+        #print(bls)
+        H_A_c = angular_distribution_multiple_channels_d(theta,sd,sA,sc,ld,0,bls)
+        
+        #  A -> lambda_c Dbar
+        theta = atfi.acos(cos_theta_hat_1_canonical_2(md, ma, mb, mc, sgma1, sgma2, sgma3))
+        bls = coupling_options(sA,sa,sb,pA,pa,pb)
+        bls[(0,1)] =  0.03 + 3* breit_wigner_lineshape(sgma3,4900,30,ma,mb,mc,md,1,1,1,2)
+        #bls[(2,1)] =  0.03 + breit_wigner_lineshape(sgma3,5400,10,ma,mb,mc,md,1,1,1,2)
+        H_a_b = angular_distribution_multiple_channels_d(theta,sd,sA,sc,ld,0,bls)
+        ampl += H_A_c * H_a_b
+    return ampl
 
 ampl = three_body_decay(smp,phsp)
 sgma3 = phsp.m2ab(smp)
@@ -145,13 +154,8 @@ sgma2 = phsp.m2ac(smp)
 sgma1 = phsp.m2bc(smp)
 
 my_cmap = plt.get_cmap('hot')
-rnd = atfi.random_uniform(sgma1.shape, (2, 3), minval=0, maxval=max(abs(ampl)), dtype=tf.dtypes.float64,alg='auto_select')
+rnd = atfi.random_uniform(sgma1.shape, (2, 3), minval=min(abs(ampl)), maxval=max(abs(ampl)), dtype=tf.dtypes.float64,alg='auto_select')
 mask = abs(ampl) > rnd
-print(abs(ampl))
-print(rnd)
-print(mask)
-plt.scatter(sgma1[mask],sgma2[mask],cmap=my_cmap,c=abs(ampl[mask]),s=2)
+plt.scatter(sgma1[mask],sgma2[mask],cmap=my_cmap,s=2) # c=abs(ampl[mask])
 
 plt.show()
-
-
