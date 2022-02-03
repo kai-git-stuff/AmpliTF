@@ -82,7 +82,7 @@ _interface_dict = {
     "atan2": "tf.atan2",
     "tanh": "tf.tanh",
     "pow": "tf.pow",
-    "zeros": "tf.zeros_like",
+    "zeros_like": "tf.zeros_like",
     "ones": "tf.ones_like",
     "cross": "tf.linalg.cross",
     "reduce_max": "tf.reduce_max",
@@ -102,6 +102,8 @@ _interface_dict = {
     "range":"tf.range",
     "linspace":"tf.linspace",
     "reduce_prod": "tf.math.reduce_prod",
+    "zeros_tensor":"tf.zeros",
+    "random_uniform":"tf.random.stateless_uniform"
 }
 
 

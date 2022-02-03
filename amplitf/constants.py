@@ -6,6 +6,10 @@ class spin:
     SPIN_3HALF = 3
     SPIN_2 = 4 
 
+    def is_half(s):
+        return s%2 != 0 
+             
+
 class angular:
     L_0 = 0
     L_1 = 1
