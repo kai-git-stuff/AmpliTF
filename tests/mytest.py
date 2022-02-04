@@ -130,7 +130,8 @@ def three_body_decay(smp,phsp:DalitzPhaseSpace):
 
         # Rotation in the isobar system
         # angle between momentum of L_b and spectator(Kaon)
-        theta = atfi.acos(cos_theta_12(md, ma, mb, mc, sgma1, sgma2, sgma3))
+        theta = atfi.acos(cos_theta_hat_1_canonical_2(md, ma, mb, mc, sgma1, sgma2, sgma3))
+        
         
         # A does not have definite Spin 
         # assume A has spin half first
@@ -145,7 +146,8 @@ def three_body_decay(smp,phsp:DalitzPhaseSpace):
         #  A -> lambda_c Dbar
         # Rotation in the isobar system
         # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
-        theta = atfi.acos(cos_theta_hat_1_canonical_2(md, ma, mb, mc, sgma1, sgma2, sgma3))
+        #theta = atfi.acos(cos_theta_12(md, ma, mb, mc, sgma1, sgma2, sgma3))
+        theta = atfi.acos(cos_helicity_angle_dalitz(sgma3, sgma1, md, ma, mb, mc))
         bls = coupling_options(sA,sa,sb,pA,pa,pb)
         bls[(0,1)] =  0.03 + 3* breit_wigner_lineshape(sgma3,4900,30,ma,mb,mc,md,1,1,1,2)
         H_a_b = angular_distribution_multiple_channels_d(theta,sd,sA,sc,ld,0,bls)
@@ -158,8 +160,8 @@ sgma2 = phsp.m2ac(smp)
 sgma1 = phsp.m2bc(smp)
 
 my_cmap = plt.get_cmap('hot')
-rnd = atfi.random_uniform(sgma1.shape, (2, 3), minval=min(abs(ampl)), maxval=max(abs(ampl)), dtype=tf.dtypes.float64,alg='auto_select')
-mask = abs(ampl) > rnd
+rnd = atfi.random_uniform(sgma1.shape, (2, 3), minval=min(abs(ampl)**2), maxval=max(abs(ampl)**2), dtype=tf.dtypes.float64,alg='auto_select')
+mask = abs(ampl)**2 > rnd
 plt.scatter(sgma1[mask],sgma2[mask],cmap=my_cmap,s=2) # c=abs(ampl[mask])
 
 plt.show()
