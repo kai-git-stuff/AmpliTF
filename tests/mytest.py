@@ -57,7 +57,7 @@ def helicity_options(J,s1,s2):
                 options.append((m1,m2))
     return options
 
-def coupling_options(J,s1,s2,P,p1,p2):
+def coupling_options(J,s1,s2,P,p1,p2) -> dict:
     bls = {}
     #spins must fit
     if sp.is_half(J) and sp.is_half(s1+s2) or not(sp.is_half(J) or sp.is_half(s1+s2)):
@@ -127,6 +127,9 @@ def three_body_decay(smp,phsp:DalitzPhaseSpace):
     for la, ld in helicities_L_b_L_c:
         # channel 1
         # L_b - > A k : A -> lambda_c Dbar
+
+        # Rotation in the isobar system
+        # angle between momentum of L_b and spectator(Kaon)
         theta = atfi.acos(cos_theta_12(md, ma, mb, mc, sgma1, sgma2, sgma3))
         
         # A does not have definite Spin 
@@ -140,10 +143,11 @@ def three_body_decay(smp,phsp:DalitzPhaseSpace):
         H_A_c = angular_distribution_multiple_channels_d(theta,sd,sA,sc,ld,0,bls)
         
         #  A -> lambda_c Dbar
+        # Rotation in the isobar system
+        # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
         theta = atfi.acos(cos_theta_hat_1_canonical_2(md, ma, mb, mc, sgma1, sgma2, sgma3))
         bls = coupling_options(sA,sa,sb,pA,pa,pb)
         bls[(0,1)] =  0.03 + 3* breit_wigner_lineshape(sgma3,4900,30,ma,mb,mc,md,1,1,1,2)
-        #bls[(2,1)] =  0.03 + breit_wigner_lineshape(sgma3,5400,10,ma,mb,mc,md,1,1,1,2)
         H_a_b = angular_distribution_multiple_channels_d(theta,sd,sA,sc,ld,0,bls)
         ampl += H_A_c * H_a_b
     return ampl
