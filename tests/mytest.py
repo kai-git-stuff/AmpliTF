@@ -99,6 +99,9 @@ for J in [sp.SPIN_0,sp.SPIN_HALF,sp.SPIN_3HALF]:
 def angular_distribution_multiple_channels_d(theta,J,s1,s2,l1,l2,bls):
     return atfi.cast_complex(helicity_couplings_from_ls(J,s1,s2,l1,l2,bls)) * atfi.cast_complex(wigner_small_d(theta,J,l1,l2))
 
+def angular_distribution_multiple_channels_d(theta,J,s1,s2,l1,l2,nu,bls):
+    return atfi.cast_complex(helicity_couplings_from_ls(J,s1,s2,l1,l2,bls)) * atfi.cast_complex(wigner_small_d(theta,J,nu,l1-l2))
+
 
 def three_body_decay(smp,phsp:DalitzPhaseSpace):
     jd = sp.SPIN_HALF
@@ -123,8 +126,9 @@ def three_body_decay(smp,phsp:DalitzPhaseSpace):
     # channel 1
     # L_b - > 
     ampl = atfi.zeros_tensor(phsp.m2ab(smp).shape,atfi.ctype())
-    helicities_L_b_L_c = [(1,1),(1,0),(1,-1),(0,1),(0,0),(0,-1),(-1,1),(-1,0),(-1,-1)]
-    for la, ld in helicities_L_b_L_c:
+    helicities_A_L_d = [(1,1),(1,0),(1,-1),(0,1),(0,0),(0,-1),(-1,1),(-1,0),(-1,-1)]
+    helicities_l_c_D = [(1,0),(0,0),(-1,0)]
+    for lA, ld in helicities_A_L_d:
         # channel 1
         # L_b - > A k : A -> lambda_c Dbar
 
@@ -139,19 +143,23 @@ def three_body_decay(smp,phsp:DalitzPhaseSpace):
         sA = sp.SPIN_HALF
         pA = -1
         bls = coupling_options(sd,sA,sc,pd,pc,pA)
+        bls.update(coupling_options(sd,sA,sc,pd * (-1),pc,pA))
 
         #print(bls)
-        H_A_c = angular_distribution_multiple_channels_d(theta,sd,sA,sc,ld,0,bls)
+        # Kaon has spin 0, so we can ditch the sum over the kaon helicities
+        H_A_c = angular_distribution_multiple_channels_d(theta,sd,sA,sc,lA,0,ld,bls)
         
-        #  A -> lambda_c Dbar
-        # Rotation in the isobar system
-        # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
-        #theta = atfi.acos(cos_theta_12(md, ma, mb, mc, sgma1, sgma2, sgma3))
-        theta = atfi.acos(cos_helicity_angle_dalitz(sgma3, sgma1, md, ma, mb, mc))
+        theta = atfi.acos(cos_theta_12(md,ma,mb,mc,sgma1,sgma2,sgma3))
         bls = coupling_options(sA,sa,sb,pA,pa,pb)
-        bls[(0,1)] =  0.03 + 3* breit_wigner_lineshape(sgma3,4900,30,ma,mb,mc,md,1,1,1,2)
-        H_a_b = angular_distribution_multiple_channels_d(theta,sd,sA,sc,ld,0,bls)
-        ampl += H_A_c * H_a_b
+        bls[(2,1)] =  0.03 + 3* breit_wigner_lineshape(sgma3,4900,30,ma,mb,mc,md,1,1,1,2)
+        for la,lb in helicities_l_c_D:
+            #  A -> lambda_c Dbar
+            # Rotation in the isobar system
+            # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
+            #theta = atfi.acos(cos_theta_12(md, ma, mb, mc, sgma1, sgma2, sgma3))
+            
+            H_a_b = angular_distribution_multiple_channels_d(theta,sA,sb,sc,la,lb,lA,bls)
+            ampl += H_A_c * H_a_b
     return ampl
 
 ampl = three_body_decay(smp,phsp)
