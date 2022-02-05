@@ -151,15 +151,15 @@ def three_body_decay(smp,phsp:DalitzPhaseSpace):
         
         theta = atfi.acos(cos_theta_12(md,ma,mb,mc,sgma1,sgma2,sgma3))
         bls = coupling_options(sA,sa,sb,pA,pa,pb)
-        bls[(2,1)] =  0.03 + 3* breit_wigner_lineshape(sgma3,4900,30,ma,mb,mc,md,1,1,1,2)
+        x =40* breit_wigner_lineshape(sgma3,4900,30,ma,mb,mc,md,1,1,1,2)
         for la,lb in helicities_l_c_D:
             #  A -> lambda_c Dbar
             # Rotation in the isobar system
             # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
             #theta = atfi.acos(cos_theta_12(md, ma, mb, mc, sgma1, sgma2, sgma3))
             
-            H_a_b = angular_distribution_multiple_channels_d(theta,sA,sb,sc,la,lb,lA,bls)
-            ampl += H_A_c * H_a_b
+            H_a_b = angular_distribution_multiple_channels_d(theta,sA,sa,sb,la,lb,lA,bls)
+            ampl += H_A_c * H_a_b * x
     return ampl
 
 ampl = three_body_decay(smp,phsp)
