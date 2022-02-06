@@ -200,8 +200,8 @@ def breit_wigner_decay_lineshape(m2, m0, gamma0, ma, mb, meson_radius, l_orbit):
     Note: This function does not include the production form factor.
     """
     inv_mass = atfi.sqrt(m2)
-    q_squared = atfk.two_body_momentum_squared(inv_mass, ma, mb)
-    q0_squared = atfk.two_body_momentum_squared(m0, ma, mb)
+    q_squared = atfi.cast_real(atfk.two_body_momentum_squared(inv_mass, ma, mb))
+    q0_squared = atfi.cast_real(atfk.two_body_momentum_squared(m0, ma, mb))
     ff2 = blatt_weisskopf_ff_squared(q_squared, meson_radius, l_orbit)
     ff02 = blatt_weisskopf_ff_squared(q0_squared, meson_radius, l_orbit)
     width = gamma0 * (m0 / inv_mass) * (ff2 / ff02)

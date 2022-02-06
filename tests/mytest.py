@@ -1,6 +1,6 @@
 from amplitf.phasespace.dalitz_phasespace import DalitzPhaseSpace
 from amplitf.phasespace.base_phasespace import PhaseSpaceSample
-from amplitf.dynamics import breit_wigner_lineshape
+from amplitf.dynamics import breit_wigner_decay_lineshape
 from amplitf.kinematics import *
 from amplitf.dalitz_decomposition import *
 from amplitf.interface import sqrt
@@ -19,7 +19,7 @@ mc = 493.677 # K-  spin = 0 parity = -1
 md = 5912.19  # lambda_b  spin = 0.5 parity = +1
 phsp = DalitzPhaseSpace(ma,mb,mc,md) 
 
-smp = PhaseSpaceSample(phsp,phsp.uniform_sample(10000))
+smp = PhaseSpaceSample(phsp,phsp.uniform_sample(100000))
 
 sgma1 = phsp.m2ab(smp)
 sgma2 = phsp.m2ac(smp)
@@ -103,7 +103,7 @@ def angular_distribution_multiple_channels_d(theta,J,s1,s2,l1,l2,nu,bls):
     return atfi.cast_complex(helicity_couplings_from_ls(J,s1,s2,l1,l2,bls)) * atfi.cast_complex(wigner_small_d(theta,J,nu,l1-l2))
 
 
-def three_body_decay(smp,phsp:DalitzPhaseSpace):
+def channel1(smp:PhaseSpaceSample):
     jd = sp.SPIN_HALF
     pd = 1 # lambda_b  spin = 0.5 parity = +1
     pa = 1 # lambda_c spin = 0.5 parity = 1
@@ -132,15 +132,21 @@ def three_body_decay(smp,phsp:DalitzPhaseSpace):
         # channel 1
         # L_b - > A k : A -> lambda_c Dbar
 
+        
+        if lA - ld != 0:
+            # spin of Kaon is 0
+            # helicity is conserved in every system
+            continue
+
         # Rotation in the isobar system
         # angle between momentum of L_b and spectator(Kaon)
-        theta = atfi.acos(cos_theta_hat_1_canonical_2(md, ma, mb, mc, sgma1, sgma2, sgma3))
+        theta = atfi.acos(cos_theta_hat_3_canonical_1(md, ma, mb, mc, sgma1, sgma2, sgma3))
         
         
         # A does not have definite Spin 
         # assume A has spin half first
         # we will add the different Amplitudes
-        sA = sp.SPIN_HALF
+        sA = sp.SPIN_3HALF
         pA = -1
         bls = coupling_options(sd,sA,sc,pd,pc,pA)
         bls.update(coupling_options(sd,sA,sc,pd * (-1),pc,pA))
@@ -151,15 +157,103 @@ def three_body_decay(smp,phsp:DalitzPhaseSpace):
         
         theta = atfi.acos(cos_theta_12(md,ma,mb,mc,sgma1,sgma2,sgma3))
         bls = coupling_options(sA,sa,sb,pA,pa,pb)
-        x =40* breit_wigner_lineshape(sgma3,4900,30,ma,mb,mc,md,1,1,1,2)
+        m0 = atfi.cast_real(4900)
+        x =0.0001 + 40* breit_wigner_decay_lineshape(sgma3,m0,30,ma,mb,1,1)
         for la,lb in helicities_l_c_D:
             #  A -> lambda_c Dbar
             # Rotation in the isobar system
             # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
-            #theta = atfi.acos(cos_theta_12(md, ma, mb, mc, sgma1, sgma2, sgma3))
-            
             H_a_b = angular_distribution_multiple_channels_d(theta,sA,sa,sb,la,lb,lA,bls)
             ampl += H_A_c * H_a_b * x
+    return ampl
+
+def channel2(smp:PhaseSpaceSample):
+    jd = sp.SPIN_HALF
+    pd = 1 # lambda_b  spin = 0.5 parity = +1
+    pa = 1 # lambda_c spin = 0.5 parity = 1
+    pb = -1 # D^0 bar spin = 0 partiy = -1
+    pc = -1 # K-  spin = 0 parity = -1
+    sd = sp.SPIN_HALF
+    sa = sp.SPIN_HALF
+    sb = sp.SPIN_0
+    sc = sp.SPIN_0
+
+    ma = 2856.1 # lambda_c spin = 0.5 parity = 1
+    mb = 1864.84 # D^0 bar spin = 0 partiy = -1
+    mc = 493.677 # K-  spin = 0 parity = -1
+    md = 5912.19  # lambda_b  spin = 0.5 parity = +1
+    
+    sgma3 = phsp.m2ab(smp)
+    sgma2 = phsp.m2ac(smp)
+    sgma1 = phsp.m2bc(smp)
+
+    ampl = atfi.zeros_tensor(phsp.m2ab(smp).shape,atfi.ctype())
+    helicities_B_L_b = [(1,1),(1,0),(1,-1),(0,1),(0,0),(0,-1),(-1,1),(-1,0),(-1,-1)]
+    helicities_l_c_k = [(1,0),(0,0),(-1,0)]
+
+    for lB, ld in helicities_B_L_b:
+
+        if lB - ld != 0:
+            # spin of D meson is 0
+            continue
+        # channel 2
+        # L_b - > B D : B -> lambda_c k
+        # L_b -> B b : B -> (a,c)
+
+        # Rotation in the isobar system
+        # angle between momentum of L_b and spectator(Kaon)
+        theta =  atfi.acos(cos_theta_hat_1_canonical_2(md, ma, mb, mc, sgma1, sgma2, sgma3))
+        
+        # A does not have definite Spin 
+        # assume A has spin half first
+        # we will add the different Amplitudes
+        sB = sp.SPIN_HALF
+        pB = -1
+        # first decay is weak -> we need all couplings even if parity is not conserved
+        # we can simulate this by just merging both dicts for p = 1 and p = -1
+        bls = coupling_options(sd,sB,sb,pd,pb,pB)
+        bls.update(coupling_options(sd,sB,sb,pd * (-1),pb,pB))
+
+        #print(bls)
+        # D meson has spin 0, so we can ditch the sum over the kaon helicities
+        H_A_c = angular_distribution_multiple_channels_d(theta,sd,sB,sb,lB,0,ld,bls)
+        
+        theta = atfi.acos(cos_theta_31(md,ma,mb,mc,sgma1,sgma2,sgma3))
+        bls = coupling_options(sB,sa,sc,pB,pa,pc)
+        m0 = atfi.cast_real(3500.0)
+        x =0.0001 + 40* breit_wigner_decay_lineshape(sgma2,m0,30,ma,mb,1,0)
+
+        for la,lc in helicities_l_c_k:
+            #  A -> lambda_c Dbar
+            # Rotation in the isobar system
+            # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
+            H_a_b = angular_distribution_multiple_channels_d(theta,sB,sa,sc,la,lc,lB,bls)
+            
+            # symmetry of the d matrices
+            H_a_b *= (-1)**(lB - ld)  
+            ampl += H_A_c * H_a_b * x
+
+    return ampl
+
+def three_body_decay(smp,phsp:DalitzPhaseSpace):
+    jd = sp.SPIN_HALF
+    pd = 1 # lambda_b  spin = 0.5 parity = +1
+    pa = 1 # lambda_c spin = 0.5 parity = 1
+    pb = -1 # D^0 bar spin = 0 partiy = -1
+    pc = -1 # K-  spin = 0 parity = -1
+    sd = sp.SPIN_HALF
+    sa = sp.SPIN_HALF
+    sb = sp.SPIN_0
+    sc = sp.SPIN_0
+
+    ma = 2856.1 # lambda_c spin = 0.5 parity = 1
+    mb = 1864.84 # D^0 bar spin = 0 partiy = -1
+    mc = 493.677 # K-  spin = 0 parity = -1
+    md = 5912.19  # lambda_b  spin = 0.5 parity = +1
+
+    ampl = channel1(smp)
+    ampl += channel2(smp)
+
     return ampl
 
 ampl = three_body_decay(smp,phsp)
