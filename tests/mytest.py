@@ -19,7 +19,7 @@ mc = 493.677 # K-  spin = 0 parity = -1
 md = 5912.19  # lambda_b  spin = 0.5 parity = +1
 phsp = DalitzPhaseSpace(ma,mb,mc,md) 
 
-smp = PhaseSpaceSample(phsp,phsp.uniform_sample(100000))
+smp = PhaseSpaceSample(phsp,phsp.uniform_sample(10000))
 
 sgma1 = phsp.m2ab(smp)
 sgma2 = phsp.m2ac(smp)
@@ -103,7 +103,12 @@ def angular_distribution_multiple_channels_d(theta,J,s1,s2,l1,l2,nu,bls):
     return atfi.cast_complex(helicity_couplings_from_ls(J,s1,s2,l1,l2,bls)) * atfi.cast_complex(wigner_small_d(theta,J,nu,l1-l2))
 
 
-def channel1(smp:PhaseSpaceSample):
+def chain3(smp:PhaseSpaceSample,la,lb,lc):
+    # channel 1
+    # L_b - > A k : A -> lambda_c Dbar
+    # d -> (a b) c
+    k = 3 # helper index for the specified decay chain
+
     jd = sp.SPIN_HALF
     pd = 1 # lambda_b  spin = 0.5 parity = +1
     pa = 1 # lambda_c spin = 0.5 parity = 1
@@ -126,14 +131,14 @@ def channel1(smp:PhaseSpaceSample):
     # channel 1
     # L_b - > 
     ampl = atfi.zeros_tensor(phsp.m2ab(smp).shape,atfi.ctype())
-    helicities_A_L_d = [(1,1),(1,0),(1,-1),(0,1),(0,0),(0,-1),(-1,1),(-1,0),(-1,-1)]
-    helicities_l_c_D = [(1,0),(0,0),(-1,0)]
-    for lA, ld in helicities_A_L_d:
+    helicities_A_d = [(1,1),(1,0),(1,-1),(0,1),(0,0),(0,-1),(-1,1),(-1,0),(-1,-1)]
+    helicities_ab = [(1,0),(0,0),(-1,0)]
+    for lA, ld in helicities_A_d:
         # channel 1
         # L_b - > A k : A -> lambda_c Dbar
 
         
-        if lA - ld != 0:
+        if lA - ld - lc != 0:
             # spin of Kaon is 0
             # helicity is conserved in every system
             continue
@@ -159,15 +164,30 @@ def channel1(smp:PhaseSpaceSample):
         bls = coupling_options(sA,sa,sb,pA,pa,pb)
         m0 = atfi.cast_real(4900)
         x =0.0001 + 40* breit_wigner_decay_lineshape(sgma3,m0,30,ma,mb,1,1)
-        for la,lb in helicities_l_c_D:
+
+        zeta_1 = cos_zeta_1_aligned_3_in_frame_1(md,ma,mb,mc,sgma1,sgma2,sgma3)
+
+        zeta_2 = cos_zeta_2_aligned_2_in_frame_3(md,ma,mb,mc,sgma1,sgma2,sgma3)
+        #remember to apply (-1)**(lb - lb_) in front of the d matrix (switch last 2 indices)
+
+        zeta_3 = 0
+        # trust me
+
+        for la_,lb_ in helicities_ab:
             #  A -> lambda_c Dbar
             # Rotation in the isobar system
             # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
-            H_a_b = angular_distribution_multiple_channels_d(theta,sA,sa,sb,la,lb,lA,bls)
-            ampl += H_A_c * H_a_b * x
+            H_a_b = angular_distribution_multiple_channels_d(theta,sA,sa,sb,la_,lb_,lA,bls)
+
+            ampl += H_A_c * H_a_b * x * atfi.cast_complex(wigner_small_d(zeta_1,sa,la,la_)) * atfi.cast_complex(wigner_small_d(zeta_2,sb,lb,lb_)) * (-1)**((lb - lb_)/2) * atfi.cast_complex(wigner_small_d(zeta_3,sc,lc,0))
     return ampl
 
-def channel2(smp:PhaseSpaceSample):
+def chain2(smp:PhaseSpaceSample):
+    # channel 2
+    # L_b - > B D : B -> lambda_c k
+    # L_b -> B b : B -> (a,c)
+    k = 2
+
     jd = sp.SPIN_HALF
     pd = 1 # lambda_b  spin = 0.5 parity = +1
     pa = 1 # lambda_c spin = 0.5 parity = 1
@@ -231,6 +251,7 @@ def channel2(smp:PhaseSpaceSample):
             
             # symmetry of the d matrices
             H_a_b *= (-1)**(lB - ld)  
+
             ampl += H_A_c * H_a_b * x
 
     return ampl
@@ -251,8 +272,17 @@ def three_body_decay(smp,phsp:DalitzPhaseSpace):
     mc = 493.677 # K-  spin = 0 parity = -1
     md = 5912.19  # lambda_b  spin = 0.5 parity = +1
 
-    ampl = channel1(smp)
-    ampl += channel2(smp)
+    sgma3 = phsp.m2ab(smp)
+    sgma2 = phsp.m2ac(smp)
+    sgma1 = phsp.m2bc(smp)
+
+
+    # D -> (a b) c 
+    ampl = sum(chain3(smp,la,0,0) for la in range(-1,2))
+
+
+    # D -> (a c) b
+    #ampl += chain2(smp)
 
     return ampl
 
