@@ -17,7 +17,7 @@
   Formulas for Dalitz plot decomposition angles from M. Mikhasenko et al. https://arxiv.org/pdf/1910.04566.pdf
 """
 
-from amplitf.interface import sqrt
+from amplitf.interface import sqrt, cast_real
 
 
 def kallen_function(x, y, z):
@@ -55,13 +55,13 @@ def cos_theta_hat_3_canonical_1(M, m1, m2, m3, sigma1, sigma2, sigma3):
     )
 
 def cos_theta_hat_1_canonical_1(M, m1, m2, m3, sigma1, sigma2, sigma3):
-    return 1
+    return cast_real(1)
 
 def cos_theta_hat_2_canonical_2(M, m1, m2, m3, sigma1, sigma2, sigma3):
-    return 1
+    return cast_real(1)
 
 def cos_theta_hat_3_canonical_3(M, m1, m2, m3, sigma1, sigma2, sigma3):
-    return 1
+    return cast_real(1)
 
 def cos_theta_hat_1_canonical_2(M, m1, m2, m3, sigma1, sigma2, sigma3):
     return cos_theta_hat_3_canonical_1(M, m2, m3, m1, sigma2, sigma3, sigma1)
