@@ -5,6 +5,8 @@ class spin:
     SPIN_1 = 2
     SPIN_3HALF = 3
     SPIN_2 = 4 
+    SPIN_5HALF = 5
+    SPIN_3 = 6 
 
     def is_half(s):
         return s%2 != 0 
