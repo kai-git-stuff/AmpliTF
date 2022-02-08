@@ -318,15 +318,16 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     return ampl
 
 ampl = abs(three_body_decay_Daliz_plot_function(smp,phsp))**2
-sgma3 = phsp.m2ab(smp)
-sgma2 = phsp.m2ac(smp)
-sgma1 = phsp.m2bc(smp)
+sgma3 = phsp.m2ab(smp) # lmbda_c , D_bar
+sgma2 = phsp.m2ac(smp) # lmbda_c , k
+sgma1 = phsp.m2bc(smp) # D_bar , k
 print(ampl)
 my_cmap = plt.get_cmap('hot')
 rnd = atfi.random_uniform(sgma1.shape, (2, 3), minval=min(ampl), maxval=max(ampl), dtype=tf.dtypes.float64,alg='auto_select')
 #mask = ampl > rnd
 plt.style.use('dark_background')
-
-plt.scatter(sgma1,sgma2,cmap=my_cmap,s=2,c=ampl,marker="s") # c=abs(ampl[mask])
+plt.xlabel(r"$M(\lambda_c^+,K^-)$")
+plt.ylabel(r"$M(\lambda_c^+,\bar{D}^0)$")
+plt.scatter(sgma2,sgma3,cmap=my_cmap,s=2,c=ampl,marker="s") # c=abs(ampl[mask])
 #plt.hist2d(sgma1,sgma2,weights=ampl,bins=90,cmap=my_cmap)
 plt.show()
