@@ -51,7 +51,7 @@ def angular_distribution_multiple_channels_d(theta,J,s1,s2,l1,l2,nu,bls):
     return atfi.cast_complex(helicity_couplings_from_ls(J,s1,s2,l1,l2,bls)) * atfi.cast_complex(wigner_small_d(theta,J,nu,l1-l2))
 
 
-def chain3(smp:PhaseSpaceSample,la,lb,lc,resonances):
+def chain3(smp:PhaseSpaceSample,la,lb,lc,resonances,helicities_dict:dict):
     # channel 1
     # L_b - > A k : A -> lambda_c Dbar
     # d -> (a b) c
@@ -117,12 +117,12 @@ def chain3(smp:PhaseSpaceSample,la,lb,lc,resonances):
                 # Rotation in the isobar system
                 # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
                 H_a_b = angular_distribution_multiple_channels_d(theta,sA,sa,sb,la_,lb_,lA,bls)
-
+                #get_helicity(helicities_dict,la_,lb_,pA,pa,pb,sA,sa,sb)
                 # no sum over lc_ needed, because sc is 0
                 ampl += H_A_c * H_a_b * x * atfi.cast_complex(wigner_small_d(zeta_1,sa,la,la_)) * atfi.cast_complex(wigner_small_d(zeta_2,sb,lb,lb_)) * (-1)**((lb - lb_)/2) * atfi.cast_complex(wigner_small_d(zeta_3,sc,lc,0))
     return ampl
 
-def chain2(smp:PhaseSpaceSample,la,lb,lc,resonances):
+def chain2(smp:PhaseSpaceSample,la,lb,lc,resonances,helicities_dict:dict):
     # channel 2
     # L_b - > B D : B -> lambda_c k
     # L_b -> B b : B -> (a,c)
@@ -188,7 +188,7 @@ def chain2(smp:PhaseSpaceSample,la,lb,lc,resonances):
                 # Rotation in the isobar system
                 # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
                 H_a_b = angular_distribution_multiple_channels_d(theta,sB,sa,sc,la_,lc_,lB,bls)
-                
+                #H_a_b = get_helicity(helicities_dict,la_,lc_,pB,pa,pc,sB,sa,sc)
                 # symmetry of the d matrices
                 H_a_b *= (-1)**(lB - ld)  * (-1)**((la - la_)/2) * atfi.cast_complex(wigner_small_d(zeta_1,sa,la,la_)) *  atfi.cast_complex(wigner_small_d(zeta_3,sc,lc,lc_))
 
@@ -196,10 +196,10 @@ def chain2(smp:PhaseSpaceSample,la,lb,lc,resonances):
 
     return ampl
 
-def chain1(smp:PhaseSpaceSample,la,lb,lc,resonances):
+def chain1(smp:PhaseSpaceSample,la,lb,lc,resonances,helicities_dict:dict):
     # channel 3
-    # L_b - > C D : B -> D_bar k
-    # L_b -> C a : B -> (b,c)
+    # L_b - > C D : C -> D_bar k
+    # L_b -> C a : C -> (b,c)
     k = 1
 
     pd = 1 # lambda_b  spin = 0.5 parity = +1
@@ -255,16 +255,21 @@ def chain1(smp:PhaseSpaceSample,la,lb,lc,resonances):
                 # C -> b c
                 # Rotation in the isobar system
                 # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
-                H_a_b = angular_distribution_multiple_channels_d(theta,sC,sb,sc,lb_,lc_,lC,bls)
-                
+                H_b_c = angular_distribution_multiple_channels_d(theta,sC,sb,sc,lb_,lc_,lC,bls)
+                #H_b_c = get_helicity(helicities_dict,lb_,lc_,pC,pb,pc,sC,sb,sc)
                 # symmetry of the d matrices
-                H_a_b *=  (-1)**((lc - lc_)/2) * atfi.cast_complex(wigner_small_d(zeta_3,sc,lc,lc_)) * atfi.cast_complex(wigner_small_d(zeta_2,sb,lb,lb_)) 
+                H_b_c *=  (-1)**((lc - lc_)/2) * atfi.cast_complex(wigner_small_d(zeta_3,sc,lc,lc_)) * atfi.cast_complex(wigner_small_d(zeta_2,sb,lb,lb_)) 
 
                 for la_ in range(-sa,sa+1):
                     # go over all possible helicities of a in the b c system with regard to the d (mother particle) system
-                    ampl += H_A_c * H_a_b * x *atfi.cast_complex(wigner_small_d(zeta_1,sa,la,la_)) 
+                    ampl += H_A_c * H_b_c * x *atfi.cast_complex(wigner_small_d(zeta_1,sa,la,la_)) 
 
     return ampl
+
+def get_helicity(helicities_dict:dict,l1_,l2_,P,p1,p2,J,s1,s2):
+    H = helicities_dict.get((l1_,l2_),None)
+    if H is None:
+        return helicities_dict.get((-l1_,-l2_),None) * P*p1*p2* (-1)**(J -s1-s2)
 
 class resonance:
     # simple wrapper class
@@ -308,12 +313,16 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     
     # we will add the different Amplitudes
     # first amplitude: D_0(2317)
-    resonances1 = [resonance(sp.SPIN_0,-1,atfi.cast_real(2317),30, 0.099 ), # 0.099
-                    resonance(sp.SPIN_3,-1,atfi.cast_real(2860),53,0.0181)]
+    resonances1 = [resonance(sp.SPIN_0,1,atfi.cast_real(2317),3.8, 0.138**0.5 ),#D_0(2317)
+                    resonance(sp.SPIN_2,1,atfi.cast_real(2573),16.9,0.0104**0.5), #D^*_s2(2573)
+                    resonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,1.21**0.5), #D^*_s1(2700)
+                    resonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,0.340**0.5), #D^*_s1(2860)
+                    resonance(sp.SPIN_3,-1,atfi.cast_real(2860),53,0.0183**0.5), #D_3(2860)
+                    ]
     
-    resonances2 = [resonance(sp.SPIN_HALF,-1,atfi.cast_real(2791.9),213.20,0.0257)]
+    resonances2 = [resonance(sp.SPIN_HALF,-1,atfi.cast_real(2791.9),213.20,0.0232**0.5)]
 
-    ampl = sum(chain3(smp,la,0,0,[]) + chain2(smp,la,0,0,resonances2) + chain1(smp,la,0,0,resonances1) for la in range(-1,2))
+    ampl = sum(chain3(smp,la,0,0,[],{}) + chain2(smp,la,0,0,resonances2,{}) + chain1(smp,la,0,0,resonances1,{}) for la in range(-1,2))
 
     return ampl
 
@@ -326,8 +335,9 @@ my_cmap = plt.get_cmap('hot')
 rnd = atfi.random_uniform(sgma1.shape, (2, 3), minval=min(ampl), maxval=max(ampl), dtype=tf.dtypes.float64,alg='auto_select')
 #mask = ampl > rnd
 plt.style.use('dark_background')
-plt.xlabel(r"$M(\lambda_c^+,K^-)$")
-plt.ylabel(r"$M(\lambda_c^+,\bar{D}^0)$")
-plt.scatter(sgma2,sgma3,cmap=my_cmap,s=2,c=ampl,marker="s") # c=abs(ampl[mask])
+plt.xlabel(r"$M^2(\lambda_c^+,K^-)$ in GeV$^2$")
+plt.ylabel(r"$M^2(\lambda_c^+,\bar{D}^0)$ in GeV$^2$")
+plt.scatter(sgma2/1e6,sgma3/1e6,cmap=my_cmap,s=2,c=ampl,marker="s") # c=abs(ampl[mask])
+plt.savefig("Dalitz.pdf")
 #plt.hist2d(sgma1,sgma2,weights=ampl,bins=90,cmap=my_cmap)
 plt.show()
