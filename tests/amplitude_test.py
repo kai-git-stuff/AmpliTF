@@ -37,7 +37,7 @@ def helicity_options(J,s1,s2):
 def coupling_options(J,s1,s2,P,p1,p2) -> dict:
     bls = {}
     #spins must fit
-    if sp.is_half(J) and sp.is_half(s1+s2) or not(sp.is_half(J) or sp.is_half(s1+s2)):
+    if (sp.is_half(J) and sp.is_half(s1+s2) ) or not(sp.is_half(J) or sp.is_half(s1+s2)):
         s_max,s_min = s1+s2, abs(s1-s2)
         for s in range(s_min,s_max+1,2):
             for l in range(0,J+s+1,2):
