@@ -21,7 +21,7 @@ import math
 import itertools
 
 import amplitf.interface as atfi
-
+from amplitf.constants import spin as sp
 
 @atfi.function
 def spatial_components(vector):
@@ -1069,13 +1069,13 @@ def zemach_tensor(m2ab, m2ac, m2bc, m2d, m2a, m2b, m2c, spin):
 
     """
     z = None
-    if spin == 0:
+    if spin == sp.SPIN_0:
         z = atfi.complex(atfi.const(1.0), atfi.const(0.0))
-    if spin == 1:
+    if spin == sp.SPIN_HALF:
         z = atfi.complex(
             m2ac - m2bc + (m2d - m2c) * (m2b - m2a) / m2ab, atfi.const(0.0)
         )
-    if spin == 2:
+    if spin == sp.SPIN_1:
         z = atfi.complex(
             (m2bc - m2ac + (m2d - m2c) * (m2a - m2b) / m2ab) ** 2
             - 1.0
