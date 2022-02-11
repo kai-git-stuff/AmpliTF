@@ -75,7 +75,7 @@ class dalitz_decay:
             for lA in helicities_A:
                 if lA- ld - lc != 0 or lA - la - lb != 0:
                     # helicites first defined in mother particle system
-                    continue
+                    pass
 
                 bls = coupling_options(self.sd,sA,self.sc,self.pd,self.pc,pA)
                 bls.update(coupling_options(self.sd,sA,self.sc,self.pd * (-1),self.pc,pA))
@@ -115,7 +115,7 @@ class dalitz_decay:
             for lB in helicities_C:
                 if lB - ld - lb != 0 or lB - lc - la != 0:
                     # helicites first defined in mother particle system
-                    continue
+                    pass
                 # channel 2
                 # L_b -> B b : B -> (a,c)
                 
@@ -164,7 +164,7 @@ class dalitz_decay:
             for lC in helicities_B:
                 if lC - ld - la != 0 or lC - lb - lc != 0:
                     # helicites first defined in mother particle system
-                    continue
+                    pass
                 # first decay is weak -> we need all couplings even if parity is not conserved
                 # we can simulate this by just merging both dicts for p = 1 and p = -1
                 bls = coupling_options(self.sd,sC,self.sa,self.pd,self.pa,pC)
@@ -289,27 +289,34 @@ class kmatrix(BaseResonance):
         return self.q(s,a)**L
 
     def phaseSpaceFactor(self,s,a):
-        return 1/(16* atfi.pi) * 2 * self.q(s,a)/atfi.sqrt(s)
+        return atfi.complex(atfi.const(1/(16* atfi.pi()) * 2), atfi.const(0))* self.q(s,a)/atfi.cast_complex(atfi.sqrt(s))
 
     def V(self,s,a,b):
         # R = resonance index
         # a,b = channel indices
-        return -sum((res.coupling(a) * res.coupling(b))/(s-res.M2) for res in self.resonances)
+        return atfi.cast_complex(-sum((res.coupling(a) * res.coupling(b))/(s-res.M2) for res in self.resonances))
 
-    def Sigma(self,s,a):
-        sigma = phasespace_factor(s,*self.get_m(a)) * self.gamma(s)**2
-        return atfi.complex(0,atfi.const(sigma))
+    def Sigma(self,s,a,L):
+        sigma = self.phaseSpaceFactor(s,a) * self.gamma(s,a,L)**2
+        return atfi.complex(atfi.const(0),atfi.const(1))*atfi.cast_complex(sigma)
 
-    def build_D(self,s):
+    def build_D(self,s,L):
         v = []
+        # we calculate v directly  as 1 - v * Sigma
         for a in range(len(self.channels)):
             v.append(list())
             for b in range(len(self.channels)):
-                v[a].append(self.V(s,a,b))
+                if a == b:
+                    v[a].append(1-self.V(s,a,b)*self.Sigma(s,b,L))
+                else:
+                    v[a].append(-self.V(s,a,b)*self.Sigma(s,b,L))
+                
         v = atfi.convert_to_tensor(v,dtype=atfi.ctype())
         shape = [-1 for _ in range(len(s.shape))] + [len(self.channels),len(self.channels)]
         v = atfi.reshape(v,shape)
+        print(v)
         self._D = atfi.linalg_inv(v)
+
 
     def g(self,n,b):
         return self.resonances[n].coupling(b)
@@ -317,16 +324,18 @@ class kmatrix(BaseResonance):
     def alpha(self,n):
         return self.alphas[n]
 
-    def D(self,s,a,b):
+    def D(self,s,a,b,L):
         if s != self._s:
-            self.build_D(s)
+            self.build_D(s,L)
         return self._D[...,a,b]
     
     def P_func(self,s,b):
-        return self.channels[b].background - sum( (res.coupling(b) * alpha )/atfi.cast_complex(s-res.M2)   for res,alpha in zip(self.resonances,self.alphas))
+        p  = self.channels[b].background - sum( (res.coupling(b) * alpha )/atfi.cast_complex(s-res.M2)   for res,alpha in zip(self.resonances,self.alphas))
+        return p
 
     def A_H(self,s,a,L):
-        return sum(self.gamma(s,a,L) * self.D(s,a,b) * self.P_func(s,b) for b in range(len(self.channels)))
+        a_h = sum(self.gamma(s,a,L) * self.D(s,a,b,L) * self.P_func(s,b) for b in range(len(self.channels)))
+        return a_h
 
     def X(self,s,L):
         # return the Lineshape for the specific outchannel
@@ -354,26 +363,26 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     bls_ds_kmatrix_in = {(0,1):atfi.complex(atfi.const(-1.8),atfi.const(4.4)),
                          (2,1):atfi.complex(atfi.const(-7.05),atfi.const(-4.06)),
                          (2,3):atfi.complex(atfi.const(4.96),atfi.const(-4.73))}
-    bls_ds_kmatrix_out = {(2,3):atfi.complex(atfi.const(-1.064),atfi.const(-0.722))}
+    bls_ds_kmatrix_out = {(2,0):atfi.complex(atfi.const(-1.064),atfi.const(-0.722))}
     alphas = [atfi.complex(atfi.const(0.00272),atfi.const(-0.00715)), atfi.complex(atfi.const(-0.00111),atfi.const(0.00394))]
     g0,g1,g2,g3 = -8.73, 6.54,6.6,-3.38
-    m11,m12,m21,m22 = mb,mc,2006.85,mc # ToDo find the masses of the second channel
+    m11,m12,m21,m22 = mb,mc,2006.85,mc 
     channels = [
         KmatChannel(m11,m12,0.0135),
         KmatChannel(m21,m22,0.0867)
     ]
     resonances = [
-        KmatResonance(2713.6,[g0,g1] ),  #D^*_s1(2700)
-        KmatResonance(2967.1,[g2,g3] ) # ToDo find if we assigned the g values correctly #D^*_s1(2860)
+        KmatResonance(2713.6,[g0,g2] ),  #D^*_s1(2700)
+        KmatResonance(2967.1,[g1,g3] ) # ToDo find if we assigned the g values correctly #D^*_s1(2860)
     ]
     D_kma = kmatrix(sp.SPIN_1,-1,alphas,channels,resonances,bls_ds_kmatrix_in,bls_ds_kmatrix_out)
     masses2 = (ma,mc)
 
     masses1 = (mb,mc)
     resonances1 = [BWresonance(sp.SPIN_0,1,atfi.cast_real(2317),3.8, 0.138**0.5 ,{(0,1):atfi.complex(atfi.const(-0.017),atfi.const(-0.1256))},bls_ds_kmatrix_out,*masses1),#D_0(2317) no specific outgoing bls given :(
-                    # BWresonance(sp.SPIN_2,1,atfi.cast_real(2573),16.9,0.0104**0.5,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s2(2573)
-                    # BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,1.21**0.5,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2700)
-                    # BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,0.340**0.5,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2860)
+                    #BWresonance(sp.SPIN_2,1,atfi.cast_real(2573),16.9,0.0104**0.5,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s2(2573)
+                    #BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,1.21**0.5,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2700)
+                    #BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,0.340**0.5,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2860)
                     D_kma,
                     BWresonance(sp.SPIN_3,-1,atfi.cast_real(2860),53,0.0183**0.5,{(4,5):atfi.complex(atfi.const(0.32),atfi.const(-0.33))},
                                                                                 {(6,0):atfi.complex(atfi.const(-0.036),atfi.const(0.015))},*masses1), #D^*_s3(2860)
@@ -382,7 +391,7 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
                                 {(0,1):atfi.complex(atfi.const(-0.0149),atfi.const(-0.0259))},*masses2), # xi_c (2790)
                     BWresonance(sp.SPIN_3HALF,-1,atfi.cast_real(2815), 2.43,0.0232**0.5,{},{},*masses2)] # xi_c (2815) no bls couplings given :(
 
-    ampl = sum(abs(decay.chain3(smp,ld,la,0,0,[]) + decay.chain2(smp,ld,la,0,0,resonances2) + decay.chain1(smp,ld,la,0,0,resonances1))**2 for la in range(-1,2,2) for ld in range(-1,2,2))
+    ampl = sum(abs(decay.chain3(smp,ld,la,0,0,[]) + decay.chain2(smp,ld,la,0,0,resonances2) + decay.chain1(smp,ld,la,0,0,resonances1))**2 for la in range(-1,2,2) for ld in [-1])
 
     return ampl
 
@@ -400,15 +409,25 @@ ampl = three_body_decay_Daliz_plot_function(smp,phsp)
 sgma3 = phsp.m2ab(smp) # lmbda_c , D_bar
 sgma2 = phsp.m2ac(smp) # lmbda_c , k
 sgma1 = phsp.m2bc(smp) # D_bar , k
+s1_name = r"$M^2(K^-,\bar{D}^0)$ in GeV$^2$"
+s2_name = r"$M^2(\Lambda_c^+,K^-)$ in GeV$^2$"
+s3_name = r"$M^2(\Lambda_c^+,\bar{D}^0)$ in GeV$^2$"
 print(ampl,max(ampl))
 my_cmap = plt.get_cmap('hot')
 #rnd = atfi.random_uniform(sgma1.shape, (2, 3), minval=min(ampl), maxval=max(ampl), dtype=tf.dtypes.float64,alg='auto_select')
 #mask = ampl > rnd
 plt.style.use('dark_background')
-plt.xlabel(r"$M^2(\lambda_c^+,K^-)$ in GeV$^2$")
-plt.ylabel(r"$M^2(\lambda_c^+,\bar{D}^0)$ in GeV$^2$")
+plt.xlabel(s2_name)
+plt.ylabel(s3_name)
 plt.scatter(sgma2/1e6,sgma3/1e6,cmap=my_cmap,s=2,c=ampl,marker="s") # c=abs(ampl[mask])
 plt.colorbar()
 plt.savefig("Dalitz.pdf")
-#plt.hist2d(sgma1,sgma2,weights=ampl,bins=90,cmap=my_cmap)
 plt.show()
+plt.close('all')
+for s,name,label in zip([sgma1,sgma2,sgma3],["_D+K","L_c+K","L_c+D"],[s1_name,s2_name,s3_name]):
+    plt.hist(s**0.5/1e3,weights=ampl,bins=100)
+    plt.xlabel(r""+label.replace("^2","")[:-2])
+    plt.savefig("Dalitz_%s.png"%name,dpi = 400)
+    plt.show()
+    plt.close('all')
+#plt.hist2d(sgma1,sgma2,weights=ampl,bins=90,cmap=my_cmap)
