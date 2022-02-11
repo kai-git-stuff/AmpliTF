@@ -73,22 +73,17 @@ class dalitz_decay:
 
         for sA,pA,helicities_A,bls_in,bls_out,X in resonances:
             for lA in helicities_A:
-                if lA- ld - lc != 0 or lA - la - lb != 0:
-                    # helicites first defined in mother particle system
-                    pass
-
                 bls = coupling_options(self.sd,sA,self.sc,self.pd,self.pc,pA)
                 bls.update(coupling_options(self.sd,sA,self.sc,self.pd * (-1),self.pc,pA))
 
                 H_A_c = phasespace_factor(self.md,sgma3,self.mc)* angular_distribution_multiple_channels_d(theta_hat,self.sd,sA,self.sc,lA,lc,ld,bls_in())
                 
-                x = 1 # X(sgma3,self.ma,self.mb)
                 helicities_abc = helicity_options(sA,self.sa,self.sb,self.sc)
                 for la_,lb_,lc_ in helicities_abc:
                     # Rotation in the isobar system
                     # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
                     H_a_b = phasespace_factor(sgma3,self.ma,self.mb) * angular_distribution_multiple_channels_d(theta,sA,self.sa,self.sb,la_,lb_,lA,bls_out(sgma3))
-                    ampl += H_A_c * H_a_b * x * atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la,la_)) * atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb,lb_)) * (-1)**((lb - lb_)/2) * atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc,lc_))
+                    ampl += H_A_c * H_a_b * atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la,la_)) * atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb,lb_)) * (-1)**((lb - lb_)/2) * atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc,lc_))
         return ampl
 
     def chain2(self,smp:PhaseSpaceSample,ld,la,lb,lc,resonances):
@@ -97,48 +92,30 @@ class dalitz_decay:
         sgma3 = phsp.m2ab(smp)
         sgma2 = phsp.m2ac(smp)
         sgma1 = phsp.m2bc(smp)
-
         ampl = atfi.zeros_tensor(phsp.m2ab(smp).shape,atfi.ctype())
 
         zeta_1 = atfi.acos(cos_zeta_1_aligned_1_in_frame_2(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
         # remember to apply (-1)**((la - la_)/2) in front of the d matrix (switch last 2 indices)
-
         zeta_2 = 0 # allways one is 0
-
         zeta_3 = atfi.acos(cos_zeta_3_aligned_2_in_frame_3(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
-
         theta_hat =  atfi.acos(cos_theta_hat_1_canonical_2(self.md, self.ma, self.mb, self.mc, sgma1, sgma2, sgma3))
         # remember factor of (-1)**((lB - ld)/2) because we switched indices 1 and 2
         theta = atfi.acos(cos_theta_31(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
 
         for sB,pB,helicities_C,bls_in,bls_out,X in resonances:
             for lB in helicities_C:
-                if lB - ld - lb != 0 or lB - lc - la != 0:
-                    # helicites first defined in mother particle system
-                    pass
                 # channel 2
                 # L_b -> B b : B -> (a,c)
-                
-                # first decay is weak -> we need all couplings even if parity is not conserved
-                # we can simulate this by just merging both dicts for p = 1 and p = -1
-                # bls = coupling_options(self.sd,sB,self.sb,self.pd,self.pb,pB)
-                # bls.update(coupling_options(self.sd,sB,self.sb,self.pd * (-1),self.pb,pB))
-
                 H_A_c =  phasespace_factor(self.md,sgma2,self.mb)* angular_distribution_multiple_channels_d(theta_hat,self.sd,sB,self.sb,lB,lb,ld,bls_in())
-                
-                x = 1 # X(sgma2,self.ma,self.mc)
                 helicities_abc = helicity_options(sB,self.sa,self.sb,self.sc)
                 for la_,lb_,lc_ in helicities_abc:
                     #  A -> lambda_c Dbar
                     # Rotation in the isobar system
-                    # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
-                    H_a_b =  phasespace_factor(sgma2,self.ma,self.mc)* angular_distribution_multiple_channels_d(theta,sB,self.sa,self.sc,lc_,la_,lB,bls_out(sgma2))
+                    H_a_b =  phasespace_factor(sgma2,self.ma,self.mc)* angular_distribution_multiple_channels_d(theta,sB,self.sa,self.sc,la_,lc_,lB,bls_out(sgma2))
                     #H_a_b = get_helicity(helicities_dict,la_,lc_,pB,pa,pc,sB,sa,sc)
                     # symmetry of the d matrices
                     H_a_b *= (-1)**((lB - ld)/2)  * (-1)**((la - la_)/2) * atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la,la_)) *  atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc,lc_))
-
-                    ampl += H_A_c * H_a_b * x * atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb,lb_)) 
-
+                    ampl += H_A_c * H_a_b * atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb,lb_)) 
         return ampl
 
     def chain1(self,smp:PhaseSpaceSample,ld,la,lb,lc,resonances):
@@ -147,13 +124,10 @@ class dalitz_decay:
         sgma3 = phsp.m2ab(smp)
         sgma2 = phsp.m2ac(smp)
         sgma1 = phsp.m2bc(smp)
-
         ampl = atfi.zeros_tensor(phsp.m2ab(smp).shape,atfi.ctype())
-
         # Rotation in the isobar system
         theta_hat =  atfi.acos(cos_theta_hat_1_canonical_1(self.md, self.ma, self.mb, self.mc, sgma1, sgma2, sgma3))
         # will just return one, as we are in the alligned system anyways
-
         theta = atfi.acos(cos_theta_23(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
         zeta_1 = 0
         # own system
@@ -162,18 +136,12 @@ class dalitz_decay:
         # remember to apply (-1)**((lc - lc_)/2) in front of the d matrix (switch last 2 indices)
         for sC,pC,helicities_B,bls_in,bls_out,X in resonances:
             for lC in helicities_B:
-                if lC - ld - la != 0 or lC - lb - lc != 0:
-                    # helicites first defined in mother particle system
-                    pass
                 # first decay is weak -> we need all couplings even if parity is not conserved
                 # we can simulate this by just merging both dicts for p = 1 and p = -1
                 bls = coupling_options(self.sd,sC,self.sa,self.pd,self.pa,pC)
                 bls.update(coupling_options(self.sd,sC,self.sa,self.pd * (-1),self.pa,pC))
 
                 H_A_c = phasespace_factor(self.md,sgma1,self.ma) * angular_distribution_multiple_channels_d(theta_hat,self.sd,sC,self.sa,lC,la,ld,bls_in())
-
-                x = 1# X(sgma1,self.mb,self.mc)
-                # bls_res = coupling_options(sC,self.sb,self.sc,pC,self.pb,self.pc)
 
                 helicities_abc = helicity_options(sC,self.sa,self.sb,self.sc)
                 for la_,lb_,lc_ in helicities_abc:
@@ -183,8 +151,7 @@ class dalitz_decay:
                     H_b_c = phasespace_factor(sgma1,self.mb,self.mc) * angular_distribution_multiple_channels_d(theta,sC,self.sb,self.sc,lb_,lc_,lC,bls_out(sgma1))
                     # symmetry of the d matrices
                     H_b_c *=  (-1)**((lc - lc_)/2) * atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc,lc_)) * atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb,lb_)) 
-
-                    ampl += H_A_c * H_b_c * x *atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la,la_)) 
+                    ampl += H_A_c * H_b_c * atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la,la_)) 
 
         return ampl
 
@@ -377,7 +344,7 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     masses2 = (ma,mc)
 
     masses1 = (mb,mc)
-    resonances1 = [BWresonance(sp.SPIN_0,1,atfi.cast_real(2317),3.8, {(0,1):atfi.complex(atfi.const(-0.017),atfi.const(-0.1256))},bls_ds_kmatrix_out,*masses1),#D_0(2317) no specific outgoing bls given :(
+    resonances1 = [BWresonance(sp.SPIN_0,1,atfi.cast_real(2317),38, {(0,1):atfi.complex(atfi.const(-0.017),atfi.const(-0.1256))},bls_ds_kmatrix_out,*masses1),#D_0(2317) no specific outgoing bls given :(
                     BWresonance(sp.SPIN_2,1,atfi.cast_real(2573),16.9,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s2(2573)
                     BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2700)
                     BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2860)
@@ -419,7 +386,7 @@ plt.xlabel(s2_name)
 plt.ylabel(s3_name)
 plt.scatter(sgma2/1e6,sgma3/1e6,cmap=my_cmap,s=2,c=ampl,marker="s") # c=abs(ampl[mask])
 plt.colorbar()
-plt.savefig("Dalitz.pdf")
+plt.savefig("Dalitz.png",dpi=400)
 plt.show()
 plt.close('all')
 for s,name,label in zip([sgma1,sgma2,sgma3],["_D+K","L_c+K","L_c+D"],[s1_name,s2_name,s3_name]):
