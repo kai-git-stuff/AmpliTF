@@ -80,7 +80,7 @@ class dalitz_decay:
                 bls = coupling_options(self.sd,sA,self.sc,self.pd,self.pc,pA)
                 bls.update(coupling_options(self.sd,sA,self.sc,self.pd * (-1),self.pc,pA))
 
-                H_A_c = phasespace_factor(self.md,sgma3,self.mc)* angular_distribution_multiple_channels_d(theta_hat,self.sd,sA,self.sc,lA,lc,ld,bls_in(sgma3))
+                H_A_c = phasespace_factor(self.md,sgma3,self.mc)* angular_distribution_multiple_channels_d(theta_hat,self.sd,sA,self.sc,lA,lc,ld,bls_in())
                 
                 x = 1 # X(sgma3,self.ma,self.mb)
                 helicities_abc = helicity_options(sA,self.sa,self.sb,self.sc)
@@ -124,7 +124,7 @@ class dalitz_decay:
                 # bls = coupling_options(self.sd,sB,self.sb,self.pd,self.pb,pB)
                 # bls.update(coupling_options(self.sd,sB,self.sb,self.pd * (-1),self.pb,pB))
 
-                H_A_c =  phasespace_factor(self.md,sgma2,self.mb)* angular_distribution_multiple_channels_d(theta_hat,self.sd,sB,self.sb,lB,lb,ld,bls_in(sgma2))
+                H_A_c =  phasespace_factor(self.md,sgma2,self.mb)* angular_distribution_multiple_channels_d(theta_hat,self.sd,sB,self.sb,lB,lb,ld,bls_in())
                 
                 x = 1 # X(sgma2,self.ma,self.mc)
                 helicities_abc = helicity_options(sB,self.sa,self.sb,self.sc)
@@ -170,7 +170,7 @@ class dalitz_decay:
                 bls = coupling_options(self.sd,sC,self.sa,self.pd,self.pa,pC)
                 bls.update(coupling_options(self.sd,sC,self.sa,self.pd * (-1),self.pa,pC))
 
-                H_A_c = phasespace_factor(self.md,sgma1,self.ma) * angular_distribution_multiple_channels_d(theta_hat,self.sd,sC,self.sa,lC,la,ld,bls_in(sgma1))
+                H_A_c = phasespace_factor(self.md,sgma1,self.ma) * angular_distribution_multiple_channels_d(theta_hat,self.sd,sC,self.sa,lC,la,ld,bls_in())
 
                 x = 1# X(sgma1,self.mb,self.mc)
                 # bls_res = coupling_options(sC,self.sb,self.sc,pC,self.pb,self.pc)
@@ -198,9 +198,10 @@ def phasespace_factor(md,ma,mb):
 
 
 class BaseResonance:
-    def __init__(self,bls_in : dict, bls_out :dict):
+    def __init__(self,S,P,bls_in : dict, bls_out :dict):
         self._bls_in = bls_in
         self._bls_out = bls_out
+        self.S,self.P = S,P
 
     def bls_out(self,s=None):
         bls = self._bls_out
@@ -214,20 +215,6 @@ class BaseResonance:
         if s is not None:
             bls = {LS : b * self.X(s,LS[0]) for LS, b in bls.items()}
         return bls
-    
-    def X(self,x,L):
-        raise NotImplementedError("This is a base class! Do not try to use it for a resonance!")
-
-class BWresonance(BaseResonance):
-    # simple wrapper class
-    def __init__(self,S,P,m0,gamma0,weight,bls_in : dict, bls_out :dict,ma,mb):
-        self.S = S
-        self.P = P
-        self.m0 = m0
-        self.gamma0 = gamma0
-        self.weight = weight
-        self.masses = (ma,mb)
-        super().__init__(bls_in,bls_out)
 
     def __iter__(self):
         return iter((self.S,self.P,self.helicities,self.bls_in,self.bls_out,self.X))
@@ -239,6 +226,18 @@ class BWresonance(BaseResonance):
             h.append(s)
         return h
     
+    def X(self,x,L):
+        raise NotImplementedError("This is a base class! Do not try to use it for a resonance!")
+
+class BWresonance(BaseResonance):
+    # simple wrapper class
+    def __init__(self,S,P,m0,gamma0,weight,bls_in : dict, bls_out :dict,ma,mb):
+        self.m0 = m0
+        self.gamma0 = gamma0
+        self.weight = weight
+        self.masses = (ma,mb)
+        super().__init__(S,P,bls_in,bls_out)
+    
     def X(self,s,L):
         # L will be given doubled, but bw need it normal
         return breit_wigner_decay_lineshape(s,self.m0,self.gamma0,self.masses[0],self.masses[1],1,L/2)
@@ -248,11 +247,10 @@ class KmatChannel:
         self.masses = m1,m2
         self.background = bg
 
-class KmatResonance:
-    def __init__(self,M,S,couplings_out):
+class KmatResonance(BaseResonance):
+    def __init__(self,M,couplings_out):
         self.couplings_out = couplings_out
         self._M = M
-        self.S = S
         self._M2 = M**2
         
 
@@ -269,14 +267,14 @@ class KmatResonance:
 
 
 class kmatrix(BaseResonance):
-    def __init__(self,alphas,channels:list,resonances:list,bls_in,bls_out ,out_channel = 0):
+    def __init__(self,S,P,alphas,channels:list,resonances:list,bls_in,bls_out ,out_channel = 0):
         self.alphas = alphas # couplings of channel to resonance
         self.channels = channels # list of channels
         self.resonances = resonances # list of contributing resonances
         self._D = None # D matrix in storage to prevent us from computing it over and over, if it is not needed
-        self._S = None # stored CMS energy, so we dont have to compute D all the time
+        self._s = None # stored CMS energy, so we dont have to compute D all the time
         self.out_channel = out_channel # if the lineshape funktion is called, this is the channel we assume we want the lineshape for
-        super().__init__(bls_in,bls_out)
+        super().__init__(S,P,bls_in,bls_out)
 
     def get_m(self,a):
         return self.channels[a].masses
@@ -285,7 +283,7 @@ class kmatrix(BaseResonance):
         m1,m2 = self.get_m(a)
         s_a = m1 + m2
         d_a = m1-m2
-        return atfi.sqrt((s-s_a**2) * (s-d_a**2)/(4*s) )
+        return atfi.cast_complex(atfi.sqrt((s-s_a**2) * (s-d_a**2)/(4*s) ))
 
     def gamma(self,s,a,L):
         return self.q(s,a)**L
@@ -303,10 +301,14 @@ class kmatrix(BaseResonance):
         return atfi.complex(0,atfi.const(sigma))
 
     def build_D(self,s):
-        v = atfi.zeros_tensor((len(self.channels),len(self.channels)),dtype=atfi.ctype())
+        v = []
         for a in range(len(self.channels)):
+            v.append(list())
             for b in range(len(self.channels)):
-                v[a,b] = self.V(s,a,b)
+                v[a].append(self.V(s,a,b))
+        v = atfi.convert_to_tensor(v,dtype=atfi.ctype())
+        shape = [-1 for _ in range(len(s.shape))] + [len(self.channels),len(self.channels)]
+        v = atfi.reshape(v,shape)
         self._D = atfi.linalg_inv(v)
 
     def g(self,n,b):
@@ -316,15 +318,15 @@ class kmatrix(BaseResonance):
         return self.alphas[n]
 
     def D(self,s,a,b):
-        if s != self._S:
+        if s != self._s:
             self.build_D(s)
-        return self._D[a,b]
+        return self._D[...,a,b]
     
-    def P(self,s,b):
-        return self.channels[b].background - sum( (res.coupling(b) * alpha )/(s-res.M2)   for res,alpha in zip(self.resonances,self.alphas))
+    def P_func(self,s,b):
+        return self.channels[b].background - sum( (res.coupling(b) * alpha )/atfi.cast_complex(s-res.M2)   for res,alpha in zip(self.resonances,self.alphas))
 
     def A_H(self,s,a,L):
-        return sum(self.gamma(s,a,L) * self.D(s,a,b) * self.P(s,b) for b in range(len(self.channels)))
+        return sum(self.gamma(s,a,L) * self.D(s,a,b) * self.P_func(s,b) for b in range(len(self.channels)))
 
     def X(self,s,L):
         # return the Lineshape for the specific outchannel
@@ -349,22 +351,33 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     decay = dalitz_decay(md,ma,mb,mc,sd,sa,sb,sc,pd,pa,pb,pc)
     
     # we will add the different Amplitudes
-    
-
     bls_ds_kmatrix_in = {(0,1):atfi.complex(atfi.const(-1.8),atfi.const(4.4)),
                          (2,1):atfi.complex(atfi.const(-7.05),atfi.const(-4.06)),
                          (2,3):atfi.complex(atfi.const(4.96),atfi.const(-4.73))}
     bls_ds_kmatrix_out = {(2,3):atfi.complex(atfi.const(-1.064),atfi.const(-0.722))}
+    alphas = [atfi.complex(atfi.const(0.00272),atfi.const(-0.00715)), atfi.complex(atfi.const(-0.00111),atfi.const(0.00394))]
+    g0,g1,g2,g3 = -8.73, 6.54,6.6,-3.38
+    m11,m12,m21,m22 = mb,mc,2006.85,mc # ToDo find the masses of the second channel
+    channels = [
+        KmatChannel(m11,m12,0.0135),
+        KmatChannel(m21,m22,0.0867)
+    ]
+    resonances = [
+        KmatResonance(2713.6,[g0,g1] ),  #D^*_s1(2700)
+        KmatResonance(2967.1,[g2,g3] ) # ToDo find if we assigned the g values correctly #D^*_s1(2860)
+    ]
+    D_kma = kmatrix(sp.SPIN_1,-1,alphas,channels,resonances,bls_ds_kmatrix_in,bls_ds_kmatrix_out)
+    masses2 = (ma,mc)
 
     masses1 = (mb,mc)
     resonances1 = [BWresonance(sp.SPIN_0,1,atfi.cast_real(2317),3.8, 0.138**0.5 ,{(0,1):atfi.complex(atfi.const(-0.017),atfi.const(-0.1256))},bls_ds_kmatrix_out,*masses1),#D_0(2317) no specific outgoing bls given :(
-                    BWresonance(sp.SPIN_2,1,atfi.cast_real(2573),16.9,0.0104**0.5,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s2(2573)
-                    BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,1.21**0.5,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2700)
-                    BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,0.340**0.5,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2860)
+                    # BWresonance(sp.SPIN_2,1,atfi.cast_real(2573),16.9,0.0104**0.5,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s2(2573)
+                    # BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,1.21**0.5,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2700)
+                    # BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,0.340**0.5,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2860)
+                    D_kma,
                     BWresonance(sp.SPIN_3,-1,atfi.cast_real(2860),53,0.0183**0.5,{(4,5):atfi.complex(atfi.const(0.32),atfi.const(-0.33))},
                                                                                 {(6,0):atfi.complex(atfi.const(-0.036),atfi.const(0.015))},*masses1), #D^*_s3(2860)
-                    ]
-    masses2 = (ma,mc)
+                    ]  
     resonances2 = [BWresonance(sp.SPIN_HALF,-1,atfi.cast_real(2791.9),8.9,0.0232**0.5,{(0,1):atfi.complex(atfi.const(-0.53),atfi.const(0.69))},
                                 {(0,1):atfi.complex(atfi.const(-0.0149),atfi.const(-0.0259))},*masses2), # xi_c (2790)
                     BWresonance(sp.SPIN_3HALF,-1,atfi.cast_real(2815), 2.43,0.0232**0.5,{},{},*masses2)] # xi_c (2815) no bls couplings given :(

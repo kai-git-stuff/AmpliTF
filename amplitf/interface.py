@@ -104,7 +104,9 @@ _interface_dict = {
     "reduce_prod": "tf.math.reduce_prod",
     "zeros_tensor":"tf.zeros",
     "random_uniform":"tf.random.stateless_uniform",
-    "linalg_inv":"tf.linalg.inv"
+    "linalg_inv":"tf.linalg.inv",
+    "convert_to_tensor":"tf.convert_to_tensor",
+    "reshape": "tf.reshape"
 }
 
 
