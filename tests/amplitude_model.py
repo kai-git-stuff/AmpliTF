@@ -233,10 +233,11 @@ class KmatChannel:
         self.masses = m1,m2
 
 class KmatResonance:
-    def __init__(self,M,couplings_out):
+    def __init__(self,M,S,couplings_out):
         self.couplings_out = couplings_out
 
         self._M = M
+        self.S = S
         self._M2 = M**2
 
     def coupling(self,a):
@@ -252,10 +253,11 @@ class KmatResonance:
 
 
 class kmatrix_resonance:
-    def __init__(self,alphas,channels:list,resonances:list):
+    def __init__(self,alphas,channels:list,resonances:list,backgrounds:list):
         self.alphas = alphas
         self.channels = channels
         self.resonances = resonances
+        self.backgrounds = backgrounds
         self._D = None
         self._S = None
 
@@ -266,16 +268,18 @@ class kmatrix_resonance:
         m1,m2 = self.get_m(a)
         s_a = m1 + m2
         d_a = m1-m2
-        atfi.sqrt((s-s_a**2) * (s-d_a**2)/(4*s) )
-        return 
+        return atfi.sqrt((s-s_a**2) * (s-d_a**2)/(4*s) )
 
     def gamma(self,s,a,L):
         return self.q(s,a)**L
 
+    def phaseSpaceFactor(self,s,a):
+        return 1/(16* atfi.pi) * 2 * self.q(s,a)/atfi.sqrt(s)
+
     def V(self,s,a,b):
         # R = resonance index
         # a,b = channel indices
-        - sum((res.coupling(a) * res.coupling(b))/(s-res.M2) for res in self.resonances)
+        return -sum((res.coupling(a) * res.coupling(b))/(s-res.M2) for res in self.resonances)
 
     def Sigma(self,s,a):
         sigma = phasespace_factor(s,*self.get_m(a)) * self.gamma(s)**2
@@ -288,13 +292,19 @@ class kmatrix_resonance:
                 v[a,b] = self.V(s,a,b)
         self._D = atfi.linalg_inv(v)
 
+    def g(self,n,b):
+        return self.resonances[n].coupling(b)
+    
+    def alpha(self,n):
+        return self.alphas[n]
+
     def D(self,s,a,b):
         if s != self._S:
             self.build_D(s)
         return self._D[a,b]
-        
-
-
+    
+    def P(self,s,b):
+        return self.backgrounds[b] - sum( (res.coupling(b) * alpha )/(s-res.M2)   for res,alpha in zip(self.resonances,self.alphas))
 
     def A_H(self,s,a):
         return sum(self.gamma(s,a) * self.D(s,a,b) * self.P(s,b) for b in range(len(self.channels)))
