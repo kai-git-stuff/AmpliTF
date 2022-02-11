@@ -80,14 +80,14 @@ class dalitz_decay:
                 bls = coupling_options(self.sd,sA,self.sc,self.pd,self.pc,pA)
                 bls.update(coupling_options(self.sd,sA,self.sc,self.pd * (-1),self.pc,pA))
 
-                H_A_c = phasespace_factor(self.md,sgma3,self.mc)* angular_distribution_multiple_channels_d(theta_hat,self.sd,sA,self.sc,lA,lc,ld,bls_in)
+                H_A_c = phasespace_factor(self.md,sgma3,self.mc)* angular_distribution_multiple_channels_d(theta_hat,self.sd,sA,self.sc,lA,lc,ld,bls_in(sgma3))
                 
-                x = X(sgma3,self.ma,self.mb)
+                x = 1 # X(sgma3,self.ma,self.mb)
                 helicities_abc = helicity_options(sA,self.sa,self.sb,self.sc)
                 for la_,lb_,lc_ in helicities_abc:
                     # Rotation in the isobar system
                     # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
-                    H_a_b = phasespace_factor(sgma3,self.ma,self.mb) * angular_distribution_multiple_channels_d(theta,sA,self.sa,self.sb,la_,lb_,lA,bls_out)
+                    H_a_b = phasespace_factor(sgma3,self.ma,self.mb) * angular_distribution_multiple_channels_d(theta,sA,self.sa,self.sb,la_,lb_,lA,bls_out(sgma3))
                     ampl += H_A_c * H_a_b * x * atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la,la_)) * atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb,lb_)) * (-1)**((lb - lb_)/2) * atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc,lc_))
         return ampl
 
@@ -124,15 +124,15 @@ class dalitz_decay:
                 # bls = coupling_options(self.sd,sB,self.sb,self.pd,self.pb,pB)
                 # bls.update(coupling_options(self.sd,sB,self.sb,self.pd * (-1),self.pb,pB))
 
-                H_A_c =  phasespace_factor(self.md,sgma2,self.mb)* angular_distribution_multiple_channels_d(theta_hat,self.sd,sB,self.sb,lB,lb,ld,bls_in)
+                H_A_c =  phasespace_factor(self.md,sgma2,self.mb)* angular_distribution_multiple_channels_d(theta_hat,self.sd,sB,self.sb,lB,lb,ld,bls_in(sgma2))
                 
-                x = X(sgma2,self.ma,self.mc)
+                x = 1 # X(sgma2,self.ma,self.mc)
                 helicities_abc = helicity_options(sB,self.sa,self.sb,self.sc)
                 for la_,lb_,lc_ in helicities_abc:
                     #  A -> lambda_c Dbar
                     # Rotation in the isobar system
                     # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
-                    H_a_b =  phasespace_factor(sgma2,self.ma,self.mc)* angular_distribution_multiple_channels_d(theta,sB,self.sa,self.sc,lc_,la_,lB,bls_out)
+                    H_a_b =  phasespace_factor(sgma2,self.ma,self.mc)* angular_distribution_multiple_channels_d(theta,sB,self.sa,self.sc,lc_,la_,lB,bls_out(sgma2))
                     #H_a_b = get_helicity(helicities_dict,la_,lc_,pB,pa,pc,sB,sa,sc)
                     # symmetry of the d matrices
                     H_a_b *= (-1)**((lB - ld)/2)  * (-1)**((la - la_)/2) * atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la,la_)) *  atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc,lc_))
@@ -170,9 +170,9 @@ class dalitz_decay:
                 bls = coupling_options(self.sd,sC,self.sa,self.pd,self.pa,pC)
                 bls.update(coupling_options(self.sd,sC,self.sa,self.pd * (-1),self.pa,pC))
 
-                H_A_c = phasespace_factor(self.md,sgma1,self.ma) * angular_distribution_multiple_channels_d(theta_hat,self.sd,sC,self.sa,lC,la,ld,bls_in)
+                H_A_c = phasespace_factor(self.md,sgma1,self.ma) * angular_distribution_multiple_channels_d(theta_hat,self.sd,sC,self.sa,lC,la,ld,bls_in(sgma1))
 
-                x = X(sgma1,self.mb,self.mc)
+                x = 1# X(sgma1,self.mb,self.mc)
                 # bls_res = coupling_options(sC,self.sb,self.sc,pC,self.pb,self.pc)
 
                 helicities_abc = helicity_options(sC,self.sa,self.sb,self.sc)
@@ -180,7 +180,7 @@ class dalitz_decay:
                     # C -> b c
                     # Rotation in the isobar system
                     # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
-                    H_b_c = phasespace_factor(sgma1,self.mb,self.mc) * angular_distribution_multiple_channels_d(theta,sC,self.sb,self.sc,lb_,lc_,lC,bls_out)
+                    H_b_c = phasespace_factor(sgma1,self.mb,self.mc) * angular_distribution_multiple_channels_d(theta,sC,self.sb,self.sc,lb_,lc_,lC,bls_out(sgma1))
                     # symmetry of the d matrices
                     H_b_c *=  (-1)**((lc - lc_)/2) * atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc,lc_)) * atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb,lb_)) 
 
@@ -196,16 +196,38 @@ def get_helicity(helicities_dict:dict,l1_,l2_,P,p1,p2,J,s1,s2):
 def phasespace_factor(md,ma,mb):
     return atfi.cast_complex(4 * atfi.pi()* atfi.sqrt(md/two_body_momentum(md,ma,mb)))
 
-class resonance:
+
+class BaseResonance:
+    def __init__(self,bls_in : dict, bls_out :dict):
+        self._bls_in = bls_in
+        self._bls_out = bls_out
+
+    def bls_out(self,s=None):
+        bls = self._bls_out
+        if s is not None:
+            bls = {LS : b * self.X(s,LS[0]) for LS, b in bls.items()}
+        return bls
+
+    def bls_in(self,s=None):
+        # returns 
+        bls = self._bls_in
+        if s is not None:
+            bls = {LS : b * self.X(s,LS[0]) for LS, b in bls.items()}
+        return bls
+    
+    def X(self,x,L):
+        raise NotImplementedError("This is a base class! Do not try to use it for a resonance!")
+
+class BWresonance(BaseResonance):
     # simple wrapper class
-    def __init__(self,S,P,m0,gamma0,weight,bls_in : dict, bls_out :dict):
+    def __init__(self,S,P,m0,gamma0,weight,bls_in : dict, bls_out :dict,ma,mb):
         self.S = S
         self.P = P
         self.m0 = m0
         self.gamma0 = gamma0
         self.weight = weight
-        self._bls_in = bls_in
-        self._bls_out = bls_out
+        self.masses = (ma,mb)
+        super().__init__(bls_in,bls_out)
 
     def __iter__(self):
         return iter((self.S,self.P,self.helicities,self.bls_in,self.bls_out,self.X))
@@ -217,28 +239,22 @@ class resonance:
             h.append(s)
         return h
     
-    def X(self,s,ma,mb):
-        return breit_wigner_decay_lineshape(s,self.m0,self.gamma0,ma,mb,1,0)
+    def X(self,s,L):
+        # L will be given doubled, but bw need it normal
+        return breit_wigner_decay_lineshape(s,self.m0,self.gamma0,self.masses[0],self.masses[1],1,L/2)
     
-    @property
-    def bls_out(self):
-        return self._bls_out
-
-    @property
-    def bls_in(self):
-        return self._bls_in
-
 class KmatChannel:
-    def __init__(self, m1,m2,):
+    def __init__(self, m1,m2,bg):
         self.masses = m1,m2
+        self.background = bg
 
 class KmatResonance:
     def __init__(self,M,S,couplings_out):
         self.couplings_out = couplings_out
-
         self._M = M
         self.S = S
         self._M2 = M**2
+        
 
     def coupling(self,a):
         return self.couplings_out[a]
@@ -252,14 +268,15 @@ class KmatResonance:
         return self._M2
 
 
-class kmatrix_resonance:
-    def __init__(self,alphas,channels:list,resonances:list,backgrounds:list):
-        self.alphas = alphas
-        self.channels = channels
-        self.resonances = resonances
-        self.backgrounds = backgrounds
-        self._D = None
-        self._S = None
+class kmatrix(BaseResonance):
+    def __init__(self,alphas,channels:list,resonances:list,bls_in,bls_out ,out_channel = 0):
+        self.alphas = alphas # couplings of channel to resonance
+        self.channels = channels # list of channels
+        self.resonances = resonances # list of contributing resonances
+        self._D = None # D matrix in storage to prevent us from computing it over and over, if it is not needed
+        self._S = None # stored CMS energy, so we dont have to compute D all the time
+        self.out_channel = out_channel # if the lineshape funktion is called, this is the channel we assume we want the lineshape for
+        super().__init__(bls_in,bls_out)
 
     def get_m(self,a):
         return self.channels[a].masses
@@ -304,11 +321,14 @@ class kmatrix_resonance:
         return self._D[a,b]
     
     def P(self,s,b):
-        return self.backgrounds[b] - sum( (res.coupling(b) * alpha )/(s-res.M2)   for res,alpha in zip(self.resonances,self.alphas))
+        return self.channels[b].background - sum( (res.coupling(b) * alpha )/(s-res.M2)   for res,alpha in zip(self.resonances,self.alphas))
 
-    def A_H(self,s,a):
-        return sum(self.gamma(s,a) * self.D(s,a,b) * self.P(s,b) for b in range(len(self.channels)))
+    def A_H(self,s,a,L):
+        return sum(self.gamma(s,a,L) * self.D(s,a,b) * self.P(s,b) for b in range(len(self.channels)))
 
+    def X(self,s,L):
+        # return the Lineshape for the specific outchannel
+        return self.A_H(s,self.out_channel,L)
 
 def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     jd = sp.SPIN_HALF
@@ -336,17 +356,18 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
                          (2,3):atfi.complex(atfi.const(4.96),atfi.const(-4.73))}
     bls_ds_kmatrix_out = {(2,3):atfi.complex(atfi.const(-1.064),atfi.const(-0.722))}
 
-    resonances1 = [resonance(sp.SPIN_0,1,atfi.cast_real(2317),3.8, 0.138**0.5 ,{(0,1):atfi.complex(atfi.const(-0.017),atfi.const(-0.1256))},bls_ds_kmatrix_out),#D_0(2317) no specific outgoing bls given :(
-                    resonance(sp.SPIN_2,1,atfi.cast_real(2573),16.9,0.0104**0.5,bls_ds_kmatrix_in,bls_ds_kmatrix_out), #D^*_s2(2573)
-                    resonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,1.21**0.5,bls_ds_kmatrix_in,bls_ds_kmatrix_out), #D^*_s1(2700)
-                    resonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,0.340**0.5,bls_ds_kmatrix_in,bls_ds_kmatrix_out), #D^*_s1(2860)
-                    resonance(sp.SPIN_3,-1,atfi.cast_real(2860),53,0.0183**0.5,{(4,5):atfi.complex(atfi.const(0.32),atfi.const(-0.33))},
-                                                                                {(6,0):atfi.complex(atfi.const(-0.036),atfi.const(0.015))}), #D^*_s3(2860)
+    masses1 = (mb,mc)
+    resonances1 = [BWresonance(sp.SPIN_0,1,atfi.cast_real(2317),3.8, 0.138**0.5 ,{(0,1):atfi.complex(atfi.const(-0.017),atfi.const(-0.1256))},bls_ds_kmatrix_out,*masses1),#D_0(2317) no specific outgoing bls given :(
+                    BWresonance(sp.SPIN_2,1,atfi.cast_real(2573),16.9,0.0104**0.5,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s2(2573)
+                    BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,1.21**0.5,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2700)
+                    BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,0.340**0.5,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2860)
+                    BWresonance(sp.SPIN_3,-1,atfi.cast_real(2860),53,0.0183**0.5,{(4,5):atfi.complex(atfi.const(0.32),atfi.const(-0.33))},
+                                                                                {(6,0):atfi.complex(atfi.const(-0.036),atfi.const(0.015))},*masses1), #D^*_s3(2860)
                     ]
-    
-    resonances2 = [resonance(sp.SPIN_HALF,-1,atfi.cast_real(2791.9),8.9,0.0232**0.5,{(0,1):atfi.complex(atfi.const(-0.53),atfi.const(0.69))},
-                                {(0,1):atfi.complex(atfi.const(-0.0149),atfi.const(-0.0259))}), # xi_c (2790)
-                    resonance(sp.SPIN_3HALF,-1,atfi.cast_real(2815), 2.43,0.0232**0.5,{},{})] # xi_c (2815) no bls couplings given :(
+    masses2 = (ma,mc)
+    resonances2 = [BWresonance(sp.SPIN_HALF,-1,atfi.cast_real(2791.9),8.9,0.0232**0.5,{(0,1):atfi.complex(atfi.const(-0.53),atfi.const(0.69))},
+                                {(0,1):atfi.complex(atfi.const(-0.0149),atfi.const(-0.0259))},*masses2), # xi_c (2790)
+                    BWresonance(sp.SPIN_3HALF,-1,atfi.cast_real(2815), 2.43,0.0232**0.5,{},{},*masses2)] # xi_c (2815) no bls couplings given :(
 
     ampl = sum(abs(decay.chain3(smp,ld,la,0,0,[]) + decay.chain2(smp,ld,la,0,0,resonances2) + decay.chain1(smp,ld,la,0,0,resonances1))**2 for la in range(-1,2,2) for ld in range(-1,2,2))
 
