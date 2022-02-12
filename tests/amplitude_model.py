@@ -35,7 +35,8 @@ def coupling_options(J,s1,s2,P,p1,p2) -> dict:
     return bls
 
 def angular_distribution_multiple_channels_d(theta,J,s1,s2,l1,l2,nu,bls):
-    return atfi.cast_complex(helicity_couplings_from_ls(J,s1,s2,l1,l2,bls)) * atfi.cast_complex(wigner_small_d(theta,J,nu,l1-l2))
+    # ToDo why -l2 ??????? maybe the axis along which things are defined is wierd?
+    return atfi.cast_complex(helicity_couplings_from_ls(J,s1,s2,l1,-l2,bls)) * atfi.cast_complex(wigner_small_d(theta,J,nu,l1-l2))
 
 class dalitz_decay:
     def __init__(self,md,ma,mb,mc,sd,sa,sb,sc,pd,pa,pb,pc):
@@ -76,12 +77,13 @@ class dalitz_decay:
                 bls = coupling_options(self.sd,sA,self.sc,self.pd,self.pc,pA)
                 bls.update(coupling_options(self.sd,sA,self.sc,self.pd * (-1),self.pc,pA))
 
-                H_A_c = phasespace_factor(self.md,sgma3,self.mc)* angular_distribution_multiple_channels_d(theta_hat,self.sd,sA,self.sc,lA,lc,ld,bls_in())
+                
                 
                 helicities_abc = helicity_options(sA,self.sa,self.sb,self.sc)
                 for la_,lb_,lc_ in helicities_abc:
                     # Rotation in the isobar system
                     # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
+                    H_A_c = phasespace_factor(self.md,sgma3,self.mc)* angular_distribution_multiple_channels_d(theta_hat,self.sd,sA,self.sc,lA,lc_,ld,bls_in())
                     H_a_b = phasespace_factor(sgma3,self.ma,self.mb) * angular_distribution_multiple_channels_d(theta,sA,self.sa,self.sb,la_,lb_,lA,bls_out(sgma3))
                     ampl += H_A_c * H_a_b * atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la,la_)) * atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb,lb_)) * (-1)**((lb - lb_)/2) * atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc,lc_))
         return ampl
@@ -106,12 +108,14 @@ class dalitz_decay:
             for lB in helicities_C:
                 # channel 2
                 # L_b -> B b : B -> (a,c)
-                H_A_c =  phasespace_factor(self.md,sgma2,self.mb)* angular_distribution_multiple_channels_d(theta_hat,self.sd,sB,self.sb,lB,lb,ld,bls_in())
+                
                 helicities_abc = helicity_options(sB,self.sa,self.sb,self.sc)
                 for la_,lb_,lc_ in helicities_abc:
                     #  A -> lambda_c Dbar
                     # Rotation in the isobar system
-                    H_a_b =  phasespace_factor(sgma2,self.ma,self.mc)* angular_distribution_multiple_channels_d(theta,sB,self.sa,self.sc,la_,lc_,lB,bls_out(sgma2))
+                    H_A_c =  phasespace_factor(self.md,sgma2,self.mb)* angular_distribution_multiple_channels_d(theta_hat,self.sd,sB,self.sb,lB,lb_,ld,bls_in())
+
+                    H_a_b =  phasespace_factor(sgma2,self.ma,self.mc)* angular_distribution_multiple_channels_d(theta,sB,self.sa,self.sc,lc_,la_,lB,bls_out(sgma2))
                     #H_a_b = get_helicity(helicities_dict,la_,lc_,pB,pa,pc,sB,sa,sc)
                     # symmetry of the d matrices
                     H_a_b *= (-1)**((lB - ld)/2)  * (-1)**((la - la_)/2) * atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la,la_)) *  atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc,lc_))
@@ -136,19 +140,14 @@ class dalitz_decay:
         # remember to apply (-1)**((lc - lc_)/2) in front of the d matrix (switch last 2 indices)
         for sC,pC,helicities_B,bls_in,bls_out,X in resonances:
             for lC in helicities_B:
-                # first decay is weak -> we need all couplings even if parity is not conserved
-                # we can simulate this by just merging both dicts for p = 1 and p = -1
-                bls = coupling_options(self.sd,sC,self.sa,self.pd,self.pa,pC)
-                bls.update(coupling_options(self.sd,sC,self.sa,self.pd * (-1),self.pa,pC))
-
-                H_A_c = phasespace_factor(self.md,sgma1,self.ma) * angular_distribution_multiple_channels_d(theta_hat,self.sd,sC,self.sa,lC,la,ld,bls_in())
-
                 helicities_abc = helicity_options(sC,self.sa,self.sb,self.sc)
                 for la_,lb_,lc_ in helicities_abc:
                     # C -> b c
                     # Rotation in the isobar system
-                    # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
-                    H_b_c = phasespace_factor(sgma1,self.mb,self.mc) * angular_distribution_multiple_channels_d(theta,sC,self.sb,self.sc,lb_,lc_,lC,bls_out(sgma1))
+                    # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar #
+                    H_A_c = phasespace_factor(self.md,sgma1,self.ma) * angular_distribution_multiple_channels_d(theta_hat,self.sd,sC,self.sa,lC,-la_,ld,bls_in())
+
+                    H_b_c = phasespace_factor(sgma1,self.mb,self.mc) * angular_distribution_multiple_channels_d(theta,sC,self.sb,self.sc,lc_,lb_,lC,bls_out(sgma1))
                     # symmetry of the d matrices
                     H_b_c *=  (-1)**((lc - lc_)/2) * atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc,lc_)) * atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb,lb_)) 
                     ampl += H_A_c * H_b_c * atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la,la_)) 
@@ -343,10 +342,10 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
 
     masses1 = (mb,mc)
     resonances1 = [BWresonance(sp.SPIN_0,1,atfi.cast_real(2317),38, {(0,1):atfi.complex(atfi.const(-0.017),atfi.const(-0.1256))},bls_ds_kmatrix_out,*masses1),#D_0(2317) no specific outgoing bls given :(
-                    #BWresonance(sp.SPIN_2,1,atfi.cast_real(2573),16.9,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s2(2573)
-                    #BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2700)
-                    #BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2860)
-                    D_kma,
+                    BWresonance(sp.SPIN_2,1,atfi.cast_real(2573),16.9,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s2(2573)
+                    BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2700)
+                    BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2860)
+                    #D_kma,
                     BWresonance(sp.SPIN_3,-1,atfi.cast_real(2860),53,{(4,5):atfi.complex(atfi.const(0.32),atfi.const(-0.33))},
                                                                                 {(6,0):atfi.complex(atfi.const(-0.036),atfi.const(0.015))},*masses1), #D^*_s3(2860)
                     ]  
@@ -389,7 +388,9 @@ plt.savefig("Dalitz.png",dpi=400)
 plt.show()
 plt.close('all')
 for s,name,label in zip([sgma1,sgma2,sgma3],["_D+K","L_c+K","L_c+D"],[s1_name,s2_name,s3_name]):
-    plt.hist(s**0.5/1e3,weights=ampl,bins=100)
+    n, bins = np.histogram(s**0.5/1e3,weights=ampl,bins=100)
+    s = (bins[1:] + bins[:-1])/2.
+    plt.plot(s,n,"x")
     plt.xlabel(r""+label.replace("^2","")[:-2])
     plt.savefig("Dalitz_%s.png"%name,dpi = 400)
     plt.show()
