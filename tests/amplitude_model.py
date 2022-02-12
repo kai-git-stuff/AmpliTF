@@ -162,8 +162,6 @@ def get_helicity(helicities_dict:dict,l1_,l2_,P,p1,p2,J,s1,s2):
 
 def phasespace_factor(md,ma,mb):
     return atfi.cast_complex(4 * atfi.pi()* atfi.sqrt(md/two_body_momentum(md,ma,mb)))
-
-
 class BaseResonance:
     def __init__(self,S,P,bls_in : dict, bls_out :dict):
         self._bls_in = bls_in
@@ -273,9 +271,9 @@ class kmatrix(BaseResonance):
             v.append(list())
             for b in range(len(self.channels)):
                 if a == b:
-                    v[a].append(1-self.V(s,a,b)*self.Sigma(s,b,L))
+                    v[a].append(1-self.V(s,a,b)*self.Sigma(s,a,L))
                 else:
-                    v[a].append(-self.V(s,a,b)*self.Sigma(s,b,L))
+                    v[a].append(-self.V(s,a,b)*self.Sigma(s,a,L))
                 
         v = atfi.convert_to_tensor(v,dtype=atfi.ctype())
         shape = [-1 for _ in range(len(s.shape))] + [len(self.channels),len(self.channels)]
@@ -337,26 +335,27 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
         KmatChannel(m21,m22,0.0867)
     ]
     resonances = [
-        KmatResonance(2713.6,[g0,g1] ),  #D^*_s1(2700)
-        KmatResonance(2967.1,[g2,g3] ) # ToDo find if we assigned the g values correctly #D^*_s1(2860)
+        KmatResonance(2713.6,[g0,g2] ),  #D^*_s1(2700)
+        KmatResonance(2967.1,[g1,g3] ) # ToDo find if we assigned the g values correctly #D^*_s1(2860)
     ]
     D_kma = kmatrix(sp.SPIN_1,-1,alphas,channels,resonances,bls_ds_kmatrix_in,bls_ds_kmatrix_out)
     masses2 = (ma,mc)
 
     masses1 = (mb,mc)
     resonances1 = [BWresonance(sp.SPIN_0,1,atfi.cast_real(2317),38, {(0,1):atfi.complex(atfi.const(-0.017),atfi.const(-0.1256))},bls_ds_kmatrix_out,*masses1),#D_0(2317) no specific outgoing bls given :(
-                    BWresonance(sp.SPIN_2,1,atfi.cast_real(2573),16.9,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s2(2573)
-                    BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2700)
-                    BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2860)
-                    #D_kma,
+                    #BWresonance(sp.SPIN_2,1,atfi.cast_real(2573),16.9,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s2(2573)
+                    #BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2700)
+                    #BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2860)
+                    D_kma,
                     BWresonance(sp.SPIN_3,-1,atfi.cast_real(2860),53,{(4,5):atfi.complex(atfi.const(0.32),atfi.const(-0.33))},
                                                                                 {(6,0):atfi.complex(atfi.const(-0.036),atfi.const(0.015))},*masses1), #D^*_s3(2860)
                     ]  
     resonances2 = [BWresonance(sp.SPIN_HALF,-1,atfi.cast_real(2791.9),8.9,{(0,1):atfi.complex(atfi.const(-0.53),atfi.const(0.69))},
                                 {(0,1):atfi.complex(atfi.const(-0.0149),atfi.const(-0.0259))},*masses2), # xi_c (2790)
-                    BWresonance(sp.SPIN_3HALF,-1,atfi.cast_real(2815), 2.43,{},{},*masses2)] # xi_c (2815) no bls couplings given :(
+                    BWresonance(sp.SPIN_3HALF,-1,atfi.cast_real(2815), 2.43,{},{},*masses2)  # xi_c (2815) no bls couplings given :(
+                    ] 
 
-    ampl = sum(abs(decay.chain3(smp,ld,la,0,0,[]) + decay.chain2(smp,ld,la,0,0,resonances2) + decay.chain1(smp,ld,la,0,0,resonances1))**2 for la in range(-1,2,2) for ld in [-1])
+    ampl = sum(abs(decay.chain3(smp,ld,la,0,0,[]) + decay.chain2(smp,ld,la,0,0,resonances2) + decay.chain1(smp,ld,la,0,0,resonances1))**2 for la in range(-1,2,2) for ld in [-1,1])
 
     return ampl
 
@@ -395,4 +394,3 @@ for s,name,label in zip([sgma1,sgma2,sgma3],["_D+K","L_c+K","L_c+D"],[s1_name,s2
     plt.savefig("Dalitz_%s.png"%name,dpi = 400)
     plt.show()
     plt.close('all')
-#plt.hist2d(sgma1,sgma2,weights=ampl,bins=90,cmap=my_cmap)
