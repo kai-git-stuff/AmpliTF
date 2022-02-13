@@ -36,6 +36,9 @@ def coupling_options(J,s1,s2,P,p1,p2) -> dict:
 
 def angular_distribution_multiple_channels_d(theta,J,s1,s2,l1,l2,nu,bls):
     # ToDo why -l2 ??????? maybe the axis along which things are defined is wierd?
+    # possible answer: helicity is not the actual thing here, but rather spin alignment.
+    # helicity in rest frame will allways be oriented along the momentum
+    # this causes (in the rest frames) the quantization axes to be 180° of each other -> l2 = -l2 on l1 quantization axis
     return atfi.cast_complex(helicity_couplings_from_ls(J,s1,s2,l1,-l2,bls)) * atfi.cast_complex(wigner_small_d(theta,J,nu,l1-l2))
 
 class dalitz_decay:
@@ -73,19 +76,15 @@ class dalitz_decay:
         # aligned system
 
         for sA,pA,helicities_A,bls_in,bls_out,X in resonances:
-            for lA in helicities_A:
-                bls = coupling_options(self.sd,sA,self.sc,self.pd,self.pc,pA)
-                bls.update(coupling_options(self.sd,sA,self.sc,self.pd * (-1),self.pc,pA))
-
-                
-                
+            for lA in helicities_A:           
                 helicities_abc = helicity_options(sA,self.sa,self.sb,self.sc)
                 for la_,lb_,lc_ in helicities_abc:
                     # Rotation in the isobar system
                     # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
                     H_A_c = phasespace_factor(self.md,sgma3,self.mc)* angular_distribution_multiple_channels_d(theta_hat,self.sd,sA,self.sc,lA,lc_,ld,bls_in())
                     H_a_b = phasespace_factor(sgma3,self.ma,self.mb) * angular_distribution_multiple_channels_d(theta,sA,self.sa,self.sb,la_,lb_,lA,bls_out(sgma3))
-                    ampl += H_A_c * H_a_b * atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la,la_)) * atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb,lb_)) * (-1)**((lb - lb_)/2) * atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc,lc_))
+                    H_a_b *= atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) * atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) * (-1)**((lb - lb_)/2) * atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc_,lc))
+                    ampl += H_A_c * H_a_b # * atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la))
         return ampl
 
     def chain2(self,smp:PhaseSpaceSample,ld,la,lb,lc,resonances):
@@ -101,7 +100,7 @@ class dalitz_decay:
         zeta_2 = 0 # allways one is 0
         zeta_3 = atfi.acos(cos_zeta_3_aligned_2_in_frame_3(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
         theta_hat =  atfi.acos(cos_theta_hat_1_canonical_2(self.md, self.ma, self.mb, self.mc, sgma1, sgma2, sgma3))
-        # remember factor of (-1)**((lB - ld)/2) because we switched indices 1 and 2
+        # remember factor of (-1)**((ld - ld + lb_)/2) because we switched indices 1 and 2
         theta = atfi.acos(cos_theta_31(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
 
         for sB,pB,helicities_C,bls_in,bls_out,X in resonances:
@@ -118,8 +117,8 @@ class dalitz_decay:
                     H_a_b =  phasespace_factor(sgma2,self.ma,self.mc)* angular_distribution_multiple_channels_d(theta,sB,self.sa,self.sc,lc_,la_,lB,bls_out(sgma2))
                     #H_a_b = get_helicity(helicities_dict,la_,lc_,pB,pa,pc,sB,sa,sc)
                     # symmetry of the d matrices
-                    H_a_b *= (-1)**((lB - ld)/2)  * (-1)**((la - la_)/2) * atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la,la_)) *  atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc,lc_))
-                    ampl += H_A_c * H_a_b * atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb,lb_)) 
+                    H_a_b *= (-1)**((ld - ld + lb_)/2)  * (-1)**((la - la_)/2) * atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) *  atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc_,lc)) * atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) 
+                    ampl += H_A_c * H_a_b #  * (-1)**((ld - ld + lb_)/2)  * (-1)**((la - la_)/2) * atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la))
         return ampl
 
     def chain1(self,smp:PhaseSpaceSample,ld,la,lb,lc,resonances):
@@ -149,8 +148,8 @@ class dalitz_decay:
 
                     H_b_c = phasespace_factor(sgma1,self.mb,self.mc) * angular_distribution_multiple_channels_d(theta,sC,self.sb,self.sc,lc_,lb_,lC,bls_out(sgma1))
                     # symmetry of the d matrices
-                    H_b_c *=  (-1)**((lc - lc_)/2) * atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc,lc_)) * atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb,lb_)) 
-                    ampl += H_A_c * H_b_c * atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la,la_)) 
+                    H_b_c *=  (-1)**((lc - lc_)/2) * atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc_,lc)) * atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) * atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la))
+                    ampl += H_A_c * H_b_c 
 
         return ampl
 
@@ -161,6 +160,7 @@ def get_helicity(helicities_dict:dict,l1_,l2_,P,p1,p2,J,s1,s2):
 
 def phasespace_factor(md,ma,mb):
     return atfi.cast_complex(4 * atfi.pi()* atfi.sqrt(md/two_body_momentum(md,ma,mb)))
+
 class BaseResonance:
     def __init__(self,S,P,bls_in : dict, bls_out :dict):
         self._bls_in = bls_in
