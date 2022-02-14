@@ -8,7 +8,7 @@ import amplitf.interface as atfi
 import matplotlib.pyplot as plt
 from amplitf.constants import spin as sp
 from matplotlib.colors import LogNorm
-
+import tensorflow as tf
 
 
 def angular_distribution_multiple_channels_D(phi,theta,J,s1,s2,l1,l2,bls):
@@ -314,7 +314,7 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     sb = sp.SPIN_0
     sc = sp.SPIN_0
 
-    ma = 2856.1 # lambda_c spin = 0.5 parity = 1
+    ma = 2286.46 # lambda_c spin = 0.5 parity = 1
     mb = 1864.84 # D^0 bar spin = 0 partiy = -1
     mc = 493.677 # K-  spin = 0 parity = -1
     md = 5912.19  # lambda_b  spin = 0.5 parity = +1
@@ -343,9 +343,9 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     masses1 = (mb,mc)
     resonances1 = [BWresonance(sp.SPIN_0,1,atfi.cast_real(2317),38, {(0,1):atfi.complex(atfi.const(-0.017),atfi.const(-0.1256))},bls_ds_kmatrix_out,*masses1),#D_0(2317) no specific outgoing bls given :(
                     BWresonance(sp.SPIN_2,1,atfi.cast_real(2573),16.9,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s2(2573)
-                    BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2700)
-                    BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2860)
-                    #D_kma,
+                    #BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2700)
+                    #BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2860)
+                    D_kma,
                     BWresonance(sp.SPIN_3,-1,atfi.cast_real(2860),53,{(4,5):atfi.complex(atfi.const(0.32),atfi.const(-0.33))},
                                                                                 {(6,0):atfi.complex(atfi.const(-0.036),atfi.const(0.015))},*masses1), #D^*_s3(2860)
                     ]  
@@ -358,17 +358,17 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
 
     return ampl
 
-ma = 2856.1 # lambda_c spin = 0.5 parity = 1
+ma = 2286.46 # lambda_c spin = 0.5 parity = 1
 mb = 1864.84 # D^0 bar spin = 0 partiy = -1
 mc = 493.677 # K-  spin = 0 parity = -1
 md = 5912.19  # lambda_b  spin = 0.5 parity = +1
 phsp = DalitzPhaseSpace(ma,mb,mc,md) 
 
-smp = PhaseSpaceSample(phsp,phsp.rectangular_grid_sample(200, 200, space_to_sample="DP"))
-
+smp = PhaseSpaceSample(phsp,phsp.rectangular_grid_sample(200, 200, space_to_sample="linDP"))
+#smp = PhaseSpaceSample(phsp,phsp.uniform_sample(10000))
+#print(smp)
 #ampl = abs(three_body_decay_Daliz_plot_function(smp,phsp))**2
 ampl = three_body_decay_Daliz_plot_function(smp,phsp)
-
 sgma3 = phsp.m2ab(smp) # lmbda_c , D_bar
 sgma2 = phsp.m2ac(smp) # lmbda_c , k
 sgma1 = phsp.m2bc(smp) # D_bar , k
@@ -388,7 +388,10 @@ plt.savefig("Dalitz.png",dpi=400)
 plt.show()
 plt.close('all')
 for s,name,label in zip([sgma1,sgma2,sgma3],["_D+K","L_c+K","L_c+D"],[s1_name,s2_name,s3_name]):
+    
     n, bins = np.histogram(s**0.5/1e3,weights=ampl,bins=100)
+    #print(min((s**0.5)/1e3))
+    #print(max(((s**0.5)/1e3)))
     s = (bins[1:] + bins[:-1])/2.
     plt.plot(s,n,"x")
     plt.xlabel(r""+label.replace("^2","")[:-2])

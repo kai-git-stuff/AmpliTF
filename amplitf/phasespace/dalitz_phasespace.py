@@ -69,12 +69,12 @@ class DalitzPhaseSpace(BasePhaseSpace):
         self.max_thprimeac = 1.0
         if self.symmetric:
             self.max_thprimeac = 0.5
-        if mabrange:
+        if mabrange is not None:
             if mabrange[1] ** 2 < self.maxab:
                 self.maxab = mabrange[1] ** 2
             if mabrange[0] ** 2 > self.minab:
                 self.minab = mabrange[0] ** 2
-        if mbcrange:
+        if mbcrange is not None:
             if mbcrange[1] ** 2 < self.maxbc:
                 self.maxbc = mbcrange[1] ** 2
             if mbcrange[0] ** 2 > self.minbc:
@@ -88,13 +88,14 @@ class DalitzPhaseSpace(BasePhaseSpace):
         m2ab = self.m2ab(x)
         m2bc = self.m2bc(x)
         mab = atfi.sqrt(m2ab)
+        mbc = atfi.sqrt(m2bc)
 
         inside = tf.logical_and(
             tf.logical_and(tf.greater(m2ab, self.minab), tf.less(m2ab, self.maxab)),
             tf.logical_and(tf.greater(m2bc, self.minbc), tf.less(m2bc, self.maxbc)),
         )
 
-        if self.macrange:
+        if self.macrange is not None:
             m2ac = self.msqsum - m2ab - m2bc
             inside = tf.logical_and(
                 inside,
@@ -382,7 +383,7 @@ class DalitzPhaseSpace(BasePhaseSpace):
 
         diff_AC = tf.cast(atfi.sqrt(self.maxac) - atfi.sqrt(self.minac), atfi.fptype())
         mAC = atfi.const(0.5) * diff_AC * (
-            Const(1.0) + atfi.cos(atfi.pi() * mPrime)
+            atfi.const(1.0) + atfi.cos(atfi.pi() * mPrime)
         ) + tf.cast(atfi.sqrt(self.minac), atfi.fptype())
         mACSq = mAC * mAC
 
@@ -408,8 +409,8 @@ class DalitzPhaseSpace(BasePhaseSpace):
         pAcmsAC = atfi.sqrt(eAcmsAC ** 2.0 - tf.cast(self.ma2, atfi.fptype()))
         pBcmsAC = atfi.sqrt(eBcmsAC ** 2.0 - tf.cast(self.mb2, atfi.fptype()))
 
-        deriv1 = Pi() * atfi.const(0.5) * diff_AC * atfi.sin(atfi.pi() * mPrime)
-        deriv2 = Pi() * atfi.sin(atfi.pi() * thPrime)
+        deriv1 = atfi.pi() * atfi.const(0.5) * diff_AC * atfi.sin(atfi.pi() * mPrime)
+        deriv2 = atfi.pi() * atfi.sin(atfi.pi() * thPrime)
 
         return atfi.const(4.0) * pAcmsAC * pBcmsAC * mAC * deriv1 * deriv2
 
