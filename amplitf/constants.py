@@ -1,5 +1,6 @@
 
 class spin:
+    # doubled
     SPIN_0 = 0
     SPIN_HALF = 1
     SPIN_1 = 2
@@ -13,6 +14,7 @@ class spin:
              
 
 class angular:
+    # not doubled 
     L_0 = 0
     L_1 = 1
     L_2 = 2

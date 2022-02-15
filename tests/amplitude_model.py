@@ -5,6 +5,7 @@ from amplitf.dalitz_decomposition import *
 import amplitf.interface as atfi
 import matplotlib.pyplot as plt
 from amplitf.constants import spin as sp
+from amplitf.constants import angular as ang
 from matplotlib.colors import LogNorm
 import tensorflow as tf
 from amplitf.amplitudes.dalitz_function import *
@@ -36,22 +37,24 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     g0,g1,g2,g3 = -8.73, 6.54,6.6,-3.38
     m11,m12,m21,m22 = mb,mc,2006.85,mc 
     channels = [
-        KmatChannel(m11,m12,0.0135),
-        KmatChannel(m21,m22,0.0867)
+        KmatChannel(m11,m12,sp.SPIN_1,0.0135,index=0), # this is the decay channel we will see
+        KmatChannel(m21,m22,sp.SPIN_1,0.0867,index=1) # this is the channel that may cause interference
     ]
     resonances = [
-        KmatResonance(2713.6,[g0,g1] ),  # D^*_s1(2700)
-        KmatResonance(2967.1,[g2,g3] )  # D^*_s1(2860)    # ToDo find if we assigned the g values correctly #D^*_s1(2860)
+        KmatResonance(2713.6,[g0,g1]),  # D^*_s1(2700)
+        KmatResonance(2967.1,[g2,g3])  # D^*_s1(2860)    # ToDo find if we assigned the g values correctly #D^*_s1(2860)
     ]
-    D_kma = kmatrix(sp.SPIN_1,-1,alphas,channels,resonances,bls_ds_kmatrix_in,bls_ds_kmatrix_out)
+    D_kma = kmatrix(sp.SPIN_1,-1,alphas,channels,resonances,
+                        bls_ds_kmatrix_in,bls_ds_kmatrix_out,out_channel=0)
+    
     masses2 = (ma,mc)
-
     masses1 = (mb,mc)
+
     resonances1 = [BWresonance(sp.SPIN_0,1,atfi.cast_real(2317),38, {(0,1):atfi.complex(atfi.const(-0.017),atfi.const(-0.1256))},bls_ds_kmatrix_out,*masses1),#D_0(2317) no specific outgoing bls given :(
                     # BWresonance(sp.SPIN_2,1,atfi.cast_real(2573),16.9,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s2(2573)
-                    BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2700)
-                    BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2860)
-                    #D_kma,
+                    #BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2700)
+                    #BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2860)
+                    D_kma,
                     BWresonance(sp.SPIN_3,-1,atfi.cast_real(2860),53,{(4,5):atfi.complex(atfi.const(0.32),atfi.const(-0.33))},
                                                                                 {(6,0):atfi.complex(atfi.const(-0.036),atfi.const(0.015))},*masses1), #D^*_s3(2860)
                     ]  
