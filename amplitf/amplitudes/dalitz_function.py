@@ -169,7 +169,6 @@ class BaseResonance:
         return bls
 
     def bls_in(self,s=None):
-        # returns 
         bls = self._bls_in
         if s is not None:
             bls = {LS : b * self.X(s,LS[0]) for LS, b in bls.items()}
@@ -221,7 +220,6 @@ class KmatResonance(BaseResonance):
     @property
     def M2(self):
         return self._M2
-
 
 class kmatrix(BaseResonance):
     def __init__(self,S,P,alphas,channels:list,resonances:list,bls_in,bls_out ,out_channel = 0):
