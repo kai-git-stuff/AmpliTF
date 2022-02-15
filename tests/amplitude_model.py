@@ -40,8 +40,8 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
         KmatChannel(m21,m22,0.0867)
     ]
     resonances = [
-        KmatResonance(2713.6,[g0,g1] ),  #D^*_s1(2700)
-        KmatResonance(2967.1,[g2,g3] ) # ToDo find if we assigned the g values correctly #D^*_s1(2860)
+        KmatResonance(2713.6,[g0,g1] ),  # D^*_s1(2700)
+        KmatResonance(2967.1,[g2,g3] )  # D^*_s1(2860)    # ToDo find if we assigned the g values correctly #D^*_s1(2860)
     ]
     D_kma = kmatrix(sp.SPIN_1,-1,alphas,channels,resonances,bls_ds_kmatrix_in,bls_ds_kmatrix_out)
     masses2 = (ma,mc)
@@ -71,9 +71,7 @@ md = 5912.19  # lambda_b  spin = 0.5 parity = +1
 phsp = DalitzPhaseSpace(ma,mb,mc,md) 
 
 smp = PhaseSpaceSample(phsp,phsp.rectangular_grid_sample(200, 200, space_to_sample="linDP"))
-#smp = PhaseSpaceSample(phsp,phsp.uniform_sample(10000))
-#print(smp)
-#ampl = abs(three_body_decay_Daliz_plot_function(smp,phsp))**2
+
 ampl = three_body_decay_Daliz_plot_function(smp,phsp)
 sgma3 = phsp.m2ab(smp) # lmbda_c , D_bar
 sgma2 = phsp.m2ac(smp) # lmbda_c , k
@@ -83,8 +81,7 @@ s2_name = r"$M^2(\Lambda_c^+,K^-)$ in GeV$^2$"
 s3_name = r"$M^2(\Lambda_c^+,\bar{D}^0)$ in GeV$^2$"
 print(ampl,max(ampl))
 my_cmap = plt.get_cmap('hot')
-#rnd = atfi.random_uniform(sgma1.shape, (2, 3), minval=min(ampl), maxval=max(ampl), dtype=tf.dtypes.float64,alg='auto_select')
-#mask = ampl > rnd
+
 plt.style.use('dark_background')
 plt.xlabel(s2_name)
 plt.ylabel(s3_name)
@@ -94,10 +91,7 @@ plt.savefig("Dalitz.png",dpi=400)
 plt.show()
 plt.close('all')
 for s,name,label in zip([sgma1,sgma2,sgma3],["_D+K","L_c+K","L_c+D"],[s1_name,s2_name,s3_name]):
-    
     n, bins = np.histogram(s**0.5/1e3,weights=ampl,bins=100)
-    #print(min((s**0.5)/1e3))
-    #print(max(((s**0.5)/1e3)))
     s = (bins[1:] + bins[:-1])/2.
     plt.plot(s,n,"x")
     plt.xlabel(r""+label.replace("^2","")[:-2])

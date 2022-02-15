@@ -188,7 +188,6 @@ class BaseResonance:
         raise NotImplementedError("This is a base class! Do not try to use it for a resonance!")
 
 class BWresonance(BaseResonance):
-    # simple wrapper class
     def __init__(self,S,P,m0,gamma0,bls_in : dict, bls_out :dict,ma,mb):
         self.m0 = m0
         self.gamma0 = gamma0
@@ -204,7 +203,7 @@ class KmatChannel:
         self.masses = m1,m2
         self.background = bg
 
-class KmatResonance(BaseResonance):
+class KmatResonance():
     def __init__(self,M,couplings_out):
         self.couplings_out = couplings_out
         self._M = M
