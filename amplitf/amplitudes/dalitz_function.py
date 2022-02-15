@@ -178,7 +178,7 @@ class BaseResonance:
         return iter((self.S,self.P,self.helicities,self.bls_in,self.bls_out,self.X))
     
     @property
-    def helicities(self):
+    def helicities(self) -> list:
         h = []
         for s in range(-self.S,self.S+1,2):
             h.append(s)
