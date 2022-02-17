@@ -11,6 +11,9 @@ class spin:
 
     def is_half(s):
         return s%2 != 0 
+    
+    def direction_options(s):
+        return [s_z for s_z in range(-s,s+1,2)]
              
 
 class angular:

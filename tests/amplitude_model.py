@@ -9,6 +9,7 @@ from amplitf.constants import angular as ang
 from matplotlib.colors import LogNorm
 import tensorflow as tf
 from amplitf.amplitudes.dalitz_function import *
+from amplitf.amplitudes.resonances import *
 
 def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     jd = sp.SPIN_HALF
@@ -50,16 +51,16 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     masses2 = (ma,mc)
     masses1 = (mb,mc)
 
-    resonances1 = [#BWresonance(sp.SPIN_0,1,atfi.cast_real(2317),38, {(0,1):atfi.complex(atfi.const(-0.017),atfi.const(-0.1256))},bls_ds_kmatrix_out,*masses1),#D_0(2317) no specific outgoing bls given :(
-                    # BWresonance(sp.SPIN_2,1,atfi.cast_real(2573),16.9,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s2(2573)
-                    #BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2700)
-                    #BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2860)
-                    D_kma,
-                    #BWresonance(sp.SPIN_3,-1,atfi.cast_real(2860),53,{(4,5):atfi.complex(atfi.const(0.32),atfi.const(-0.33))},
-                     #                                                           {(6,0):atfi.complex(atfi.const(-0.036),atfi.const(0.015))},*masses1), #D^*_s3(2860)
+    resonances1 = [BWresonance(sp.SPIN_0,1,atfi.cast_real(2317),38, {(0,1):atfi.complex(atfi.const(-0.017),atfi.const(-0.1256))},{(0,0):atfi.complex(atfi.const(1),atfi.const(0))},*masses1),#D_0(2317) no specific outgoing bls given :(
+                    #BWresonance(sp.SPIN_2,1,atfi.cast_real(2573),16.9,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s2(2573)
+                    BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2700)
+                    BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2860)
+                    #D_kma,
+                    BWresonance(sp.SPIN_3,-1,atfi.cast_real(2860),53,{(4,5):atfi.complex(atfi.const(0.32),atfi.const(-0.33))},
+                                                                                {(6,0):atfi.complex(atfi.const(-0.036),atfi.const(0.015))},*masses1), #D^*_s3(2860)
                     ]  
-    resonances2 = [#BWresonance(sp.SPIN_HALF,-1,atfi.cast_real(2791.9),8.9,{(0,1):atfi.complex(atfi.const(-0.53),atfi.const(0.69))},
-                     #           {(0,1):atfi.complex(atfi.const(-0.0149),atfi.const(-0.0259))},*masses2), # xi_c (2790)
+    resonances2 = [BWresonance(sp.SPIN_HALF,-1,atfi.cast_real(2791.9),8.9,{(0,1):atfi.complex(atfi.const(-0.53),atfi.const(0.69))},
+                               {(0,1):atfi.complex(atfi.const(-0.0149),atfi.const(-0.0259))},*masses2), # xi_c (2790)
                     #BWresonance(sp.SPIN_3HALF,-1,atfi.cast_real(2815), 2.43,{},{},*masses2)  # xi_c (2815) no bls couplings given :(
                     ] 
 
