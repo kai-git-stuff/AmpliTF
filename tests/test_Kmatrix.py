@@ -8,7 +8,7 @@ from amplitf.constants import spin as sp
 from amplitf.constants import angular as ang
 from matplotlib.colors import LogNorm
 import tensorflow as tf
-from amplitf.amplitudes.dalitz_function import *
+from amplitf.amplitudes.resonances import *
 
 
 ma = 2286.46 # lambda_c spin = 0.5 parity = 1
@@ -30,7 +30,7 @@ bls_ds_kmatrix_in = {(0,1):atfi.complex(atfi.const(-1.8),atfi.const(4.4)),
 bls_ds_kmatrix_out = {(2,0):atfi.complex(atfi.const(-1.064),atfi.const(-0.722))}
 alphas = [atfi.complex(atfi.const(0.00272),atfi.const(-0.00715)), atfi.complex(atfi.const(-0.00111),atfi.const(0.00394))]
 g0,g1,g2,g3 = -8.73, 6.54,6.6,-3.38
-m11,m12,m21,m22 = mb,mc,2006.85,mc 
+m11,m12,m21,m22 = mb,mc,1863,mc 
 channels = [
     KmatChannel(m11,m12,sp.SPIN_1,0.0135,index=0), # this is the decay channel we will see
     KmatChannel(m21,m22,sp.SPIN_1,0.0867,index=1) # this is the channel that may cause interference

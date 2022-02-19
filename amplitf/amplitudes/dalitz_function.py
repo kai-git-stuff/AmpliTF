@@ -89,7 +89,10 @@ class dalitz_decay:
                     # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
                     H_A_c = phasespace_factor(self.md,sgma3,self.mc)* angular_distribution_multiple_channels_d(theta_hat,self.sd,sA,self.sc,lA,lc_,ld,bls_in())
                     H_a_b = phasespace_factor(sgma3,self.ma,self.mb) * angular_distribution_multiple_channels_d(theta,sA,self.sa,self.sb,la_,lb_,lA,bls_out(sgma3))
-                    H_a_b *= atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) * atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) * (-1)**((lb - lb_)/2) * atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc_,lc))
+                    H_a_b *= (-1)**((lb - lb_)/2) * ( 
+                        atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) * 
+                        atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) * 
+                        atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc_,lc))  )
                     ampl +=nj * ns* H_A_c * H_a_b # * atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la))
         return ampl
 
@@ -106,7 +109,7 @@ class dalitz_decay:
         zeta_2 = 0 # allways one is 0
         zeta_3 = atfi.acos(cos_zeta_3_aligned_2_in_frame_3(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
         theta_hat =  atfi.acos(cos_theta_hat_1_canonical_2(self.md, self.ma, self.mb, self.mc, sgma1, sgma2, sgma3))
-        # remember factor of (-1)**((ld - ld + lb_)/2) because we switched indices 1 and 2
+        # remember factor of (-1)**((ld - lB + lb_)/2) because we switched indices 1 and 2
         theta = atfi.acos(cos_theta_31(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
 
         for sB,pB,helicities_C,bls_in,bls_out,X in resonances:
@@ -117,15 +120,15 @@ class dalitz_decay:
                 # L_b -> B b : B -> (a,c)
                 helicities_abc = helicity_options(sB,self.sa,self.sb,self.sc)
                 for la_,lb_,lc_ in helicities_abc:
-                    #  A -> lambda_c Dbar
                     # Rotation in the isobar system
                     H_A_c =  phasespace_factor(self.md,sgma2,self.mb)* angular_distribution_multiple_channels_d(theta_hat,self.sd,sB,self.sb,lB,lb_,ld,bls_in())
-
                     H_a_b =  phasespace_factor(sgma2,self.ma,self.mc)* angular_distribution_multiple_channels_d(theta,sB,self.sc,self.sa,lc_,la_,lB,bls_out(sgma2))
                     # symmetry of the d matrices
-                    # 
-                    H_a_b *= (-1)**((ld - lB + lb_)/2)  * (-1)**((la - la_)/2) * atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) *  atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc_,lc)) * atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) 
-                    ampl += nj * ns * H_A_c * H_a_b #  * (-1)**((ld - ld + lb_)/2)  * (-1)**((la - la_)/2) * atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la))
+                    H_a_b *= (-1)**((ld - lB + lb_)/2)  * (-1)**((la - la_)/2) * (
+                        atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) *  
+                        atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) *
+                        atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc_,lc)) )
+                    ampl += nj * ns * H_A_c * H_a_b 
         return ampl
 
     def chain1(self,smp:PhaseSpaceSample,ld,la,lb,lc,resonances):
@@ -157,7 +160,10 @@ class dalitz_decay:
 
                     H_b_c = phasespace_factor(sgma1,self.mb,self.mc) * angular_distribution_multiple_channels_d(theta,sC,self.sb,self.sc,lb_,lc_,lC,bls_out(sgma1))
                     # symmetry of the d matrices
-                    H_b_c *=  (-1)**((lc - lc_)/2) * atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc_,lc)) * atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) * atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la))
+                    H_b_c *=  (-1)**((lc - lc_)/2) *(
+                         atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc_,lc)) * 
+                         atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) * 
+                         atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) )
                     ampl += ns * nj * H_A_c * H_b_c 
 
         return ampl

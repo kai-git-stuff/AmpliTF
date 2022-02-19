@@ -29,24 +29,22 @@ class BaseResonance:
     
     @property
     def helicities(self) -> list:
-        h = []
-        for s in range(-self.S,self.S+1,2):
-            h.append(s)
-        return h
+        return sp.direction_options(self.S)
     
     def X(self,x,L):
         raise NotImplementedError("This is a base class! Do not try to use it for a resonance!")
 
 class BWresonance(BaseResonance):
-    def __init__(self,S,P,m0,gamma0,bls_in : dict, bls_out :dict,ma,mb):
+    def __init__(self,S,P,m0,gamma0,bls_in : dict, bls_out :dict,ma,mb,d):
         self.m0 = m0
         self.gamma0 = gamma0
+        self.d = d
         self.masses = (ma,mb)
         super().__init__(S,P,bls_in,bls_out)
     
     def X(self,s,L):
         # L will be given doubled, but bw need it normal
-        return breit_wigner_decay_lineshape(s,self.m0,self.gamma0,self.masses[0],self.masses[1],1,L/2)
+        return breit_wigner_decay_lineshape(s,self.m0,self.gamma0,self.masses[0],self.masses[1],self.d,L/2)
     
 class KmatChannel:
     def __init__(self, m1,m2,L,bg,index):
@@ -77,7 +75,7 @@ class KmatResonance():
         return self._M2
 
 class kmatrix(BaseResonance):
-    def __init__(self,S,P,alphas,channels:list,resonances:list,bls_in,bls_out ,out_channel = 0):
+    def __init__(self,S,P,alphas,channels:list,resonances:list,bls_in,bls_out ,width_factors=(atfi.complex(atfi.const(0), atfi.const(0.)),atfi.complex(atfi.const(0), atfi.const(0.))),out_channel = 0):
         self.alphas = alphas # couplings of channel to resonance
         self.channels = channels # list of channels: type = KmatChannel
         self.resonances = resonances # list of contributing resonances
@@ -85,7 +83,7 @@ class kmatrix(BaseResonance):
         self._s = None # stored CMS energy, so we dont have to compute D all the time
         self.out_channel = out_channel # if the lineshape funktion is called, this is the channel we assume we want the lineshape for
         self.channel_LS = {(c.index,c.L):i for i,c in enumerate(channels)} # we have to figure out the correct channel for a decay with a given L
-        
+        self.width_factors = width_factors
         super().__init__(S,P,bls_in,bls_out)
 
     def get_m(self,a):
@@ -116,8 +114,8 @@ class kmatrix(BaseResonance):
         return atfi.cast_complex(-sum((res.coupling(a) * res.coupling(b))/(s-res.M2) for res in self.resonances))
 
     def Sigma(self,s,a):
-        sigma = self.phaseSpaceFactor(s,a) * self.gamma(s,a)**2
-        return atfi.complex(atfi.const(0),atfi.const(1))*atfi.cast_complex(sigma)
+        sigma = self.phaseSpaceFactor(s,a) * self.gamma(s,a)**2 
+        return atfi.complex(atfi.const(0),atfi.const(1))*(atfi.cast_complex(sigma) + self.width_factors[a])
 
     def build_D(self,s):
         v = []
@@ -149,7 +147,7 @@ class kmatrix(BaseResonance):
         return p
 
     def A_H(self,s,a):
-        a_h = sum(self.gamma(s,a) * self.D(s,a,b) * self.P_func(s,b) for b in range(len(self.channels)))
+        a_h = self.gamma(s,a) *  sum(self.D(s,a,b) * self.P_func(s,b) for b in range(len(self.channels)))
         return a_h
 
     def X(self,s,L):
