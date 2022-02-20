@@ -34,7 +34,7 @@ def phasespace_factor(md,ma,mb):
 
 def angular_distribution_multiple_channels_d(theta,J,s1,s2,l1,l2,nu,bls):
     return (atfi.cast_complex(helicity_couplings_from_ls(J,s1,s2,l1,l2,bls)) * # helicity based
-            atfi.cast_complex(wigner_small_d(theta,J,nu,l1-l2)) ) # spin orientation based -> l2 = -m2
+            atfi.cast_complex(wigner_small_d(theta,J,nu,l1-l2)) ) # spin orientation based -> -l2 = m2 (z-achsis is along l1)
 
 class dalitz_decay:
     """
@@ -102,7 +102,7 @@ class dalitz_decay:
                         atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) * 
                         atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) * 
                         atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc_,lc))  )
-                    ampl +=nj * ns* H_A_c * H_a_b # * atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la))
+                    ampl +=nj * ns* H_A_c * H_a_b 
         return ampl
 
     def chain2(self,smp:PhaseSpaceSample,ld,la,lb,lc,resonances):
@@ -133,7 +133,6 @@ class dalitz_decay:
                     # Rotation in the isobar system
                     H_A_c =  phasespace_factor(self.md,sgma2,self.mb)* angular_distribution_multiple_channels_d(theta_hat,self.sd,sB,self.sb,lB,lb_,ld,bls_in())
                     H_a_b =  phasespace_factor(sgma2,self.ma,self.mc)* angular_distribution_multiple_channels_d(theta,sB,self.sc,self.sa,lc_,la_,lB,bls_out(sgma2))
-                    # symmetry of the d matrices
                     H_a_b *= (-1)**((ld - lB + lb_)/2)  * (-1)**((la - la_)/2) * ( # prefactors for index switches
                         atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) *  
                         atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) *

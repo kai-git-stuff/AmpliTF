@@ -75,7 +75,7 @@ class KmatResonance():
         return self._M2
 
 class kmatrix(BaseResonance):
-    def __init__(self,S,P,alphas,channels:list,resonances:list,bls_in,bls_out ,width_factors=(atfi.complex(atfi.const(0), atfi.const(0.)),atfi.complex(atfi.const(0), atfi.const(0.))),out_channel = 0):
+    def __init__(self,S,P,alphas,channels:list,resonances:list,bls_in,bls_out ,width_factors=None,out_channel = 0):
         self.alphas = alphas # couplings of channel to resonance
         self.channels = channels # list of channels: type = KmatChannel
         self.resonances = resonances # list of contributing resonances
@@ -83,7 +83,10 @@ class kmatrix(BaseResonance):
         self._s = None # stored CMS energy, so we dont have to compute D all the time
         self.out_channel = out_channel # if the lineshape funktion is called, this is the channel we assume we want the lineshape for
         self.channel_LS = {(c.index,c.L):i for i,c in enumerate(channels)} # we have to figure out the correct channel for a decay with a given L
-        self.width_factors = width_factors
+        if width_factors is not None:
+            self.width_factors = width_factors
+        else:
+            self.width_factors = [atfi.complex(atfi.const(0), atfi.const(0.)) for _ in range(len(self.channels))]
         super().__init__(S,P,bls_in,bls_out)
 
     def get_m(self,a):
