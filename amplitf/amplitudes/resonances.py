@@ -35,7 +35,7 @@ class BaseResonance:
         raise NotImplementedError("This is a base class! Do not try to use it for a resonance!")
 
 class BWresonance(BaseResonance):
-    def __init__(self,S,P,m0,gamma0,bls_in : dict, bls_out :dict,ma,mb,d):
+    def __init__(self,S,P,m0,gamma0,bls_in : dict, bls_out :dict,ma,mb,d=1500):
         self.m0 = m0
         self.gamma0 = gamma0
         self.d = d

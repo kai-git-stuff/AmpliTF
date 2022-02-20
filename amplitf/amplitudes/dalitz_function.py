@@ -33,12 +33,8 @@ def phasespace_factor(md,ma,mb):
     return atfi.cast_complex(4 * atfi.pi()* atfi.sqrt(md/two_body_momentum(md,ma,mb)))
 
 def angular_distribution_multiple_channels_d(theta,J,s1,s2,l1,l2,nu,bls):
-    # ToDo why -l2 ??????? maybe the axis along which things are defined is wierd?
-    # possible answer: helicity is not the actual thing here, but rather spin alignment.
-    # helicity in rest frame will allways be oriented along the momentum
-    # this causes (in the rest frames) the quantization axes to be 180° of each other -> l2 = -l2 on l1 quantization axis
-    # this is already respected in the helicity coulplings function
-    return atfi.cast_complex(helicity_couplings_from_ls(J,s1,s2,l1,l2,bls)) * atfi.cast_complex(wigner_small_d(theta,J,nu,l1-l2))
+    return (atfi.cast_complex(helicity_couplings_from_ls(J,s1,s2,l1,l2,bls)) * # helicity based
+            atfi.cast_complex(wigner_small_d(theta,J,nu,l1-l2)) ) # spin orientation based -> l2 = -m2
 
 class dalitz_decay:
     """
@@ -46,7 +42,7 @@ class dalitz_decay:
     Can take any decay with defined resonances
     Background terms need to be given as a resonance aswell
     For the resonances the functions will expect a list of objects inheriting from BaseResonance
-    The main functions from BaseResonance, to be implemented are: 
+    The needed functions from BaseResonance, to be implemented are (for the rest do not change the main impelmentation): 
     X(s,L) -> the lineshape function depending on the CMS energy and the angular momentum
     """
     def __init__(self,md,ma,mb,mc,sd,sa,sb,sc,pd,pa,pb,pc,phsp = None):
