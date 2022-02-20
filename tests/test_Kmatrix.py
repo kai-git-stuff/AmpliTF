@@ -33,7 +33,9 @@ g0,g1,g2,g3 = -8.73, 6.54,6.6,-3.38
 m11,m12,m21,m22 = mb,mc,1863,mc 
 channels = [
     KmatChannel(m11,m12,sp.SPIN_1,0.0135,index=0), # this is the decay channel we will see
-    KmatChannel(m21,m22,sp.SPIN_1,0.0867,index=1) # this is the channel that may cause interference
+    # KmatChannel(m11,m12,sp.SPIN_0,0.0135,index=0), # this is the decay channel we will see
+    KmatChannel(m21,m22,sp.SPIN_1,0.0867,index=1), # this is the channel that may cause interference
+    # KmatChannel(m21,m22,sp.SPIN_0,0.0867,index=1) # this is the channel that may cause interference
 ]
 resonances = [
     KmatResonance(2713.6,[g0,g1]),  # D^*_s1(2700)
