@@ -41,6 +41,14 @@ def angular_distribution_multiple_channels_d(theta,J,s1,s2,l1,l2,nu,bls):
     return atfi.cast_complex(helicity_couplings_from_ls(J,s1,s2,l1,l2,bls)) * atfi.cast_complex(wigner_small_d(theta,J,nu,l1-l2))
 
 class dalitz_decay:
+    """
+    class modeled after dalitz function from dalitz plot decomposition from https://arxiv.org/pdf/1910.04566.pdf
+    Can take any decay with defined resonances
+    Background terms need to be given as a resonance aswell
+    For the resonances the functions will expect a list of objects inheriting from BaseResonance
+    The main functions from BaseResonance, to be implemented are: 
+    X(s,L) -> the lineshape function depending on the CMS energy and the angular momentum
+    """
     def __init__(self,md,ma,mb,mc,sd,sa,sb,sc,pd,pa,pb,pc,phsp = None):
         self.pd = pd 
         self.pa = pa 
@@ -62,6 +70,11 @@ class dalitz_decay:
             self.phsp = phsp
 
     def chain3(self,smp:PhaseSpaceSample,ld,la,lb,lc,resonances):
+        """
+        ld: helicity of mother particle in CMS sytem of mother (see https://arxiv.org/pdf/1910.04566.pdf)
+        la,lb,lc helicites of decay products
+        resonances: list[BaseResonance] of the resonances (background term needs to be resonance aswell)
+        """
         # channel 3   
         # d -> A c : A -> a b
         sgma3 = self.phsp.m2ab(smp)
@@ -165,6 +178,5 @@ class dalitz_decay:
                          atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) * 
                          atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) )
                     ampl += ns * nj * H_A_c * H_b_c 
-
         return ampl
 
