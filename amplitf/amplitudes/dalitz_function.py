@@ -7,7 +7,7 @@ import amplitf.interface as atfi
 from amplitf.constants import spin as sp
 
 
-def angular_distribution_multiple_channels_D(phi,theta,J,s1,s2,l1,l2,bls):
+def helicity_coupling_times_D(phi,theta,J,s1,s2,l1,l2,bls):
     return atfi.cast_complex(helicity_couplings_from_ls(J,s1,s2,l1,l2,bls)) * atfi.cast_complex(wigner_capital_d(phi,theta,0,J,l1,l2))
 
 def helicity_options(J,s1,s2,s3):
@@ -25,14 +25,14 @@ def possible_LS_states(J,s1,s2,P,p1,p2,parity_conservation=True) -> dict:
         for s in range(s_min,s_max+1,2):
             for l in range(0,J+s+1,2):
                 if J <= l+s and J >= abs(l-s)  and P == p1*p2*(-1)**l:
-                    bls[(l,s)] = ((2*l + 1)/(2*J+1))**0.5
+                    bls[(l,s)] = ((l + 1)/(J+1))**0.5
     return bls
 
 def phasespace_factor(md,ma,mb):
     # phasespace factor for the dalitz functions
     return atfi.cast_complex(4 * atfi.pi()* atfi.sqrt(md/two_body_momentum(md,ma,mb)))
 
-def angular_distribution_multiple_channels_d(theta,J,s1,s2,l1,l2,nu,bls):
+def helicity_coupling_times_d(theta,J,s1,s2,l1,l2,nu,bls):
     return (atfi.cast_complex(helicity_couplings_from_ls(J,s1,s2,l1,l2,bls)) * # helicity based
             atfi.cast_complex(wigner_small_d(theta,J,nu,l1-l2)) ) # spin orientation based -> -l2 = m2 (z-achsis is along l1)
 
@@ -96,8 +96,8 @@ class dalitz_decay:
                 for la_,lb_,lc_ in helicities_abc:
                     # Rotation in the isobar system
                     # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
-                    H_A_c = phasespace_factor(self.md,sgma3,self.mc)* angular_distribution_multiple_channels_d(theta_hat,self.sd,sA,self.sc,lA,lc_,ld,bls_in())
-                    H_a_b = phasespace_factor(sgma3,self.ma,self.mb) * angular_distribution_multiple_channels_d(theta,sA,self.sa,self.sb,la_,lb_,lA,bls_out(sgma3))
+                    H_A_c = phasespace_factor(self.md,sgma3,self.mc)* helicity_coupling_times_d(theta_hat,self.sd,sA,self.sc,lA,lc_,ld,bls_in())
+                    H_a_b = phasespace_factor(sgma3,self.ma,self.mb) * helicity_coupling_times_d(theta,sA,self.sa,self.sb,la_,lb_,lA,bls_out(sgma3))
                     H_a_b *= (-1)**((lb - lb_)/2) * (       # prefactors for index switches
                         atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) * 
                         atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) * 
@@ -131,8 +131,8 @@ class dalitz_decay:
                 helicities_abc = helicity_options(sB,self.sa,self.sb,self.sc)
                 for la_,lb_,lc_ in helicities_abc:
                     # Rotation in the isobar system
-                    H_A_c =  phasespace_factor(self.md,sgma2,self.mb)* angular_distribution_multiple_channels_d(theta_hat,self.sd,sB,self.sb,lB,lb_,ld,bls_in())
-                    H_a_b =  phasespace_factor(sgma2,self.ma,self.mc)* angular_distribution_multiple_channels_d(theta,sB,self.sc,self.sa,lc_,la_,lB,bls_out(sgma2))
+                    H_A_c =  phasespace_factor(self.md,sgma2,self.mb)* helicity_coupling_times_d(theta_hat,self.sd,sB,self.sb,lB,lb_,ld,bls_in())
+                    H_a_b =  phasespace_factor(sgma2,self.ma,self.mc)* helicity_coupling_times_d(theta,sB,self.sc,self.sa,lc_,la_,lB,bls_out(sgma2))
                     H_a_b *= (-1)**((ld - lB + lb_)/2)  * (-1)**((la - la_)/2) * ( # prefactors for index switches
                         atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) *  
                         atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) *
@@ -166,9 +166,9 @@ class dalitz_decay:
                     # C -> b c
                     # Rotation in the isobar system
                     # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar #
-                    H_A_c = phasespace_factor(self.md,sgma1,self.ma) * angular_distribution_multiple_channels_d(theta_hat,self.sd,sC,self.sa,lC,la_,ld,bls_in())
+                    H_A_c = phasespace_factor(self.md,sgma1,self.ma) * helicity_coupling_times_d(theta_hat,self.sd,sC,self.sa,lC,la_,ld,bls_in())
 
-                    H_b_c = phasespace_factor(sgma1,self.mb,self.mc) * angular_distribution_multiple_channels_d(theta,sC,self.sb,self.sc,lb_,lc_,lC,bls_out(sgma1))
+                    H_b_c = phasespace_factor(sgma1,self.mb,self.mc) * helicity_coupling_times_d(theta,sC,self.sb,self.sc,lb_,lc_,lC,bls_out(sgma1))
                     # symmetry of the d matrices
                     H_b_c *=  (-1)**((lc - lc_)/2) *(   # prefactors for index switches  
                          atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc_,lc)) * 

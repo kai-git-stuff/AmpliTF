@@ -23,7 +23,7 @@ sgma3 = phsp.m2bc(smp)
 def winkel_verteillung(phi,theta,J,m1,m2):
     return wigner_capital_d(phi,theta,0,J,m1,m2)
 
-def angular_distribution_multiple_channels_D(phi,theta,J,s1,s2,l1,l2,bls):
+def helicity_coupling_times_d(phi,theta,J,s1,s2,l1,l2,bls):
     return atfi.cast_complex(helicity_couplings_from_ls(J,s1,s2,l1,l2,bls)) * atfi.cast_complex(wigner_capital_d(phi,theta,0,J,l1,l2))
 
 def helicity_options(J,s1,s2):
@@ -47,7 +47,7 @@ def coupling_options(J,s1,s2,P,p1,p2) -> dict:
 
 
 
-def angular_distribution_multiple_channels_d(theta,J,s1,s2,l1,l2,nu,bls):
+def helicity_coupling_times_d(theta,J,s1,s2,l1,l2,nu,bls):
     return atfi.cast_complex(helicity_couplings_from_ls(J,s1,s2,l1,l2,bls)) * atfi.cast_complex(wigner_small_d(theta,J,nu,l1-l2))
 
 
@@ -106,7 +106,7 @@ def chain3(smp:PhaseSpaceSample,ld,la,lb,lc,resonances):
             bls = coupling_options(sd,sA,sc,pd,pc,pA)
             bls.update(coupling_options(sd,sA,sc,pd * (-1),pc,pA))
 
-            H_A_c = phasespace_factor(md,sgma3,mc)* angular_distribution_multiple_channels_d(theta_hat,sd,sA,sc,lA,lc,ld,bls)
+            H_A_c = phasespace_factor(md,sgma3,mc)* helicity_coupling_times_d(theta_hat,sd,sA,sc,lA,lc,ld,bls)
             
             bls = coupling_options(sA,sa,sb,pA,pa,pb)
             x =  weight* breit_wigner_decay_lineshape(sgma3,m0,gamma0,ma,mb,1,0)
@@ -115,7 +115,7 @@ def chain3(smp:PhaseSpaceSample,ld,la,lb,lc,resonances):
                 #  A -> lambda_c Dbar
                 # Rotation in the isobar system
                 # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
-                H_a_b = phasespace_factor(sgma3,ma,mb) * angular_distribution_multiple_channels_d(theta,sA,sa,sb,la_,lb_,lA,bls)
+                H_a_b = phasespace_factor(sgma3,ma,mb) * helicity_coupling_times_d(theta,sA,sa,sb,la_,lb_,lA,bls)
                 #get_helicity(helicities_dict,la_,lb_,pA,pa,pb,sA,sa,sb)
                 # no sum over lc_ needed, because sc is 0
                 ampl += H_A_c * H_a_b * x * atfi.cast_complex(wigner_small_d(zeta_1,sa,la,la_)) * atfi.cast_complex(wigner_small_d(zeta_2,sb,lb,lb_)) * (-1)**((lb - lb_)/2) * atfi.cast_complex(wigner_small_d(zeta_3,sc,lc,0))
@@ -177,7 +177,7 @@ def chain2(smp:PhaseSpaceSample,ld,la,lb,lc,resonances):
             bls.update(coupling_options(sd,sB,sb,pd * (-1),pb,pB))
 
             # D meson has spin 0, so we can ditch the sum over the kaon helicities
-            H_A_c =  phasespace_factor(md,sgma2,mb)* angular_distribution_multiple_channels_d(theta_hat,sd,sB,sb,lB,0,ld,bls)
+            H_A_c =  phasespace_factor(md,sgma2,mb)* helicity_coupling_times_d(theta_hat,sd,sB,sb,lB,0,ld,bls)
             
             bls = coupling_options(sB,sa,sc,pB,pa,pc)
             x =  weight* breit_wigner_decay_lineshape(sgma2,m0,gamma0,ma,mc,1,0)
@@ -186,7 +186,7 @@ def chain2(smp:PhaseSpaceSample,ld,la,lb,lc,resonances):
                 #  A -> lambda_c Dbar
                 # Rotation in the isobar system
                 # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
-                H_a_b =  phasespace_factor(sgma2,ma,mc)* angular_distribution_multiple_channels_d(theta,sB,sa,sc,la_,lc_,lB,bls)
+                H_a_b =  phasespace_factor(sgma2,ma,mc)* helicity_coupling_times_d(theta,sB,sa,sc,la_,lc_,lB,bls)
                 #H_a_b = get_helicity(helicities_dict,la_,lc_,pB,pa,pc,sB,sa,sc)
                 # symmetry of the d matrices
                 H_a_b *= (-1)**(lB - ld)  * (-1)**((la - la_)/2) * atfi.cast_complex(wigner_small_d(zeta_1,sa,la,la_)) *  atfi.cast_complex(wigner_small_d(zeta_3,sc,lc,lc_))
@@ -245,7 +245,7 @@ def chain1(smp:PhaseSpaceSample,ld,la,lb,lc,resonances):
             bls.update(coupling_options(sd,sC,sa,pd * (-1),pa,pC))
 
             # sum over initial frame lambda_c helicities is done outside of this function
-            H_A_c = phasespace_factor(md,sgma1,ma) * angular_distribution_multiple_channels_d(theta_hat,sd,sC,sa,lC,la,ld,bls)
+            H_A_c = phasespace_factor(md,sgma1,ma) * helicity_coupling_times_d(theta_hat,sd,sC,sa,lC,la,ld,bls)
 
             x = weight* breit_wigner_decay_lineshape(sgma1,m0,gamma0,mb,mc,1,0)
             bls = coupling_options(sC,sb,sc,pC,pb,pc)
@@ -254,7 +254,7 @@ def chain1(smp:PhaseSpaceSample,ld,la,lb,lc,resonances):
                 # C -> b c
                 # Rotation in the isobar system
                 # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
-                H_b_c = phasespace_factor(sgma1,mb,mc) * angular_distribution_multiple_channels_d(theta,sC,sb,sc,lb_,lc_,lC,bls)
+                H_b_c = phasespace_factor(sgma1,mb,mc) * helicity_coupling_times_d(theta,sC,sb,sc,lb_,lc_,lC,bls)
                 #H_b_c = get_helicity(helicities_dict,lb_,lc_,pC,pb,pc,sC,sb,sc)
                 # symmetry of the d matrices
                 H_b_c *=  (-1)**((lc - lc_)/2) * atfi.cast_complex(wigner_small_d(zeta_3,sc,lc,lc_)) * atfi.cast_complex(wigner_small_d(zeta_2,sb,lb,lb_)) 
