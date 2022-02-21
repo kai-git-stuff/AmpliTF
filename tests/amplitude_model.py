@@ -25,7 +25,7 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     ma = 2286.46 # lambda_c spin = 0.5 parity = 1
     mb = 1864.84 # D^0 bar spin = 0 partiy = -1
     mc = 493.677 # K-  spin = 0 parity = -1
-    md = 5912.19  # lambda_b  spin = 0.5 parity = +1
+    md = 5619.60  # lambda_b  spin = 0.5 parity = +1
 
     decay = dalitz_decay(md,ma,mb,mc,sd,sa,sb,sc,pd,pa,pb,pc)
     
@@ -65,14 +65,14 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
                     #BWresonance(sp.SPIN_3HALF,-1,atfi.cast_real(2815), 2.43,{},{},*masses2)  # xi_c (2815) no bls couplings given :(
                     ] 
 
-    ampl = sum(abs(decay.chain3(smp,ld,la,0,0,[]) + decay.chain2(smp,ld,la,0,0,resonances2) + decay.chain1(smp,ld,la,0,0,resonances1))**2 for la in range(-1,2,2) for ld in [-1,1])
+    ampl = sum(abs(decay.chain3(smp,ld,la,0,0,[]) + decay.chain2(smp,ld,la,0,0,resonances2) + decay.chain1(smp,ld,la,0,0,resonances1))**2 for la in range(-1,2,2) for ld in [1,-1])
 
     return ampl
 
 ma = 2286.46 # lambda_c spin = 0.5 parity = 1
 mb = 1864.84 # D^0 bar spin = 0 partiy = -1
 mc = 493.677 # K-  spin = 0 parity = -1
-md = 5912.19  # lambda_b  spin = 0.5 parity = +1
+md = 5619.60  # lambda_b  spin = 0.5 parity = +1
 phsp = DalitzPhaseSpace(ma,mb,mc,md) 
 
 smp = PhaseSpaceSample(phsp,phsp.rectangular_grid_sample(200, 200, space_to_sample="linDP"))
