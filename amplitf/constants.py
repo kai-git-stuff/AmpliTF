@@ -9,9 +9,11 @@ class spin:
     SPIN_5HALF = 5
     SPIN_3 = 6 
 
+    @staticmethod
     def is_half(s):
         return s%2 != 0 
     
+    @staticmethod
     def direction_options(s):
         return [s_z for s_z in range(-s,s+1,2)]
              
