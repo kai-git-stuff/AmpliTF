@@ -96,7 +96,7 @@ class dalitz_decay:
                 for la_,lb_,lc_ in helicities_abc:
                     # Rotation in the isobar system
                     # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
-                    H_A_c = phasespace_factor(self.md,sgma3,self.mc)* helicity_coupling_times_d(theta_hat,self.sd,sA,self.sc,lA,lc_,ld,bls_in())
+                    H_A_c = phasespace_factor(self.md,sgma3,self.mc)* helicity_coupling_times_d(theta_hat,self.sd,sA,self.sc,lA,lc,ld,bls_in())
                     H_a_b = phasespace_factor(sgma3,self.ma,self.mb) * helicity_coupling_times_d(theta,sA,self.sa,self.sb,la_,lb_,lA,bls_out(sgma3))
                     H_a_b *= (-1)**((lb - lb_)/2) * (       # prefactors for index switches
                         atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) * 
@@ -131,7 +131,7 @@ class dalitz_decay:
                 helicities_abc = helicity_options(sB,self.sa,self.sb,self.sc)
                 for la_,lb_,lc_ in helicities_abc:
                     # Rotation in the isobar system
-                    H_A_c =  phasespace_factor(self.md,sgma2,self.mb)* helicity_coupling_times_d(theta_hat,self.sd,sB,self.sb,lB,lb_,ld,bls_in())
+                    H_A_c =  phasespace_factor(self.md,sgma2,self.mb)* helicity_coupling_times_d(theta_hat,self.sd,sB,self.sb,lB,lb,ld,bls_in())
                     H_a_b =  phasespace_factor(sgma2,self.ma,self.mc)* helicity_coupling_times_d(theta,sB,self.sc,self.sa,lc_,la_,lB,bls_out(sgma2))
                     H_a_b *= (-1)**((ld - lB + lb_)/2)  * (-1)**((la - la_)/2) * ( # prefactors for index switches
                         atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) *  
@@ -162,14 +162,14 @@ class dalitz_decay:
             nj = atfi.cast_complex(atfi.sqrt(atfi.const(2*self.sd+1)))
             for lC in helicities_B:
                 helicities_abc = helicity_options(sC,self.sa,self.sb,self.sc)
+                print("L_d=%s, L_C=%s, L_a =%s"%(ld,lC,la))
+                H_A_c = phasespace_factor(self.md,sgma1,self.ma) * helicity_coupling_times_d(theta_hat,self.sd,sC,self.sa,lC,la,ld,bls_in())
+                print(H_A_c)
                 for la_,lb_,lc_ in helicities_abc:
                     # C -> b c
                     # Rotation in the isobar system
                     # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar #
-                    
 
-                    H_A_c = phasespace_factor(self.md,sgma1,self.ma) * helicity_coupling_times_d(theta_hat,self.sd,sC,self.sa,lC,la_,ld,bls_in())
-                    print(lC,la_,ld,H_A_c)
                     H_b_c = phasespace_factor(sgma1,self.mb,self.mc) * helicity_coupling_times_d(theta,sC,self.sb,self.sc,lb_,lc_,lC,bls_out(sgma1))
                     # symmetry of the d matrices
                     H_b_c *=  (-1)**((lc - lc_)/2) *(   # prefactors for index switches  
