@@ -123,7 +123,7 @@ class kmatrix(BaseResonance):
     def build_D(self,s):
         v = []
         # we calculate v directly  as 1 - v * Sigma
-        # ToDo figure out how to do this wiht tf.stack
+        # ToDo do this with tf.stack
         v = np.zeros(list(s.shape) + [len(self.channels),len(self.channels)],dtype=np.complex128)
         for a in range(len(self.channels)):
             for b in range(len(self.channels)):

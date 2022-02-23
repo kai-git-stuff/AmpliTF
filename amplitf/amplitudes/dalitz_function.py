@@ -166,8 +166,10 @@ class dalitz_decay:
                     # C -> b c
                     # Rotation in the isobar system
                     # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar #
-                    H_A_c = phasespace_factor(self.md,sgma1,self.ma) * helicity_coupling_times_d(theta_hat,self.sd,sC,self.sa,lC,la_,ld,bls_in())
+                    
 
+                    H_A_c = phasespace_factor(self.md,sgma1,self.ma) * helicity_coupling_times_d(theta_hat,self.sd,sC,self.sa,lC,la_,ld,bls_in())
+                    print(lC,la_,ld,H_A_c)
                     H_b_c = phasespace_factor(sgma1,self.mb,self.mc) * helicity_coupling_times_d(theta,sC,self.sb,self.sc,lb_,lc_,lC,bls_out(sgma1))
                     # symmetry of the d matrices
                     H_b_c *=  (-1)**((lc - lc_)/2) *(   # prefactors for index switches  
