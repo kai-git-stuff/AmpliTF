@@ -93,7 +93,7 @@ class dalitz_decay:
             nj = atfi.cast_complex(atfi.sqrt(atfi.const(2*self.sd+1)))
             for lA in helicities_A:           
                 helicities_abc = helicity_options(sA,self.sa,self.sb,self.sc)
-                H_A_c = phasespace_factor(self.md,sgma3,self.mc)* helicity_coupling_times_d(theta_hat,self.sd,sA,self.sc,lA,lc,ld,bls_in())
+                H_A_c = phasespace_factor(self.md,sgma3,self.mc)* helicity_coupling_times_d(theta_hat,self.sd,self.sc,sA,lc,lA,ld,bls_in())
                 for la_,lb_,lc_ in helicities_abc:
                     # Rotation in the isobar system
                     # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
@@ -129,7 +129,7 @@ class dalitz_decay:
                 # channel 2
                 # L_b -> B b : B -> (a,c)
                 helicities_abc = helicity_options(sB,self.sa,self.sb,self.sc)
-                H_A_c = phsp_factor * helicity_coupling_times_d(theta_hat,self.sd,sB,self.sb,lB,lb,ld,bls_in())
+                H_A_c = phsp_factor * helicity_coupling_times_d(theta_hat,self.sd,self.sb,sB,lb,lB,ld,bls_in())
                 for la_,lb_,lc_ in helicities_abc:
                     # Rotation in the isobar system
                     H_a_b =   helicity_coupling_times_d(theta,sB,self.sc,self.sa,lc_,la_,lB,bls_out(sgma2))
