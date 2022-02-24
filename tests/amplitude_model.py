@@ -42,8 +42,8 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
         KmatChannel(m21,m22,2,0.0867,index=1) # this is the channel that may cause interference
     ]
     resonances = [
-        KmatResonance(2713.6,[g0,g1]),  # D^*_s1(2700)
-        KmatResonance(2967.1,[g2,g3])  # D^*_s1(2860)    # ToDo find if we assigned the g values correctly #D^*_s1(2860)
+        KmatPole(2713.6,[g0,g1]),  # D^*_s1(2700)
+        KmatPole(2967.1,[g2,g3])  # D^*_s1(2860)    # ToDo find if we assigned the g values correctly #D^*_s1(2860)
     ]
     D_kma = kmatrix(sp.SPIN_1,-1,alphas,channels,resonances,
                         bls_ds_kmatrix_in,bls_ds_kmatrix_out,out_channel=0)
@@ -52,20 +52,20 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     masses1 = (mb,mc)
 
     from test_Kmatrix import D_kma # kmatrix with extra channel, that will lead to fall at 2.85GeV
-    resonances1 = [BWresonance(sp.SPIN_0,1,atfi.cast_real(2317),38, {(0,1):atfi.complex(atfi.const(-0.017),atfi.const(-0.1256))},{(0,0):atfi.complex(atfi.const(1),atfi.const(0))},*masses1),#D_0(2317) no specific outgoing bls given :(
+    resonances1 = [#BWresonance(sp.SPIN_0,1,atfi.cast_real(2317),38, {(0,1):atfi.complex(atfi.const(-0.017),atfi.const(-0.1256))},{(0,0):atfi.complex(atfi.const(1),atfi.const(0))},*masses1),#D_0(2317) no specific outgoing bls given :(
                     #BWresonance(sp.SPIN_2,1,atfi.cast_real(2573),16.9,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s2(2573)
-                    #BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2700)
+                    BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2700)
                     #BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s1(2860)
                     D_kma,
-                    BWresonance(sp.SPIN_3,-1,atfi.cast_real(2860),53,{(4,5):atfi.complex(atfi.const(0.32),atfi.const(-0.33))},
-                                                                                {(6,0):atfi.complex(atfi.const(-0.036),atfi.const(0.015))},*masses1), #D^*_s3(2860)
+                    #BWresonance(sp.SPIN_3,-1,atfi.cast_real(2860),53,{(4,5):atfi.complex(atfi.const(0.32),atfi.const(-0.33))},
+                    #                                                    {(6,0):atfi.complex(atfi.const(-0.036),atfi.const(0.015))},*masses1), #D^*_s3(2860)
                     ]  
     resonances2 = [BWresonance(sp.SPIN_HALF,-1,atfi.cast_real(2791.9),8.9,{(0,1):atfi.complex(atfi.const(-0.53),atfi.const(0.69))},
                                {(0,1):atfi.complex(atfi.const(-0.0149),atfi.const(-0.0259))},*masses2), # xi_c (2790)
                     #BWresonance(sp.SPIN_3HALF,-1,atfi.cast_real(2815), 2.43,{},{},*masses2)  # xi_c (2815) no bls couplings given :(
                     ] 
 
-    ampl = sum(abs(decay.chain3(smp,ld,la,0,0,[]) + decay.chain2(smp,ld,la,0,0,resonances2) + decay.chain1(smp,ld,la,0,0,resonances1))**2 for la in range(-1,2,2) for ld in [-1])
+    ampl = sum(abs(decay.chain3(smp,ld,la,0,0,[]) + decay.chain2(smp,ld,la,0,0,resonances2) + decay.chain1(smp,ld,la,0,0,resonances1))**2 for la in range(-1,2,2) for ld in [1,-1])
 
     return ampl
 

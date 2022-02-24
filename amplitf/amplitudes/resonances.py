@@ -57,7 +57,7 @@ class KmatChannel:
         self.index = index 
         self.background = bg
 
-class KmatResonance():
+class KmatPole:
     def __init__(self,M,couplings_out):
         self.couplings_out = couplings_out
         self._M = atfi.cast_complex(M)
@@ -78,7 +78,7 @@ class kmatrix(BaseResonance):
     def __init__(self,S,P,alphas,channels:list,resonances:list,bls_in,bls_out ,width_factors=None,out_channel = 0):
         self.alphas = alphas # couplings of channel to resonance
         self.channels = channels # list of channels: type = KmatChannel
-        self.resonances = resonances # list of contributing resonances
+        self.resonances = resonances # list of contributing poles (resonances)
         self._D = None # D matrix in storage to prevent us from computing it over and over, if it is not needed
         self._s = None # stored CMS energy, so we dont have to compute D all the time
         self.out_channel = out_channel # if the lineshape funktion is called, this is the channel we assume we want the lineshape for

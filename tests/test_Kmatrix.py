@@ -38,11 +38,11 @@ channels = [
     # KmatChannel(m21,m22,sp.SPIN_0,0.0867,index=1) # this is a channel that may cause interference
     KmatChannel(2420,mc,sp.SPIN_1,0.9,index=2), # this is a channel that may cause interference
 ]
-resonances = [
-    KmatResonance(2713.6,[g0,g1,5]),  # D^*_s1(2700)
-    KmatResonance(2967.1,[g2,g3,5])  # D^*_s1(2860)    # ToDo find if we assigned the g values correctly #D^*_s1(2860)
+poles = [
+    KmatPole(2713.6,[g0,g1,5]),  # D^*_s1(2700)
+    KmatPole(2967.1,[g2,g3,5])  # D^*_s1(2860)    # ToDo find if we assigned the g values correctly #D^*_s1(2860)
 ]
-D_kma = kmatrix(sp.SPIN_1,-1,alphas,channels,resonances,
+D_kma = kmatrix(sp.SPIN_1,-1,alphas,channels,poles,
                         bls_ds_kmatrix_in,bls_ds_kmatrix_out,out_channel=0)
 
 
