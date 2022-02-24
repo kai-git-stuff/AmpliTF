@@ -14,7 +14,7 @@ from amplitf.amplitudes.resonances import *
 ma = 2286.46 # lambda_c spin = 0.5 parity = 1
 mb = 1864.84 # D^0 bar spin = 0 partiy = -1
 mc = 493.677 # K-  spin = 0 parity = -1
-md = 5912.19  # lambda_b  spin = 0.5 parity = +1
+md = 5619.60  # lambda_b  spin = 0.5 parity = +1
 phsp = DalitzPhaseSpace(ma,mb,mc,md) 
 
 smp = PhaseSpaceSample(phsp,phsp.rectangular_grid_sample(200, 200, space_to_sample="linDP"))

@@ -11,6 +11,9 @@ def helicity_coupling_times_D(phi,theta,J,s1,s2,l1,l2,bls):
     return atfi.cast_complex(helicity_couplings_from_ls(J,s1,s2,l1,l2,bls)) * atfi.cast_complex(wigner_capital_d(phi,theta,0,J,l1,l2))
 
 def helicity_options(J,s1,s2,s3):
+    """gives all possible helicity comibnations for 3 given spins 
+        J is ignored for now!
+    """
     options = []
     for m1 in sp.direction_options(s1):
         for m2 in sp.direction_options(s2):
@@ -93,10 +96,10 @@ class dalitz_decay:
             nj = atfi.cast_complex(atfi.sqrt(atfi.const(2*self.sd+1)))
             for lA in helicities_A:           
                 helicities_abc = helicity_options(sA,self.sa,self.sb,self.sc)
+                H_A_c = phasespace_factor(self.md,sgma3,self.mc)* helicity_coupling_times_d(theta_hat,self.sd,self.sc,sA,lc,lA,ld,bls_in())
                 for la_,lb_,lc_ in helicities_abc:
                     # Rotation in the isobar system
                     # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
-                    H_A_c = phasespace_factor(self.md,sgma3,self.mc)* helicity_coupling_times_d(theta_hat,self.sd,sA,self.sc,lA,lc_,ld,bls_in())
                     H_a_b = phasespace_factor(sgma3,self.ma,self.mb) * helicity_coupling_times_d(theta,sA,self.sa,self.sb,la_,lb_,lA,bls_out(sgma3))
                     H_a_b *= (-1)**((lb - lb_)/2) * (       # prefactors for index switches
                         atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) * 
@@ -121,23 +124,23 @@ class dalitz_decay:
         theta_hat =  atfi.acos(cos_theta_hat_1_canonical_2(self.md, self.ma, self.mb, self.mc, sgma1, sgma2, sgma3))
         # remember factor of (-1)**((ld - lB + lb_)/2) because we switched indices 1 and 2
         theta = atfi.acos(cos_theta_31(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
-
-        for sB,pB,helicities_C,bls_in,bls_out,X in resonances:
+        phsp_factor = phasespace_factor(sgma2,self.ma,self.mc)* phasespace_factor(self.md,sgma2,self.mb)
+        for sB,pB,helicities_B,bls_in,bls_out,X in resonances:
             ns = atfi.cast_complex(atfi.sqrt(atfi.const(2*sB+1)))
             nj = atfi.cast_complex(atfi.sqrt(atfi.const(2*self.sd+1)))
-            for lB in helicities_C:
+            for lB in helicities_B:
                 # channel 2
                 # L_b -> B b : B -> (a,c)
                 helicities_abc = helicity_options(sB,self.sa,self.sb,self.sc)
+                H_B_b = phsp_factor * helicity_coupling_times_d(theta_hat,self.sd,self.sb,sB,lb,lB,ld,bls_in())
                 for la_,lb_,lc_ in helicities_abc:
                     # Rotation in the isobar system
-                    H_A_c =  phasespace_factor(self.md,sgma2,self.mb)* helicity_coupling_times_d(theta_hat,self.sd,sB,self.sb,lB,lb_,ld,bls_in())
-                    H_a_b =  phasespace_factor(sgma2,self.ma,self.mc)* helicity_coupling_times_d(theta,sB,self.sc,self.sa,lc_,la_,lB,bls_out(sgma2))
-                    H_a_b *= (-1)**((ld - lB + lb_)/2)  * (-1)**((la - la_)/2) * ( # prefactors for index switches
+                    H_a_c =   helicity_coupling_times_d(theta,sB,self.sc,self.sa,lc_,la_,lB,bls_out(sgma2))
+                    H_a_c *= (-1)**((ld - lB + lb_)/2)  * (-1)**((la - la_)/2) * ( # prefactors for index switches
                         atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) *  
                         atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) *
                         atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc_,lc)) )
-                    ampl += nj * ns * H_A_c * H_a_b 
+                    ampl += nj * ns * H_B_b * H_a_c 
         return ampl
 
     def chain1(self,smp:PhaseSpaceSample,ld,la,lb,lc,resonances):
@@ -157,20 +160,20 @@ class dalitz_decay:
         zeta_2 = atfi.acos(cos_zeta_2_aligned_1_in_frame_2(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
         zeta_3 = atfi.acos(cos_zeta_3_aligned_3_in_frame_1(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
         # remember to apply (-1)**((lc - lc_)/2) in front of the d matrix (switch last 2 indices)
-        for sC,pC,helicities_B,bls_in,bls_out,X in resonances:
+        for sC,pC,helicities_C,bls_in,bls_out,X in resonances:
+            
             ns = atfi.cast_complex(atfi.sqrt(atfi.const(2*sC+1)))
             nj = atfi.cast_complex(atfi.sqrt(atfi.const(2*self.sd+1)))
-            for lC in helicities_B:
+            for lC in helicities_C:
                 helicities_abc = helicity_options(sC,self.sa,self.sb,self.sc)
+                H_A_c = ( phasespace_factor(sgma1,self.mb,self.mc) * phasespace_factor(self.md,sgma1,self.ma) * 
+                            helicity_coupling_times_d(theta_hat,self.sd,self.sa,sC,la,lC,ld,bls_in())   )
                 for la_,lb_,lc_ in helicities_abc:
                     # C -> b c
                     # Rotation in the isobar system
                     # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar #
-                    
 
-                    H_A_c = phasespace_factor(self.md,sgma1,self.ma) * helicity_coupling_times_d(theta_hat,self.sd,sC,self.sa,lC,la_,ld,bls_in())
-                    print(lC,la_,ld,H_A_c)
-                    H_b_c = phasespace_factor(sgma1,self.mb,self.mc) * helicity_coupling_times_d(theta,sC,self.sb,self.sc,lb_,lc_,lC,bls_out(sgma1))
+                    H_b_c =  helicity_coupling_times_d(theta,sC,self.sb,self.sc,lb_,lc_,lC,bls_out(sgma1))
                     # symmetry of the d matrices
                     H_b_c *=  (-1)**((lc - lc_)/2) *(   # prefactors for index switches  
                          atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc_,lc)) * 
