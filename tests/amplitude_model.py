@@ -72,7 +72,7 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
                     ] 
 
     ampl = sum(abs(decay.chain3(smp,ld,la,0,0,[]) + decay.chain2(smp,ld,la,0,0,resonances2) + decay.chain1(smp,ld,la,0,0,resonances1))**2
-                for la in sp.direction_options(sa) for ld in [1,-1])
+                for la in sp.direction_options(sa) for ld in [-1,1])
     # ampl = sum(
     #             abs(
     #                 sum(

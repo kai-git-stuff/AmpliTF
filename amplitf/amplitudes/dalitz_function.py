@@ -11,6 +11,9 @@ def helicity_coupling_times_D(phi,theta,J,s1,s2,l1,l2,bls):
     return atfi.cast_complex(helicity_couplings_from_ls(J,s1,s2,l1,l2,bls)) * atfi.cast_complex(wigner_capital_d(phi,theta,0,J,l1,l2))
 
 def helicity_options(J,s1,s2,s3):
+    """gives all possible helicity comibnations for 3 given spins 
+        J is ignored for now!
+    """
     options = []
     for m1 in sp.direction_options(s1):
         for m2 in sp.direction_options(s2):
@@ -122,22 +125,22 @@ class dalitz_decay:
         # remember factor of (-1)**((ld - lB + lb_)/2) because we switched indices 1 and 2
         theta = atfi.acos(cos_theta_31(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
         phsp_factor = phasespace_factor(sgma2,self.ma,self.mc)* phasespace_factor(self.md,sgma2,self.mb)
-        for sB,pB,helicities_C,bls_in,bls_out,X in resonances:
+        for sB,pB,helicities_B,bls_in,bls_out,X in resonances:
             ns = atfi.cast_complex(atfi.sqrt(atfi.const(2*sB+1)))
             nj = atfi.cast_complex(atfi.sqrt(atfi.const(2*self.sd+1)))
-            for lB in helicities_C:
+            for lB in helicities_B:
                 # channel 2
                 # L_b -> B b : B -> (a,c)
                 helicities_abc = helicity_options(sB,self.sa,self.sb,self.sc)
-                H_A_c = phsp_factor * helicity_coupling_times_d(theta_hat,self.sd,self.sb,sB,lb,lB,ld,bls_in())
+                H_B_b = phsp_factor * helicity_coupling_times_d(theta_hat,self.sd,self.sb,sB,lb,lB,ld,bls_in())
                 for la_,lb_,lc_ in helicities_abc:
                     # Rotation in the isobar system
-                    H_a_b =   helicity_coupling_times_d(theta,sB,self.sc,self.sa,lc_,la_,lB,bls_out(sgma2))
-                    H_a_b *= (-1)**((ld - lB + lb_)/2)  * (-1)**((la - la_)/2) * ( # prefactors for index switches
+                    H_a_c =   helicity_coupling_times_d(theta,sB,self.sc,self.sa,lc_,la_,lB,bls_out(sgma2))
+                    H_a_c *= (-1)**((ld - lB + lb_)/2)  * (-1)**((la - la_)/2) * ( # prefactors for index switches
                         atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) *  
                         atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) *
                         atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc_,lc)) )
-                    ampl += nj * ns * H_A_c * H_a_b 
+                    ampl += nj * ns * H_B_b * H_a_c 
         return ampl
 
     def chain1(self,smp:PhaseSpaceSample,ld,la,lb,lc,resonances):
