@@ -1,7 +1,7 @@
 """
 This file includes different types of resonances one might want to use for fits
 """
-from amplitf.dynamics import breit_wigner_decay_lineshape
+from amplitf.dynamics import blatt_weisskopf_ff, breit_wigner_decay_lineshape
 import amplitf.interface as atfi
 from amplitf.constants import spin as sp
 import numpy as np
@@ -104,8 +104,12 @@ class kmatrix(BaseResonance):
         # L is doubled, so for calculations we need L/2
         return self.channels[channel].L/2
 
+    def BWF(self,s,a):
+        q0 = # ?
+        return blatt_weisskopf_ff(self.q(s,a),self.q(q0,a),1500,self.L(a)/2) # bwff use un doubled convention
+
     def gamma(self,s,a):
-        return self.q(s,a)**self.L(a)
+        return self.q(s,a)**self.L(a) * self.BWF(s,a)
 
     def phaseSpaceFactor(self,s,a):
         return atfi.complex(atfi.const(1/(8* atfi.pi())), atfi.const(0))* self.q(s,a)/atfi.cast_complex(atfi.sqrt(s))

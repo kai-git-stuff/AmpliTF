@@ -83,7 +83,7 @@ def blatt_weisskopf_ff(q, q0, d, l):
     """
     z = q * d
     z0 = q0 * d
-
+    print(q,q0)
     def hankel1(x):
         if l == angular_constant.L_0:
             return atfi.const(1.0)
