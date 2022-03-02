@@ -80,7 +80,6 @@ class kmatrix(BaseResonance):
         self.channels = channels # list of channels: type = KmatChannel
         self.resonances = resonances # list of contributing poles (resonances)
         self._D = None # D matrix in storage to prevent us from computing it over and over, if it is not needed
-        self._s = None # stored CMS energy, so we dont have to compute D all the time
         self.out_channel = out_channel # if the lineshape funktion is called, this is the channel we assume we want the lineshape for
         self.channel_LS = {(c.index,c.L):i for i,c in enumerate(channels)} # we have to figure out the correct channel for a decay with a given L
         if width_factors is not None:
@@ -140,9 +139,7 @@ class kmatrix(BaseResonance):
     def alpha(self,n):
         return self.alphas[n]
 
-    def D(self,s,a,b):
-        if s != self._s:
-            self.build_D(s)
+    def D(self,s,a,b):            
         return self._D[...,a,b]
     
     def P_func(self,s,b):
@@ -152,6 +149,7 @@ class kmatrix(BaseResonance):
     def A_H(self,s,a):
         # s: squared energy
         # a: channel number
+        self.build_D(s)
         a_h = self.gamma(s,a) * sum( self.D(s,a,b) * self.P_func(s,b) for b in range(len(self.channels)))
         return a_h
 
