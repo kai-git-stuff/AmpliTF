@@ -175,7 +175,7 @@ class dalitz_decay:
 
                     H_b_c =  helicity_coupling_times_d(theta,sC,self.sb,self.sc,lb_,lc_,lC,bls_out(sgma1))
                     # symmetry of the d matrices
-                    H_b_c *=  (-1)**((lc - lc_)/2) *(   # prefactors for index switches  
+                    H_b_c *=  (-1)**((lc - lc_)/2) * (   # prefactors for index switches  
                          atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc_,lc)) * 
                          atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) * 
                          atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) )

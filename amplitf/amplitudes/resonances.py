@@ -150,7 +150,9 @@ class kmatrix(BaseResonance):
         return p
 
     def A_H(self,s,a):
-        a_h = self.gamma(s,a) *  sum(self.D(s,a,b) * self.P_func(s,b) for b in range(len(self.channels)))
+        # s: squared energy
+        # a: channel number
+        a_h = self.gamma(s,a) * sum( self.D(s,a,b) * self.P_func(s,b) for b in range(len(self.channels)))
         return a_h
 
     def X(self,s,L):
