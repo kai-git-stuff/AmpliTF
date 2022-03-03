@@ -30,13 +30,13 @@ def density(ampl):
 @atfi.function
 def polar(a, ph):
     """ Create a complex number from a magnitude and a phase """
-    return complex(a * cos(ph), a * sin(ph))
+    return complex(a * atfi.cos(ph), a * atfi.sin(ph))
 
 
 @atfi.function
 def argument(c):
     """ Return argument (phase) of a complex number """
-    return atan2(imag(c), real(c))
+    return atfi.atan2(atfi.imag(c), atfi.real(c))
 
 
 @atfi.function

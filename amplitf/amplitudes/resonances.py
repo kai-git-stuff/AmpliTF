@@ -1,9 +1,9 @@
 """
 This file includes different types of resonances one might want to use for fits
 """
-from amplitf.dynamics import blatt_weisskopf_ff, breit_wigner_decay_lineshape
+from amplitf.dynamics import blatt_weisskopf_ff_squared, breit_wigner_decay_lineshape
 import amplitf.interface as atfi
-from amplitf.constants import spin as sp
+from amplitf.constants import spin as sp, angular as angular_constant
 import numpy as np
 
 class BaseResonance:
@@ -97,13 +97,6 @@ class kmatrix(BaseResonance):
         d_a = m1-m2
         return atfi.sqrt(atfi.cast_complex((s-s_a**2) * (s-d_a**2)/(4*s) ))
 
-    def q_q0(self,s,a):
-        """helper function for the Blatt-Weisskopf ff"""
-        m1,m2 = self.get_m(a)
-        s_a = m1 + m2
-        d_a = m1-m2
-        return atfi.sqrt((s-s_a**2)) * (s-d_a**2), atfi.sqrt(4*s) 
-
     def get_channel(self,index,L):
         return self.channel_LS[(index,L)]
 
@@ -112,10 +105,26 @@ class kmatrix(BaseResonance):
         return self.channels[channel].L/2
 
     def BWF(self,s,a):
-        return blatt_weisskopf_ff(self.q(s,a),self.q(self.resonances[0].M**2/len(self.resonances),a),3500,self.L(a))  # bwff use un doubled convention
+        l = self.L(a)
+        def hankel1(x):
+            if l == angular_constant.L_0:
+                return atfi.const(1.0)
+            if l == angular_constant.L_1:
+                return 1 + x * x
+            if l == angular_constant.L_2:
+                x2 = x * x
+                return 9 + x2 * (3.0 + x2)
+            if l == angular_constant.L_3:
+                x2 = x * x
+                return 225 + x2 * (45 + x2 * (6 + x2))
+            if l == angular_constant.L_4:
+                x2 = x * x
+                return 11025.0 + x2 * (1575.0 + x2 * (135.0 + x2 * (10.0 + x2)))
+        return atfi.sqrt(1/hankel1(self.q(s,a)/1.))
 
     def gamma(self,s,a):
-        return self.q(s,a)**self.L(a) * self.BWF(s,a)
+        #return 1
+        return (self.q(s,a)/1.)**self.L(a) # * self.BWF(s,a)
 
     def phaseSpaceFactor(self,s,a):
         return atfi.complex(atfi.const(1/(8* atfi.pi())), atfi.const(0))* self.q(s,a)/atfi.cast_complex(atfi.sqrt(s))

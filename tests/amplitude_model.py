@@ -91,7 +91,7 @@ mc = 493.677 # K-  spin = 0 parity = -1
 md = 5619.60  # lambda_b  spin = 0.5 parity = +1
 phsp = DalitzPhaseSpace(ma,mb,mc,md) 
 
-smp = PhaseSpaceSample(phsp,phsp.rectangular_grid_sample(200, 200, space_to_sample="linDP"))
+smp = PhaseSpaceSample(phsp,phsp.rectangular_grid_sample(250, 250, space_to_sample="linDP"))
 
 ampl = three_body_decay_Daliz_plot_function(smp,phsp)
 sgma3 = phsp.m2ab(smp) # lmbda_c , D_bar
@@ -114,7 +114,7 @@ plt.close('all')
 
 
 for s,name,label in zip([sgma1,sgma2,sgma3],["_D+K","L_c+K","L_c+D"],[s1_name,s2_name,s3_name]):
-    n, bins = np.histogram(s**0.5/1e3,weights=ampl,bins=100)
+    n, bins = np.histogram(s**0.5/1e3,weights=ampl,bins=50)
     s = (bins[1:] + bins[:-1])/2.
     plt.plot(s,n,"x")
     plt.xlabel(r""+label.replace("^2","")[:-2])
