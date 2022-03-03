@@ -97,6 +97,13 @@ class kmatrix(BaseResonance):
         d_a = m1-m2
         return atfi.sqrt(atfi.cast_complex((s-s_a**2) * (s-d_a**2)/(4*s) ))
 
+    def q_q0(self,s,a):
+        """helper function for the Blatt-Weisskopf ff"""
+        m1,m2 = self.get_m(a)
+        s_a = m1 + m2
+        d_a = m1-m2
+        return atfi.sqrt((s-s_a**2)) * (s-d_a**2), atfi.sqrt(4*s) 
+
     def get_channel(self,index,L):
         return self.channel_LS[(index,L)]
 
@@ -105,8 +112,7 @@ class kmatrix(BaseResonance):
         return self.channels[channel].L/2
 
     def BWF(self,s,a):
-        q0 = # ?
-        return blatt_weisskopf_ff(self.q(s,a),self.q(q0,a),1500,self.L(a)/2) # bwff use un doubled convention
+        return blatt_weisskopf_ff(self.q(s,a),self.q(self.resonances[0].M**2/len(self.resonances),a),3500,self.L(a))  # bwff use un doubled convention
 
     def gamma(self,s,a):
         return self.q(s,a)**self.L(a) * self.BWF(s,a)
@@ -117,7 +123,7 @@ class kmatrix(BaseResonance):
     def V(self,s,a,b):
         # R = resonance index
         # a,b = channel indices
-        return atfi.cast_complex(-sum((res.coupling(a) * res.coupling(b))/(s-res.M2) for res in self.resonances))
+        return atfi.cast_complex(sum((res.coupling(a) * res.coupling(b))/(res.M2-s) for res in self.resonances))
 
     def Sigma(self,s,a):
         sigma = self.phaseSpaceFactor(s,a) * self.gamma(s,a)**2 
@@ -147,7 +153,7 @@ class kmatrix(BaseResonance):
         return self._D[...,a,b]
     
     def P_func(self,s,b):
-        p  = self.channels[b].background - sum( (res.coupling(b) * alpha )/atfi.cast_complex(s-res.M2)   for res,alpha in zip(self.resonances,self.alphas))
+        p  = self.channels[b].background + sum( (res.coupling(b) * alpha )/atfi.cast_complex(res.M2-s)   for res,alpha in zip(self.resonances,self.alphas))
         return p
 
     def A_H(self,s,a):

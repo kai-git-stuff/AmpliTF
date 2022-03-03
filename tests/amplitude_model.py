@@ -11,6 +11,8 @@ import tensorflow as tf
 from amplitf.amplitudes.dalitz_function import *
 from amplitf.amplitudes.resonances import *
 
+tf.compat.v1.enable_eager_execution()
+
 def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     jd = sp.SPIN_HALF
     pd = 1 # lambda_b  spin = 0.5 parity = +1

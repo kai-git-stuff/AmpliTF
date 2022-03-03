@@ -83,7 +83,6 @@ def blatt_weisskopf_ff(q, q0, d, l):
     """
     z = q * d
     z0 = q0 * d
-    print(q,q0)
     def hankel1(x):
         if l == angular_constant.L_0:
             return atfi.const(1.0)
@@ -98,7 +97,6 @@ def blatt_weisskopf_ff(q, q0, d, l):
         if l == angular_constant.L_4:
             x2 = x * x
             return 11025.0 + x2 * (1575.0 + x2 * (135.0 + x2 * (10.0 + x2)))
-
     return atfi.sqrt(hankel1(z0) / hankel1(z))
 
 
