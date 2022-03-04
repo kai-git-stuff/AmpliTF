@@ -29,19 +29,15 @@ class BaseResonance:
         if d is not None and s is not None:
             q = two_body_momentum(s,*self.masses)
             q0 = two_body_momentum(self.M0,*self.masses)
-            bls = {LS : b * atfi.cast_complex(blatt_weisskopf_ff(q, q0, d, LS[0]) * orbital_barrier_factor(q, q0, LS[0])) for LS, b in bls.items()}
-        print(bls)
+            bls = {LS : b * blatt_weisskopf_ff(q, q0, d, LS[0]) * orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), LS[0]) for LS, b in bls.items()}
         return bls
 
     def bls_in(self,s=None, d = None,md = None,mbachelor = None):
         bls = self._bls_in
-        if s is not None:
-            bls = {LS : b * self.X(s,LS[0]) for LS, b in bls.items()}
         if d is not None and s is not None and md is not None and mbachelor is not None:
             q = two_body_momentum(md,s,mbachelor)   # this is the momentum of the isobar in the main decayings particle rest frame (particle d)
             q0 = two_body_momentum(md,self.M0,mbachelor) # todo this might be wrong: we are allways at L_b resonance peak, so the BW_FF do not make sense here
-            bls = {LS : b * atfi.cast_complex(blatt_weisskopf_ff(q, q0, d, LS[0]) * orbital_barrier_factor(q, q0, LS[0])) for LS, b in bls.items()}
-        print(bls)
+            bls = {LS : b * blatt_weisskopf_ff(q, q0, d, LS[0]) * orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), LS[0]) for LS, b in bls.items()}
         return bls
 
     def __iter__(self):
@@ -76,8 +72,8 @@ class BWresonance(BaseResonance):
         ma,mb = self.masses
         m = atfi.sqrt(s)
         p = two_body_momentum(m, ma, mb)
-        p0 = atfi.cast_real(two_body_momentum(self.m0, ma , mb))
-        ffr = blatt_weisskopf_ff(p, p0, self.d, L)
+        p0 = two_body_momentum(self.m0, ma , mb)
+        ffr = atfi.cast_real(blatt_weisskopf_ff(p, p0, self.d, L))
         width = mass_dependent_width(m, self.m0, self.gamma0, p, p0, ffr, L)
         return relativistic_breit_wigner(s,self.m0, width)# * orbital_barrier_factor(p, p0, L) * ffr
     
@@ -155,25 +151,7 @@ class kmatrix(BaseResonance):
     def BWF(self,s,a):
         q = self.q(s,a)
         q0 = sum(self.q(res.M2,a) for res in self.resonances)/len(self.resonances)
-        blatt_weisskopf_ff(q,q0,self.d,self.L(a))
-
-
-        l = self.L(a)
-        def hankel1(x):
-            if l == angular_constant.L_0:
-                return atfi.const(1.0)
-            if l == angular_constant.L_1:
-                return 1 + x * x
-            if l == angular_constant.L_2:
-                x2 = x * x
-                return 9 + x2 * (3.0 + x2)
-            if l == angular_constant.L_3:
-                x2 = x * x
-                return 225 + x2 * (45 + x2 * (6 + x2))
-            if l == angular_constant.L_4:
-                x2 = x * x
-                return 11025.0 + x2 * (1575.0 + x2 * (135.0 + x2 * (10.0 + x2)))
-        return atfi.sqrt(1/hankel1(self.q(s,a)/1.))
+        return blatt_weisskopf_ff(q,q0,self.d,self.L(a))
 
     def gamma(self,s,a):
         #return 1
@@ -222,7 +200,8 @@ class kmatrix(BaseResonance):
         # s: squared energy
         # a: channel number
         self.build_D(s)
-        a_h = self.gamma(s,a) * sum( self.D(s,a,b) * self.P_func(s,b) for b in range(len(self.channels)))
+        #a_h = self.gamma(s,a) * sum( self.D(s,a,b) * self.P_func(s,b) for b in range(len(self.channels)))
+        a_h = sum( self.D(s,a,b) * self.P_func(s,b) for b in range(len(self.channels))) # because The barrier factors are sourced out of the resonance lineshape
         return a_h
 
     def X(self,s,L):

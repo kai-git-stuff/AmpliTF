@@ -68,7 +68,7 @@ def relativistic_breit_wigner(m2, mres, wres):
     """
     if wres.dtype is atfi.ctype():
         return tf.math.reciprocal(
-            atfi.cast_complex(mres * mres - m2)
+            atfi.cast_complex((atfi.cast_complex(mres * mres) - m2))
             - atfi.complex(atfi.const(0.0), mres) * wres
         )
     if wres.dtype is atfi.fptype():
@@ -97,7 +97,7 @@ def blatt_weisskopf_ff(q, q0, d, l):
         if l == angular_constant.L_4:
             x2 = x * x
             return 11025.0 + x2 * (1575.0 + x2 * (135.0 + x2 * (10.0 + x2)))
-    return atfi.sqrt(hankel1(z0) / hankel1(z))
+    return atfi.sqrt(atfi.cast_complex(hankel1(z0)) / atfi.cast_complex(hankel1(z)))
 
 
 @atfi.function

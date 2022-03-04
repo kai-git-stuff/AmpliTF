@@ -96,8 +96,8 @@ class dalitz_decay:
         for sA,pA,helicities_A,bls_in,bls_out,X in resonances:
             ns = atfi.cast_complex(atfi.sqrt(atfi.const(2*sA+1)))
             nj = atfi.cast_complex(atfi.sqrt(atfi.const(2*self.sd+1)))
-            bls_out = bls_out(sgma3,d=1.5/1000.)
             bls_in = bls_in(s = sgma3,d = self.d,md = self.md,mbachelor=self.mc)
+            bls_out = bls_out(sgma3,d=1.5/1000.)
             for lA in helicities_A:           
                 helicities_abc = helicity_options(sA,self.sa,self.sb,self.sc)
                 H_A_c = phasespace_factor(self.md,sgma3,self.mc)* helicity_coupling_times_d(theta_hat,self.sd,self.sc,sA,lc,lA,ld,bls_in)
@@ -132,9 +132,8 @@ class dalitz_decay:
         for sB,pB,helicities_B,bls_in,bls_out,X in resonances:
             ns = atfi.cast_complex(atfi.sqrt(atfi.const(2*sB+1)))
             nj = atfi.cast_complex(atfi.sqrt(atfi.const(2*self.sd+1)))
-
-            bls_out = bls_out(sgma2,d=1.5/1000.)
             bls_in = bls_in(s = sgma2,d = self.d,md = self.md,mbachelor=self.mb)
+            bls_out = bls_out(sgma2,d=1.5/1000.)
             for lB in helicities_B:
                 # channel 2
                 # L_b -> B b : B -> (a,c)
@@ -172,9 +171,9 @@ class dalitz_decay:
             ns = atfi.cast_complex(atfi.sqrt(atfi.const(2*sC+1)))
             nj = atfi.cast_complex(atfi.sqrt(atfi.const(2*self.sd+1)))
 
-            # getting the Blatt-Weisskopf form factors into our values
-            bls_out = bls_out(sgma1,d=1.5/1000.)
+            # getting the Blatt-Weisskopf form factors into our bls
             bls_in = bls_in(s = sgma1,d = self.d,md = self.md,mbachelor=self.ma)
+            bls_out = bls_out(sgma1,d=1.5/1000.)
             for lC in helicities_C:
                 helicities_abc = helicity_options(sC,self.sa,self.sb,self.sc)
                 H_A_c = ( phasespace_factor(sgma1,self.mb,self.mc) * phasespace_factor(self.md,sgma1,self.ma) * 
