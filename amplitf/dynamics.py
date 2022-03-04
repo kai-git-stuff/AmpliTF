@@ -171,6 +171,8 @@ def breit_wigner_lineshape(
 ):
     """
     Breit-Wigner amplitude with Blatt-Weisskopf formfactors, mass-dependent width and orbital barriers
+    mc = bachelor
+    md = decaying
     """
     m = atfi.sqrt(m2)
     q = atfk.two_body_momentum(md, m, mc)
