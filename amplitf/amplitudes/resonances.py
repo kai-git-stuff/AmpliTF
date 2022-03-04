@@ -150,12 +150,13 @@ class kmatrix(BaseResonance):
 
     def BWF(self,s,a):
         q = self.q(s,a)
-        q0 = sum(self.q(res.M2,a) for res in self.resonances)/len(self.resonances)
+        q0 = self.q(sum(res.M2 for res in self.resonances)/len(self.resonances),a)
         return blatt_weisskopf_ff(q,q0,self.d,self.L(a))
 
     def gamma(self,s,a):
         #return 1
-        return (self.q(s,a)/1.)**self.L(a) * self.BWF(s,a)
+        q0 = self.q(sum(res.M2 for res in self.resonances)/len(self.resonances),a)
+        return (self.q(s,a)/q0)**self.L(a) * self.BWF(s,a)
 
     def phaseSpaceFactor(self,s,a):
         return atfi.complex(atfi.const(1/(8* atfi.pi())), atfi.const(0))* self.q(s,a)/atfi.cast_complex(atfi.sqrt(s))
