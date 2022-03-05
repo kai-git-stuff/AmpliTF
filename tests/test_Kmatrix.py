@@ -36,18 +36,18 @@ channels = [
     # KmatChannel(m11,m12,sp.SPIN_0,0.0135,index=0), # this is the decay channel we will see
     KmatChannel(m21,m22,sp.SPIN_1,0.0867,index=1), # this is a channel that may cause interference
     # KmatChannel(m21,m22,sp.SPIN_0,0.0867,index=1) # this is a channel that may cause interference
-    KmatChannel(2420,mc,sp.SPIN_1,0.9,index=2), # this is a channel that may cause interference
+    #KmatChannel(2420,mc,sp.SPIN_1,0.9,index=2), # this is a channel that may cause interference
 ]
 poles = [
     KmatPole(2713.6,[g0,g1,5]),  # D^*_s1(2700)
     KmatPole(2967.1,[g2,g3,5])  # D^*_s1(2860)    # ToDo find if we assigned the g values correctly #D^*_s1(2860)
 ]
-D_kma = kmatrix(sp.SPIN_1,-1,alphas,channels,poles,
+D_kma = kmatrix(sp.SPIN_1,-1,5./1000.,alphas,channels,poles,
                         bls_ds_kmatrix_in,bls_ds_kmatrix_out,out_channel=0)
 
 
 if __name__ =="__main__":
-    s1_plt = atfi.convert_to_tensor(np.linspace(min(sgma1),max(sgma1),1000))
+    s1_plt = atfi.convert_to_tensor(np.linspace(min(sgma1),max(sgma1),10000))
     ampl = abs(D_kma.X(s1_plt,2))**2
     plt.plot(s1_plt**0.5/1e3,ampl)
     plt.show()

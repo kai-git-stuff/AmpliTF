@@ -139,11 +139,12 @@ class kmatrix(BaseResonance):
         for channel in self.channels:
             if channel.index == self.out_channel:
                 return channel.masses
-        raise(ValueError("No channel for given index found!"))
+        raise(ValueError("No channel for given index %s found!"%self.out_channel))
         return None
 
     @property
     def M0(self):
+        """Mean of pole positions"""
         return sum(res.M for res in self.resonances)/len(self.resonances)
 
     def get_m(self,a):
@@ -164,13 +165,14 @@ class kmatrix(BaseResonance):
 
     def BWF(self,s,a):
         q = self.q(s,a)
-        q0 = self.q(sum(res.M2 for res in self.resonances)/len(self.resonances),a)
+        q0 = self.q(self.M0**2,a)
         return blatt_weisskopf_ff(q,q0,self.d,self.L(a))
 
     def gamma(self,s,a):
         #return 1
-        q0 = self.q(sum(res.M2 for res in self.resonances)/len(self.resonances),a)
+        q0 = self.q(self.M0**2,a)
         return (self.q(s,a)/q0)**self.L(a) * self.BWF(s,a)
+        #return (self.q(s,a))**self.L(a) 
 
     def phaseSpaceFactor(self,s,a):
         return atfi.complex(atfi.const(1/(8* atfi.pi())), atfi.const(0))* self.q(s,a)/atfi.cast_complex(atfi.sqrt(s))
