@@ -19,7 +19,7 @@ class BaseResonance:
 
     @property
     def M0(self):
-        raise NotImplementedError("This is the peak mass or the mean of the pole masses! It is used in the standard BLS versions!")
+        raise NotImplementedError("This is the peak mass or the mean of the pole masses! It is meant for use in the standard BLS versions! It must be implemented!")
 
     def bls_out(self,s=None,d=None):
         """WARNING: do not use d != None, if the Blatt-Weisskopf FF are already used in the resonance function!"""
@@ -72,11 +72,25 @@ class BWresonance(BaseResonance):
         ma,mb = self.masses
         m = atfi.sqrt(s)
         p = two_body_momentum(m, ma, mb)
-        p0 = two_body_momentum(self.m0, ma , mb)
+        p0 = two_body_momentum(self.M0, ma , mb)
         ffr = atfi.cast_real(blatt_weisskopf_ff(p, p0, self.d, L))
-        width = mass_dependent_width(m, self.m0, self.gamma0, p, p0, ffr, L)
-        return relativistic_breit_wigner(s,self.m0, width)# * orbital_barrier_factor(p, p0, L) * ffr
+        width = mass_dependent_width(m, self.M0, self.gamma0, p, p0, ffr, L)
+        return relativistic_breit_wigner(s,self.M0, width)# * orbital_barrier_factor(p, p0, L) * ffr
+
+class subThresholdBWresonance(BWresonance):
+    def __init__(self, S, P, m0, gamma0, bls_in: dict, bls_out: dict, ma, mb,mc,md, d=5 / 1000):
+        """A variation of the BW resonance, that sits beneeth a threshold for our decay products"""
+        super().__init__(S, P, m0, gamma0, bls_in, bls_out, ma, mb, d)
+        self.mmax = md-mc
     
+    @property
+    def M0(self):
+        ma,mb = self.masses
+        mmin = ma + mb
+        tanhterm = atfi.tanh((self.m0 - ((mmin + self.mmax) / 2.0)) / (self.mmax - mmin))
+        m0eff = mmin + (self.mmax - mmin) * (1.0 + tanhterm) / 2.0
+        return m0eff
+
 class KmatChannel:
     def __init__(self, m1,m2,L,bg,index):
         self.masses = m1,m2
