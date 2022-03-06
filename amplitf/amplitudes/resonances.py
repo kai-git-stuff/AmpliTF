@@ -140,7 +140,7 @@ class kmatrix(BaseResonance):
         if width_factors is not None:
             self.width_factors = width_factors
         else:
-            self.width_factors = [atfi.complex(atfi.const(0), atfi.const(0.)) for _ in range(len(self.channels))]
+            self.width_factors = [atfi.complex(atfi.const(0.), atfi.const(0.)) for _ in range(len(self.channels))]
         self.d = d # the momentum scale for the BWff
         super().__init__(S,P,bls_in,bls_out,d)
 
@@ -179,10 +179,10 @@ class kmatrix(BaseResonance):
         return blatt_weisskopf_ff(q,q0,self.d,self.L(a))
 
     def gamma(self,s,a):
-        #return 1
         q0 = self.q(self.M0**2,a)
+        #return (self.q(s,a)/q0)**self.L(a) * self.BWF(s,a)
+        # return (self.q(s,a))**self.L(a)
         return (self.q(s,a)/q0)**self.L(a) * self.BWF(s,a)
-        #return (self.q(s,a))**self.L(a) 
 
     def phaseSpaceFactor(self,s,a):
         return atfi.complex(atfi.const(1/(8* atfi.pi())), atfi.const(0))* self.q(s,a)/atfi.cast_complex(atfi.sqrt(s))
@@ -235,4 +235,4 @@ class kmatrix(BaseResonance):
         # return the Lineshape for the specific outchannel
         channel_number = self.get_channel(self.out_channel,L)
         s = atfi.cast_complex(s)
-        return self.A_H(s,channel_number)
+        return self.A_H(s,channel_number) 
