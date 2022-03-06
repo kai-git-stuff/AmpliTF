@@ -47,6 +47,11 @@ class dalitz_decay:
     For the resonances the functions will expect a list of objects inheriting from BaseResonance
     The needed functions from BaseResonance, to be implemented are (for the rest do not change the main impelmentation): 
     X(s,L) -> the lineshape function depending on the CMS energy and the angular momentum
+    
+    use d=None to disable the use of Blatt-Weisskopf form factors and orbital barriers
+    if d is None the orbital barriers need to be implemented in the resonances
+    This is best done by overwritng the bls method from BaseResonance in your resonance classes,
+    because all angular momentum based funtions should live in the bls couplings
     """
     def __init__(self,md,ma,mb,mc,sd,sa,sb,sc,pd,pa,pb,pc,d=1.5/1000.,phsp = None):
         self.pd = pd 
@@ -64,6 +69,8 @@ class dalitz_decay:
         self.md = md 
 
         self.d = d
+        # d is the radius of the decaying particle for the Blatt-Weisskopf FF
+        # set d = None to disable use of Blatt-Weisskopf FF
 
         if phsp is None:
             self.phsp = DalitzPhaseSpace(ma,mb,mc,md)
@@ -97,7 +104,7 @@ class dalitz_decay:
             ns = atfi.cast_complex(atfi.sqrt(atfi.const(2*sA+1)))
             nj = atfi.cast_complex(atfi.sqrt(atfi.const(2*self.sd+1)))
             bls_in = bls_in(s = sgma3,d = self.d,md = self.md,mbachelor=self.mc)
-            bls_out = bls_out(sgma3,d=1.5/1000.)
+            bls_out = bls_out(sgma3)
             for lA in helicities_A:           
                 helicities_abc = helicity_options(sA,self.sa,self.sb,self.sc)
                 H_A_c = phasespace_factor(self.md,sgma3,self.mc)* helicity_coupling_times_d(theta_hat,self.sd,self.sc,sA,lc,lA,ld,bls_in)
@@ -133,7 +140,7 @@ class dalitz_decay:
             ns = atfi.cast_complex(atfi.sqrt(atfi.const(2*sB+1)))
             nj = atfi.cast_complex(atfi.sqrt(atfi.const(2*self.sd+1)))
             bls_in = bls_in(s = sgma2,d = self.d,md = self.md,mbachelor=self.mb)
-            bls_out = bls_out(sgma2,d=1.5/1000.)
+            bls_out = bls_out(sgma2)
             for lB in helicities_B:
                 # channel 2
                 # L_b -> B b : B -> (a,c)
@@ -173,7 +180,7 @@ class dalitz_decay:
 
             # getting the Blatt-Weisskopf form factors into our bls
             bls_in = bls_in(s = sgma1,d = self.d,md = self.md,mbachelor=self.ma)
-            bls_out = bls_out(sgma1,d=1.5/1000.)
+            bls_out = bls_out(sgma1)
             for lC in helicities_C:
                 helicities_abc = helicity_options(sC,self.sa,self.sb,self.sc)
                 H_A_c = ( phasespace_factor(sgma1,self.mb,self.mc) * phasespace_factor(self.md,sgma1,self.ma) * 

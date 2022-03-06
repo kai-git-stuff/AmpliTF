@@ -8,10 +8,11 @@ from amplitf.constants import spin as sp, angular as angular_constant
 import numpy as np
 
 class BaseResonance:
-    def __init__(self,S,P,bls_in : dict, bls_out :dict):
+    def __init__(self,S,P,bls_in : dict, bls_out :dict, d = None):
         self._bls_in = bls_in
         self._bls_out = bls_out
         self.S,self.P = S,P
+        self.d = d   # resonance radius (if None)
 
     @property
     def masses(self):
@@ -25,19 +26,29 @@ class BaseResonance:
         """WARNING: do not use d != None, if the Blatt-Weisskopf FF are already used in the resonance function!"""
         bls = self._bls_out
         if s is not None:
-            bls = {LS : b * self.X(s,LS[0]) for LS, b in bls.items()}
+            q = two_body_momentum(s,*self.masses)
+            q0 = two_body_momentum(self.M0,*self.masses)
+            bls = {LS : b * self.X(s,LS[0]) * 
+                    orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), LS[0]/2) 
+                    for LS, b in bls.items()}
         if d is not None and s is not None:
             q = two_body_momentum(s,*self.masses)
             q0 = two_body_momentum(self.M0,*self.masses)
-            bls = {LS : b * blatt_weisskopf_ff(q, q0, d, LS[0]/2) * orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), LS[0]/2) for LS, b in bls.items()}
+            bls = {LS : b * blatt_weisskopf_ff(q, q0, d, LS[0]/2)  for LS, b in bls.items()}
         return bls
 
     def bls_in(self,s=None, d = None,md = None,mbachelor = None):
         bls = self._bls_in
-        if d is not None and s is not None and md is not None and mbachelor is not None:
+        if s is not None and md is not None and mbachelor is not None:
             q = two_body_momentum(md,s,mbachelor)   # this is the momentum of the isobar in the main decayings particle rest frame (particle d)
             q0 = two_body_momentum(md,self.M0,mbachelor) # todo this might be wrong: we are allways at L_b resonance peak, so the BW_FF do not make sense here
-            bls = {LS : b * blatt_weisskopf_ff(q, q0, d, LS[0]/2) * orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), LS[0]/2) for LS, b in bls.items()}
+            if self.d is not None:
+                bls = {LS : b * blatt_weisskopf_ff(q, q0, self.d, LS[0]/2) * 
+                        orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), LS[0]/2) 
+                    for LS, b in bls.items()}
+            else:
+                bls = {LS : b * orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), LS[0]/2) 
+                    for LS, b in bls.items()}
         return bls
 
     def __iter__(self):
@@ -54,9 +65,8 @@ class BWresonance(BaseResonance):
     def __init__(self,S,P,m0,gamma0,bls_in : dict, bls_out :dict,ma,mb,d=5./1000.):
         self.m0 = m0
         self.gamma0 = gamma0
-        self.d = d
         self._masses = (ma,mb)
-        super().__init__(S,P,bls_in,bls_out)
+        super().__init__(S,P,bls_in,bls_out,d)
 
     @property
     def masses(self):
@@ -67,7 +77,7 @@ class BWresonance(BaseResonance):
         return self.m0
 
     def X(self,s,L):
-        # L will be given doubled, but bw need it normal
+        # L will be given doubled, but bw needs it normal
         L = L/2
         ma,mb = self.masses
         m = atfi.sqrt(s)
@@ -75,7 +85,7 @@ class BWresonance(BaseResonance):
         p0 = two_body_momentum(self.M0, ma , mb)
         ffr = atfi.cast_real(blatt_weisskopf_ff(p, p0, self.d, L))
         width = mass_dependent_width(m, self.M0, self.gamma0, p, p0, ffr, L)
-        return relativistic_breit_wigner(s,self.M0, width)# * orbital_barrier_factor(p, p0, L) * ffr
+        return relativistic_breit_wigner(s,self.M0, width)
 
 class subThresholdBWresonance(BWresonance):
     def __init__(self, S, P, m0, gamma0, bls_in: dict, bls_out: dict, ma, mb,mc,md, d=5 / 1000):
@@ -132,7 +142,7 @@ class kmatrix(BaseResonance):
         else:
             self.width_factors = [atfi.complex(atfi.const(0), atfi.const(0.)) for _ in range(len(self.channels))]
         self.d = d # the momentum scale for the BWff
-        super().__init__(S,P,bls_in,bls_out)
+        super().__init__(S,P,bls_in,bls_out,d)
 
     @property
     def masses(self):
