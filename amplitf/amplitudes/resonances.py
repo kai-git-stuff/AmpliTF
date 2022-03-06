@@ -29,7 +29,7 @@ class BaseResonance:
         if d is not None and s is not None:
             q = two_body_momentum(s,*self.masses)
             q0 = two_body_momentum(self.M0,*self.masses)
-            bls = {LS : b * blatt_weisskopf_ff(q, q0, d, LS[0]) * orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), LS[0]) for LS, b in bls.items()}
+            bls = {LS : b * blatt_weisskopf_ff(q, q0, d, LS[0]/2) * orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), LS[0]/2) for LS, b in bls.items()}
         return bls
 
     def bls_in(self,s=None, d = None,md = None,mbachelor = None):
@@ -37,7 +37,7 @@ class BaseResonance:
         if d is not None and s is not None and md is not None and mbachelor is not None:
             q = two_body_momentum(md,s,mbachelor)   # this is the momentum of the isobar in the main decayings particle rest frame (particle d)
             q0 = two_body_momentum(md,self.M0,mbachelor) # todo this might be wrong: we are allways at L_b resonance peak, so the BW_FF do not make sense here
-            bls = {LS : b * blatt_weisskopf_ff(q, q0, d, LS[0]) * orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), LS[0]) for LS, b in bls.items()}
+            bls = {LS : b * blatt_weisskopf_ff(q, q0, d, LS[0]/2) * orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), LS[0]/2) for LS, b in bls.items()}
         return bls
 
     def __iter__(self):
