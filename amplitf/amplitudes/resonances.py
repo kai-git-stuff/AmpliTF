@@ -180,13 +180,9 @@ class kmatrix(BaseResonance):
 
     def gamma(self,s,a):
         # q0 = self.q(self.M0**2,a)
-        #return (self.q(s,a)/q0)**self.L(a) * self.BWF(s,a)
-        print("-----------------------------")
-        print((self.q(s,a))**self.L(a))
-        # print((self.q(s,a)/q0)**self.L(a) * self.BWF(s,a))
-        print(self.phaseSpaceFactor(s,a))
-        return (self.q(s,a))**self.L(a)
-        return (self.q(s,a)/q0)**self.L(a) * self.BWF(s,a)
+        # return (self.q(s,a)/q0)**self.L(a) * self.BWF(s,a)
+        #return (self.q(s,a))**self.L(a) * self.BWF(s,a)
+        return (self.q(s,a))**self.L(a) # * self.BWF(s,a)
 
     def phaseSpaceFactor(self,s,a):
         return atfi.complex(atfi.const(1/(8* atfi.pi())), atfi.const(0))* self.q(s,a)/atfi.cast_complex(atfi.sqrt(s))
@@ -212,6 +208,7 @@ class kmatrix(BaseResonance):
                 else:
                     v[...,a,b] = -self.V(s,a,b)*self.Sigma(s,b)
         v = atfi.convert_to_tensor(v)
+        
         self._D = atfi.linalg_inv(v)
 
     def g(self,n,b):
