@@ -84,8 +84,8 @@ class BWresonance(BaseResonance):
         p = two_body_momentum(m, ma, mb)
         p0 = two_body_momentum(self.M0, ma , mb)
         ffr = atfi.cast_real(blatt_weisskopf_ff(p, p0, self.d, L))
-        width = mass_dependent_width(m, self.M0, self.gamma0, p, p0, ffr, L)
-        return relativistic_breit_wigner(s,self.M0, width)
+        width = mass_dependent_width(m, self.m0, self.gamma0, p, p0, ffr, L)
+        return relativistic_breit_wigner(s,self.m0, width)
 
 class subThresholdBWresonance(BWresonance):
     def __init__(self, S, P, m0, gamma0, bls_in: dict, bls_out: dict, ma, mb,mc,md, d=5 / 1000):
@@ -179,9 +179,13 @@ class kmatrix(BaseResonance):
         return blatt_weisskopf_ff(q,q0,self.d,self.L(a))
 
     def gamma(self,s,a):
-        q0 = self.q(self.M0**2,a)
+        # q0 = self.q(self.M0**2,a)
         #return (self.q(s,a)/q0)**self.L(a) * self.BWF(s,a)
-        # return (self.q(s,a))**self.L(a)
+        print("-----------------------------")
+        print((self.q(s,a))**self.L(a))
+        # print((self.q(s,a)/q0)**self.L(a) * self.BWF(s,a))
+        print(self.phaseSpaceFactor(s,a))
+        return (self.q(s,a))**self.L(a)
         return (self.q(s,a)/q0)**self.L(a) * self.BWF(s,a)
 
     def phaseSpaceFactor(self,s,a):
@@ -194,7 +198,7 @@ class kmatrix(BaseResonance):
 
     def Sigma(self,s,a):
         sigma = self.phaseSpaceFactor(s,a) * self.gamma(s,a)**2 
-        return atfi.complex(atfi.const(0),atfi.const(1))*(atfi.cast_complex(sigma) + self.width_factors[a])
+        return atfi.complex(atfi.const(0),atfi.const(1.))*(atfi.cast_complex(sigma) + self.width_factors[a])
 
     def build_D(self,s):
         v = []

@@ -65,9 +65,9 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
                     subThresholdBWresonance(sp.SPIN_0,1,atfi.cast_real(2317),30, {(0,1):atfi.complex(atfi.const(-0.017),atfi.const(-0.1256))},
                                                                     {(0,0):atfi.complex(atfi.const(1),atfi.const(0))},*masses1,mb,md,d_mesons),
                     # BWresonance(sp.SPIN_2,1,atfi.cast_real(2573),16.9,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s2(2573)
-                    #BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1,d_mesons), #D^*_s1(2700)
-                    #BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1,d_mesons), #D^*_s1(2860)
-                    D_kma,
+                    BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1,d_mesons), #D^*_s1(2700)
+                    BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1,d_mesons), #D^*_s1(2860)
+                    # D_kma,
                     BWresonance(sp.SPIN_3,-1,atfi.cast_real(2860),53,{(4,5):atfi.complex(atfi.const(0.32),atfi.const(-0.33))},
                                                                         {(6,0):atfi.complex(atfi.const(-0.036),atfi.const(0.015))},*masses1,d_mesons), #D^*_s3(2860)
                     ]  

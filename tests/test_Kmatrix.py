@@ -42,7 +42,7 @@ poles = [
     KmatPole(2713.6,[g0,g1,5]),  # D^*_s1(2700)
     KmatPole(2967.1,[g2,g3,5])  # D^*_s1(2860)    # ToDo find if we assigned the g values correctly #D^*_s1(2860)
 ]
-D_kma = kmatrix(sp.SPIN_1,-1,5./1000.,alphas,channels,poles,
+D_kma = kmatrix(sp.SPIN_1,-1,1.5/1000.,alphas,channels,poles,
                         bls_ds_kmatrix_in,bls_ds_kmatrix_out,out_channel=0)
 
 
