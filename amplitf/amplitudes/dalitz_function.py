@@ -24,7 +24,7 @@ def possible_LS_states(J,s1,s2,P,p1,p2,parity_conservation=True) -> dict:
         s_max,s_min = s1+s2, abs(s1-s2)
         for s in range(s_min,s_max+1,2):
             for l in range(0,J+s+1,2):
-                if J <= l+s and J >= abs(l-s)  and P == p1*p2*(-1)**l:
+                if J <= l+s and J >= abs(l-s)  and P == p1*p2*(-1)**(l/2.):
                     bls[(l,s)] = ((l + 1)/(J+1))**0.5
     return bls
 
@@ -34,7 +34,7 @@ def phasespace_factor(md,ma,mb):
 
 def helicity_coupling_times_d(theta,J,s1,s2,l1,l2,nu,bls):
     return (atfi.cast_complex(helicity_couplings_from_ls(J,s1,s2,l1,l2,bls)) * # helicity based
-            atfi.cast_complex(wigner_small_d(theta,J,nu,l1-l2)) ) # spin orientation based -> -l2 = m2 (z-achsis is along l1)
+            atfi.cast_complex(wigner_small_d(theta,J,nu,l1-l2)) ) * (-1)**((s2-l2)/2) # spin orientation based -> -l2 = m2 (z-achsis is along l1)
 
 class dalitz_decay:
     """
@@ -106,7 +106,7 @@ class dalitz_decay:
                 helicities_abc = helicity_options(sA,self.sa,self.sb,self.sc)
                 for la_,lb_,lc_ in helicities_abc:
                     H_A_c = ( atfi.sqrt(phasespace_factor(self.md,sgma3,self.mc)* phasespace_factor(sgma3,self.ma,self.mb)) * 
-                        helicity_coupling_times_d(theta_hat,self.sd,self.sc,sA,lA,lc_,ld,bls_in) 
+                        helicity_coupling_times_d(theta_hat,self.sd,sA,self.sc,lA,lc_,ld,bls_in) 
                         )
 
                     # Rotation in the isobar system
@@ -147,7 +147,7 @@ class dalitz_decay:
                 helicities_abc = helicity_options(sB,self.sa,self.sb,self.sc)
                 for la_,lb_,lc_ in helicities_abc:
                     # Rotation in the isobar system
-                    H_B_b = phsp_factor * helicity_coupling_times_d(theta_hat,self.sd,self.sb,sB,lB,lb_,ld,bls_in) # ToDo why the other way arround then in the paper? 
+                    H_B_b = phsp_factor * helicity_coupling_times_d(theta_hat,self.sd,sB,self.sb,lB,lb_,ld,bls_in) # ToDo why the other way arround then in the paper? 
                     H_a_c =   helicity_coupling_times_d(theta,sB,self.sc,self.sa,lc_,la_,lB,bls_out)
                     H_a_c *= (-1)**((ld - lB + lb_)/2)  * (-1)**((la - la_)/2) * ( # prefactors for index switches
                         atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) *  
@@ -188,7 +188,7 @@ class dalitz_decay:
                     # Rotation in the isobar system
                     # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar #
                     H_A_c = ( atfi.sqrt(phasespace_factor(sgma1,self.mb,self.mc) * phasespace_factor(self.md,sgma1,self.ma)) * 
-                            helicity_coupling_times_d(theta_hat,self.sd,self.sa,sC,lC,la_,ld,bls_in)   )
+                            helicity_coupling_times_d(theta_hat,self.sd,sC,self.sa,lC,la_,ld,bls_in)   )
                     H_b_c =  helicity_coupling_times_d(theta,sC,self.sb,self.sc,lb_,lc_,lC,bls_out)
                     # symmetry of the d matrices
                     H_b_c *=  (-1)**((lc - lc_)/2) * (   # prefactors for index switches  
