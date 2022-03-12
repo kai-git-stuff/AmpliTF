@@ -295,6 +295,7 @@ def polynomial_nonresonant_lineshape(
         b2 = orbital_barrier_factor(q, q0, ld)
         return poly(m - m0, coeffs) * atfi.complex(b1 * b2, atfi.const(0.0))
     else:
+        m = atfi.sqrt(m2)
         return poly(m - m0, coeffs)
 
 

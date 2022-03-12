@@ -13,6 +13,9 @@ from amplitf.amplitudes.resonances import *
 
 tf.compat.v1.enable_eager_execution()
 
+
+
+
 def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     jd = sp.SPIN_HALF
     pd = 1 # lambda_b  spin = 0.5 parity = +1
@@ -37,7 +40,7 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     bls_ds_kmatrix_in = {
                         (0,1):atfi.complex(atfi.const(-1.8),atfi.const(4.4)),
                         (2,1):atfi.complex(atfi.const(-7.05),atfi.const(-4.06)),
-                        (2,3):atfi.complex(atfi.const(4.96),atfi.const(-4.73))
+                        # (2,3):atfi.complex(atfi.const(4.96),atfi.const(-4.73))
                          }
     bls_ds_kmatrix_out = {
                         (2,0):atfi.complex(atfi.const(-1.064),atfi.const(-0.722))
@@ -65,9 +68,9 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
                     subThresholdBWresonance(sp.SPIN_0,1,atfi.cast_real(2317),30, {(0,1):atfi.complex(atfi.const(-0.017),atfi.const(-0.1256))},
                                                                     {(0,0):atfi.complex(atfi.const(1),atfi.const(0))},*masses1,mb,md,d_mesons),
                     # BWresonance(sp.SPIN_2,1,atfi.cast_real(2573),16.9,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s2(2573)
-                    #BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1,d_mesons), #D^*_s1(2700)
-                    #BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1,d_mesons), #D^*_s1(2860)
-                    D_kma,
+                    BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1,d_mesons), #D^*_s1(2700)
+                    BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1,d_mesons), #D^*_s1(2860)
+                    # D_kma,
                     BWresonance(sp.SPIN_3,-1,atfi.cast_real(2860),53,{(4,5):atfi.complex(atfi.const(0.32),atfi.const(-0.33))},
                                                                         {(6,0):atfi.complex(atfi.const(-0.036),atfi.const(0.015))},*masses1,d_mesons), #D^*_s3(2860)
                     ]  
@@ -76,10 +79,39 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
                                {(0,1):atfi.complex(atfi.const(-0.0149),atfi.const(-0.0259))},*masses2,d_mesons), # xi_c (2790)
                     BWresonance(sp.SPIN_3HALF,-1,atfi.cast_real(2815), 2.43,{},{},*masses2,d_mesons)  # xi_c (2815) no bls couplings given :(
                     ] 
+    def O(nu,lambdas):
+        return decay.chain3(smp,nu,*lambdas,[]) + decay.chain2(smp,nu,*lambdas,resonances2) + decay.chain1(smp,nu,*lambdas,resonances1)
 
-    ampl = sum(abs(decay.chain3(smp,ld,la,0,0,[]) + decay.chain2(smp,ld,la,0,0,resonances2) + decay.chain1(smp,ld,la,0,0,resonances1))**2
-                for la in sp.direction_options(sa) for ld in [1,-1])
-    return ampl
+    def M(Lambda,lambdas,alpha,beta,gamma):
+        """
+        alpha,beta,gamma = euler angles
+        Lambda and nu are the polarisation of the particle 0 in the labframe and outer frame
+        """
+        return sum(wigner_capital_d(alpha,beta,gamma,decay.sd,Lambda,nu) * O(nu,lambdas) for nu in sp.direction_options(decay.sd))
+    
+
+    # ampl = sum(sum(abs(M(ld,[la,0,0],0.5,1,0))**2  for la in sp.direction_options(decay.sa))for ld in [1])
+
+    def spin_density(l1,l2):
+        m = np.asarray(
+            [[0.5,0.25],
+             [0.25,0.5]])
+        i1 = (l1 + 1)//2 
+        l2 = (l2 + 1)//2
+        return m[l1,l2]
+
+    def ll():
+        return zip(sp.direction_options(decay.sd) , sp.direction_options(decay.sd))
+
+    ampl = sum( spin_density(L1,L2) * sum(M(ld1,[la,0,0],0,1,0) * atfi.conjugate(M(ld2,[la,0,0],0,1,0)) for la in sp.direction_options(decay.sa))for ld1,ld2 in ll()
+                    for L1,L2 in ll()
+                    )
+    ampl2 = sum(sum(abs(M(ld,[la,0,0],0.0,1,0))**2  for la in sp.direction_options(decay.sa))for ld in [1,-1])
+
+    diff = sum(abs(abs(ampl)/sum(abs(ampl)) - ampl2/sum(ampl2)))
+    print("DIFF=%s",diff)
+
+    return abs(ampl)
 
 ma = 2286.46 # lambda_c spin = 0.5 parity = 1
 mb = 1864.84 # D^0 bar spin = 0 partiy = -1
