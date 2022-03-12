@@ -12,6 +12,7 @@
 __pycache__/
 htmlcov/
 *.egg-info/
+*.egg
 
 # Virtual environments
 *venv/
