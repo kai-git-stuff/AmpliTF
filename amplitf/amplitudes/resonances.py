@@ -3,7 +3,7 @@ This file includes different types of resonances one might want to use for fits
 """
 from amplitf.dynamics import blatt_weisskopf_ff, blatt_weisskopf_ff_squared, breit_wigner_lineshape, relativistic_breit_wigner, mass_dependent_width, orbital_barrier_factor
 import amplitf.interface as atfi
-from amplitf.kinematics import two_body_momentum
+from amplitf.kinematics import two_body_momentum, two_body_momentum_squared
 from amplitf.constants import spin as sp, angular as angular_constant
 import numpy as np
 
@@ -92,14 +92,18 @@ class subThresholdBWresonance(BWresonance):
         """A variation of the BW resonance, that sits beneeth a threshold for our decay products"""
         super().__init__(S, P, m0, gamma0, bls_in, bls_out, ma, mb, d)
         self.mmax = md-mc
-    
-    @property
-    def M0(self):
+
+    def X(self,s,L):
+        # L will be given doubled, but bw needs it normal
+        L = L/2
         ma,mb = self.masses
-        mmin = ma + mb
-        tanhterm = atfi.tanh((self.m0 - ((mmin + self.mmax) / 2.0)) / (self.mmax - mmin))
-        m0eff = mmin + (self.mmax - mmin) * (1.0 + tanhterm) / 2.0
-        return m0eff
+        m = atfi.cast_complex(atfi.sqrt(s))
+        p = atfi.cast_complex(two_body_momentum(m, ma, mb))
+        p0_2 = two_body_momentum_squared(self.M0, ma , mb)
+        p0 = atfi.cast_complex(atfi.sqrt(p0_2)) if p0_2 > 0 else atfi.complex(atfi.const(0),atfi.sqrt(-p0_2))
+        ffr = blatt_weisskopf_ff(p, p0, self.d, L)
+        width = mass_dependent_width(m, atfi.cast_complex(self.m0), atfi.cast_complex(self.gamma0), p, p0, ffr, L)
+        return relativistic_breit_wigner(atfi.cast_complex(s),self.m0, atfi.cast_complex(width))
 
 class KmatChannel:
     def __init__(self, m1,m2,L,bg,index):
@@ -179,10 +183,7 @@ class kmatrix(BaseResonance):
         return blatt_weisskopf_ff(q,q0,self.d,self.L(a))
 
     def gamma(self,s,a):
-        # q0 = self.q(self.M0**2,a)
-        # return (self.q(s,a)/q0)**self.L(a) * self.BWF(s,a)
-        #return (self.q(s,a))**self.L(a) * self.BWF(s,a)
-        return (self.q(s,a))**self.L(a) # * self.BWF(s,a)
+        return (self.q(s,a))**self.L(a) 
 
     def phaseSpaceFactor(self,s,a):
         return atfi.complex(atfi.const(1/(8* atfi.pi())), atfi.const(0))* self.q(s,a)/atfi.cast_complex(atfi.sqrt(s))

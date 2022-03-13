@@ -40,7 +40,7 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     bls_ds_kmatrix_in = {
                         (0,1):atfi.complex(atfi.const(-1.8),atfi.const(4.4)),
                         (2,1):atfi.complex(atfi.const(-7.05),atfi.const(-4.06)),
-                        # (2,3):atfi.complex(atfi.const(4.96),atfi.const(-4.73))
+                        #(2,3):atfi.complex(atfi.const(4.96),atfi.const(-4.73))
                          }
     bls_ds_kmatrix_out = {
                         (2,0):atfi.complex(atfi.const(-1.064),atfi.const(-0.722))
@@ -94,22 +94,26 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
 
     def spin_density(l1,l2):
         m = np.asarray(
-            [[0.5,0.25],
-             [0.25,0.5]])
+            [[1,0],
+             [0,1]])
         i1 = (l1 + 1)//2 
-        l2 = (l2 + 1)//2
-        return m[l1,l2]
+        i2 = (l2 + 1)//2
+        return m[i1,i2]
 
     def ll():
         return zip(sp.direction_options(decay.sd) , sp.direction_options(decay.sd))
 
-    ampl = sum( spin_density(L1,L2) * sum(M(ld1,[la,0,0],0,1,0) * atfi.conjugate(M(ld2,[la,0,0],0,1,0)) for la in sp.direction_options(decay.sa))for ld1,ld2 in ll()
-                    for L1,L2 in ll()
-                    )
-    ampl2 = sum(sum(abs(M(ld,[la,0,0],0.0,1,0))**2  for la in sp.direction_options(decay.sa))for ld in [1,-1])
+    alpha,beta,gamma = 0,0,0
+    # precompute the M components
+    M_prec = {ld:sum(M(ld,[la,0,0],alpha,beta,gamma) for la in sp.direction_options(decay.sa))  for ld in sp.direction_options(decay.sd)}
 
-    diff = sum(abs(abs(ampl)/sum(abs(ampl)) - ampl2/sum(ampl2)))
-    print("DIFF=%s",diff)
+    ampl = sum( 
+            spin_density(L1,L2) * 
+                        M_prec[L1] * atfi.conjugate(M_prec[L2]) 
+                for L1,L2 in ll()
+                )
+
+    print(max(abs(ampl)- sum(abs(M_prec[L1])**2 for L1 in sp.direction_options(decay.sd))))
 
     return abs(ampl)
 
