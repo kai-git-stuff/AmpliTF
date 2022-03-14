@@ -91,7 +91,6 @@ class subThresholdBWresonance(BWresonance):
     def __init__(self, S, P, m0, gamma0, bls_in: dict, bls_out: dict, ma, mb,mc,md, d=5 / 1000):
         """A variation of the BW resonance, that sits beneeth a threshold for our decay products"""
         super().__init__(S, P, m0, gamma0, bls_in, bls_out, ma, mb, d)
-        self.mmax = md-mc
 
     def X(self,s,L):
         # L will be given doubled, but bw needs it normal

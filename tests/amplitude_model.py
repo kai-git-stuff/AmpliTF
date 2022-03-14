@@ -37,10 +37,11 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     decay = dalitz_decay(md,ma,mb,mc,sd,sa,sb,sc,pd,pa,pb,pc)
     
     # we will add the different Amplitudes
+    
     bls_ds_kmatrix_in = {
                         (0,1):atfi.complex(atfi.const(-1.8),atfi.const(4.4)),
                         (2,1):atfi.complex(atfi.const(-7.05),atfi.const(-4.06)),
-                        #(2,3):atfi.complex(atfi.const(4.96),atfi.const(-4.73))
+                        (2,3):atfi.complex(atfi.const(4.96),atfi.const(-4.73))
                          }
     bls_ds_kmatrix_out = {
                         (2,0):atfi.complex(atfi.const(-1.064),atfi.const(-0.722))
@@ -66,13 +67,13 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     resonances1 = [ 
                     # BWresonance(sp.SPIN_0,1,atfi.cast_real(2317),30, {(0,1):atfi.complex(atfi.const(-0.017),atfi.const(-0.1256))},{(0,0):atfi.complex(atfi.const(1),atfi.const(0))},*masses1),#D_0(2317) no specific outgoing bls given :(
                     subThresholdBWresonance(sp.SPIN_0,1,atfi.cast_real(2317),30, {(0,1):atfi.complex(atfi.const(-0.017),atfi.const(-0.1256))},
-                                                                    {(0,0):atfi.complex(atfi.const(1),atfi.const(0))},*masses1,mb,md,d_mesons),
+                                                                     {(0,0):atfi.complex(atfi.const(1),atfi.const(0))},*masses1,mb,md,d_mesons),
                     # BWresonance(sp.SPIN_2,1,atfi.cast_real(2573),16.9,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s2(2573)
                     BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1,d_mesons), #D^*_s1(2700)
                     BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1,d_mesons), #D^*_s1(2860)
                     # D_kma,
-                    BWresonance(sp.SPIN_3,-1,atfi.cast_real(2860),53,{(4,5):atfi.complex(atfi.const(0.32),atfi.const(-0.33))},
-                                                                        {(6,0):atfi.complex(atfi.const(-0.036),atfi.const(0.015))},*masses1,d_mesons), #D^*_s3(2860)
+                    # BWresonance(sp.SPIN_3,-1,atfi.cast_real(2860),53,{(4,5):atfi.complex(atfi.const(0.32),atfi.const(-0.33))},
+                    #                                                     {(6,0):atfi.complex(atfi.const(-0.036),atfi.const(0.015))},*masses1,d_mesons), #D^*_s3(2860)
                     ]  
     resonances2 = [
                     BWresonance(sp.SPIN_HALF,-1,atfi.cast_real(2791.9),8.9,{(0,1):atfi.complex(atfi.const(-0.53),atfi.const(0.69))},
@@ -94,14 +95,18 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
 
     def spin_density(l1,l2):
         m = np.asarray(
-            [[1,0],
+            [[1,0,],
              [0,1]])
         i1 = (l1 + 1)//2 
         i2 = (l2 + 1)//2
         return m[i1,i2]
 
     def ll():
-        return zip(sp.direction_options(decay.sd) , sp.direction_options(decay.sd))
+        a = []
+        for s1 in sp.direction_options(decay.sd):
+            for s2 in sp.direction_options(decay.sd):
+                a.append((s1,s2))
+        return a
 
     alpha,beta,gamma = 0,0,0
     # precompute the M components
@@ -113,8 +118,8 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
                 for L1,L2 in ll()
                 )
 
-    print(max(abs(ampl)- sum(abs(M_prec[L1])**2 for L1 in sp.direction_options(decay.sd))))
-
+    print(max(abs(ampl)- atfi.real(ampl)))
+    #return sum(abs(M_prec[L1])**2 for L1 in sp.direction_options(decay.sd))
     return abs(ampl)
 
 ma = 2286.46 # lambda_c spin = 0.5 parity = 1

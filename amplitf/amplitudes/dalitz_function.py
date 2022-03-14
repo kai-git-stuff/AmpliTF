@@ -33,6 +33,8 @@ def phasespace_factor(md,ma,mb):
     return atfi.cast_complex(4 * atfi.pi()* atfi.sqrt(md/two_body_momentum(md,ma,mb)))
 
 def helicity_coupling_times_d(theta,J,s1,s2,l1,l2,nu,bls):
+    if abs(l1-l2) > J or abs(nu) > J: 
+        return 0
     return (atfi.cast_complex(helicity_couplings_from_ls(J,s1,s2,l1,l2,bls)) * # helicity based
             atfi.cast_complex(wigner_small_d(theta,J,nu,l1-l2)) ) * (-1)**((s2-l2)/2) # spin orientation based -> -l2 = m2 (z-achsis is along l1)
 
@@ -82,10 +84,10 @@ class dalitz_decay:
         """
         # channel 3   
         # d -> A c : A -> a b
-        sgma3 = self.phsp.m2ab(smp)
-        sgma2 = self.phsp.m2ac(smp)
         sgma1 = self.phsp.m2bc(smp)
-        ampl = atfi.zeros_tensor(sgma1.shape,atfi.ctype())
+        sgma2 = self.phsp.m2ac(smp)
+        sgma3 = self.phsp.m2ab(smp)
+        ampl = atfi.zeros_tensor(sgma3.shape,atfi.ctype())
         
         # Rotation in the isobar system
         # angle between momentum of L_b and spectator 
@@ -123,10 +125,10 @@ class dalitz_decay:
         """For explanation see chain3"""
         # channel 2
         # L_b -> B b : B -> (a,c)
-        sgma3 = self.phsp.m2ab(smp)
-        sgma2 = self.phsp.m2ac(smp)
         sgma1 = self.phsp.m2bc(smp)
-        ampl = atfi.zeros_tensor(self.phsp.m2ab(smp).shape,atfi.ctype())
+        sgma2 = self.phsp.m2ac(smp)
+        sgma3 = self.phsp.m2ab(smp)
+        ampl = atfi.zeros_tensor(sgma2.shape,atfi.ctype())
 
         zeta_1 = atfi.acos(cos_zeta_1_aligned_1_in_frame_2(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
         # remember to apply (-1)**((la - la_)/2) in front of the d matrix (switch last 2 indices)
@@ -160,9 +162,9 @@ class dalitz_decay:
         """For explanation see chain3"""
         # channel 1
         # L_b -> C a : C -> (b,c)  
-        sgma3 = self.phsp.m2ab(smp)
-        sgma2 = self.phsp.m2ac(smp)
         sgma1 = self.phsp.m2bc(smp)
+        sgma2 = self.phsp.m2ac(smp)
+        sgma3 = self.phsp.m2ab(smp)
         ampl = atfi.zeros_tensor(self.phsp.m2ab(smp).shape,atfi.ctype())
         # Rotation in the isobar system
         theta_hat =  atfi.acos(cos_theta_hat_1_canonical_1(self.md, self.ma, self.mb, self.mc, sgma1, sgma2, sgma3))
@@ -191,7 +193,7 @@ class dalitz_decay:
                             helicity_coupling_times_d(theta_hat,self.sd,sC,self.sa,lC,la_,ld,bls_in)   )
                     H_b_c =  helicity_coupling_times_d(theta,sC,self.sb,self.sc,lb_,lc_,lC,bls_out)
                     # symmetry of the d matrices
-                    H_b_c *=  (-1)**((lc_ - lc)/2) * (   # prefactors for index switches  
+                    H_b_c *=  (-1)**((lc - lc_)/2) * (   # prefactors for index switches  
                          atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc_,lc)) * 
                          atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) * 
                          atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) )

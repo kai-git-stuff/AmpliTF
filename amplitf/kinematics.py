@@ -902,7 +902,7 @@ def wigner_small_d(theta, j, m1, m2):
     from sympy.abc import x
     from sympy.utilities.lambdify import lambdify
     from sympy.physics.quantum.spin import Rotation as Wigner
-
+    
     d = Wigner.d(Rational(j, 2), Rational(m1, 2), Rational(m2, 2), x).doit().evalf()
     # cast_complex is nescesarry for some reason, as otherwise tensorflow expects the result to be real
     return lambdify(x, d, "tensorflow")(atfi.cast_complex( theta))
