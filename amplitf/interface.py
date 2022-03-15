@@ -106,7 +106,8 @@ _interface_dict = {
     "random_uniform":"tf.random.stateless_uniform",
     "linalg_inv":"tf.linalg.inv",
     "convert_to_tensor":"tf.convert_to_tensor",
-    "reshape": "tf.reshape"
+    "reshape": "tf.reshape",
+    "nansum":"tf.experimental.numpy.nansum"
 }
 
 
