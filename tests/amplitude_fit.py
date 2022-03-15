@@ -23,15 +23,20 @@ def run_fit():
     tensor_data = atfi.cast_real(atfi.stack([atfi.convert_to_tensor(s3.values),atfi.convert_to_tensor(s1.values)],axis=1))
     smp = PhaseSpaceSample(phsp,tensor_data)
 
+    maxL, minL = 0,1e15
 
 
     def print_self(args,L):
+        nonlocal maxL, minL
+        stdscr.clear()
+        if -L < minL: minL = -L
+        if -L > maxL: maxL = -L
         stdscr.addstr(0,0,"Arguments %s"%(args,))
         stdscr.addstr(1,0,"")
-        stdscr.addstr(2,0,"-Log(L)=%.3f"%-L)
+        stdscr.addstr(5,0,"-Log(L)=%.3f, MAX(-Log(L))=%.3f, MIN(-Log(L))=%.3f"%(-L,maxL,minL))
         stdscr.addstr(3,0,"")
         stdscr.addstr(4,0,"")
-        stdscr.addstr(5,0,"")
+        stdscr.addstr(2,0,"")
         stdscr.refresh()
 
     def log_L(*args):
