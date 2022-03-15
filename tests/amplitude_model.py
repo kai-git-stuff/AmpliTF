@@ -46,17 +46,21 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
                         })
 
     bls_D2317_in = kwargs.get('bls_D2317_in',{(0,1):atfi.complex(atfi.const(-0.017),atfi.const(-0.1256))})
-    bld_D2317_out = kwargs.get('bld_D2317_out',{(0,0):atfi.complex(atfi.const(1),atfi.const(0))})
+    bls_D2317_out = kwargs.get('bls_D2317_out',{(0,0):atfi.complex(atfi.const(1),atfi.const(0))})
 
     bls_L_2791_in = kwargs.get('bls_L_2791_in',{(0,1):atfi.complex(atfi.const(-0.53),atfi.const(0.69))})
     bls_L_2791_out = kwargs.get('bls_L_2791_out',{(0,1):atfi.complex(atfi.const(-0.0149),atfi.const(-0.0259))})
 
+    bls_D2860_in = kwargs.get('bls_D2860_in',{(4,5):atfi.complex(atfi.const(0.32),atfi.const(-0.33))})
+    bls_D2860_out = kwargs.get('bls_D2860_out',{(6,0):atfi.complex(atfi.const(-0.036),atfi.const(0.015))})
+
     alphas = [atfi.complex(atfi.const(0.00272),atfi.const(-0.00715)), atfi.complex(atfi.const(-0.00111),atfi.const(0.00394))]
-    g0,g1,g2,g3 = -8.73, 6.54,6.6,-3.38
+    g0,g1,g2,g3 = kwargs.get("KmatG_factors",(-8.73, 6.54,6.6,-3.38))
+    bg1, bg2 = kwargs.get("Kmatbg_values",(0.0135,0.0867))
     m11,m12,m21,m22 = mb,mc,2006.85,mc 
     channels = [
-        KmatChannel(m11,m12,2,0.0135,index=0), # this is the decay channel we will see
-        KmatChannel(m21,m22,2,0.0867,index=1) # this is the channel that may cause interference
+        KmatChannel(m11,m12,2,bg1,index=0), # this is the decay channel we will see
+        KmatChannel(m21,m22,2,bg2,index=1) # this is the channel that may cause interference
     ]
     resonances = [
         KmatPole(2713.6,[g0,g1]),  # D^*_s1(2700)
@@ -71,13 +75,12 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     # from test_Kmatrix import D_kma # kmatrix with extra channel, that will lead to fall at 2.85GeV
     resonances1 = [ 
                     # BWresonance(sp.SPIN_0,1,atfi.cast_real(2317),30, {(0,1):atfi.complex(atfi.const(-0.017),atfi.const(-0.1256))},{(0,0):atfi.complex(atfi.const(1),atfi.const(0))},*masses1),#D_0(2317) no specific outgoing bls given :(
-                    subThresholdBWresonance(sp.SPIN_0,1,atfi.cast_real(2317),30, bls_D2317_in,bld_D2317_out,*masses1,mb,md,d_mesons),
+                    subThresholdBWresonance(sp.SPIN_0,1,atfi.cast_real(2317),30, bls_D2317_in,bls_D2317_out,*masses1,mb,md,d_mesons),
                     # BWresonance(sp.SPIN_2,1,atfi.cast_real(2573),16.9,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s2(2573)
-                    BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1,d_mesons), #D^*_s1(2700)
-                    BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1,d_mesons), #D^*_s1(2860)
-                    # D_kma,
-                    # BWresonance(sp.SPIN_3,-1,atfi.cast_real(2860),53,{(4,5):atfi.complex(atfi.const(0.32),atfi.const(-0.33))},
-                    #                                                     {(6,0):atfi.complex(atfi.const(-0.036),atfi.const(0.015))},*masses1,d_mesons), #D^*_s3(2860)
+                    # BWresonance(sp.SPIN_1,-1,atfi.cast_real(2700),122,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1,d_mesons), #D^*_s1(2700)
+                    # BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1,d_mesons), #D^*_s1(2860)
+                    D_kma,
+                    BWresonance(sp.SPIN_3,-1,atfi.cast_real(2860),53,bls_D2860_in,bls_D2860_out,*masses1,d_mesons), #D^*_s3(2860)
                     ]  
     resonances2 = [
                     BWresonance(sp.SPIN_HALF,-1,atfi.cast_real(2791.9),8.9,bls_L_2791_in,bls_L_2791_out,*masses2,d_mesons), # xi_c (2790)

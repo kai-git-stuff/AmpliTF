@@ -26,13 +26,18 @@ def run_fit():
     smp = PhaseSpaceSample(phsp,tensor_data)
 
     maxL, minL = 0,1e15
-
+    global_args = ()
 
     def print_self(args,L):
-        nonlocal maxL, minL
+        nonlocal maxL, minL,global_args
+        
         stdscr.clear()
-        if -L < minL: minL = -L
-        if -L > maxL: maxL = -L
+        stdscr.refresh()
+        if -L < minL:
+            minL = -L
+            global_args = args
+        if -L > maxL: 
+            maxL = -L
         stdscr.addstr(0,0,"Arguments %s"%(args,))
         stdscr.addstr(1,0,"")
         stdscr.addstr(5,0,"-Log(L)=%.3f, MAX(-Log(L))=%.3f, MIN(-Log(L))=%.3f"%(-L,maxL,minL))
@@ -42,7 +47,7 @@ def run_fit():
         stdscr.refresh()
 
     def log_L(*args):
-        v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14 = args
+        v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17,v18,v19,v20,v21,v22,v23,v24 = args
         bls_ds_kmatrix_in = {
                         (0,1):atfi.complex(atfi.const(v1),atfi.const(v2)),
                         (2,1):atfi.complex(atfi.const(v3),atfi.const(v4)),
@@ -58,21 +63,27 @@ def run_fit():
         bls_L_2791_in = {(0,1):atfi.complex(atfi.const(v11),atfi.const(v12))}
         bls_L_2791_out = {(0,1):atfi.complex(atfi.const(v13),atfi.const(v14))}
 
+        bls_D2860_in = {(4,5):atfi.complex(atfi.const(v15),atfi.const(v16))}
+        bls_D2860_out = {(6,0):atfi.complex(atfi.const(v17),atfi.const(v18))}
+
         kwargs = {"bls_ds_kmatrix_in":bls_ds_kmatrix_in,
                   "bls_ds_kmatrix_out":bls_ds_kmatrix_out, 
                   "bls_D2317_in":bls_D2317_in,
                   "bld_D2317_out":bld_D2317_out,
                   "bls_L_2791_in":bls_L_2791_in,
-                  "bls_L_2791_out":bls_L_2791_out }
+                  "bls_L_2791_out":bls_L_2791_out,
+                  "bls_D2860_in":bls_D2860_in,
+                  "bls_D2860_in":bls_D2860_out,
+                  "KmatG_factors":(v19,v20,v21,v22) ,
+                  "Kmatbg_values":(v23,v24)}
         amplitude = three_body_decay_Daliz_plot_function(smp,phsp,**kwargs)
         L = atfi.nansum(atfi.log(amplitude/atfi.nansum(amplitude)))
         
         print_self(args,L)
         return -L
     
-    start = [1 for _ in range(14)]
-#     start = (7.815589133667614, -8.879935237766773, 6.668222479231542, 4.757150469692397, 0.1902563180407234, 11.99432175663503, 0.5268145161075181, -0.0919303397799821, 19.44511733740075
-# , 0.017517318535441806, 0.9325524054317059, 0.6612866897366092, 0.9108577264514952, 0.6612866896678835)
+    start = [1 for _ in range(22)] + [0.1,0.1]
+
     stdscr = curses.initscr()
     curses.noecho()
     curses.cbreak()
@@ -85,8 +96,9 @@ def run_fit():
         curses.nocbreak()
         curses.endwin()
     print(m)
+    print(global_args)
 
-def amplitude_from_fit(args= (7.8129217018561405, -8.9029791987581, 6.672740837966961, 4.753554879115412, 0.25482039945567525, 12.001709375759884, 0.5267874285177503, -0.09320190898238714, 19.44897530068699, 0.05323202382048686, 0.9210743497097295, 0.6849073346905623, 0.8995643811457568, 0.6623408395456626)):
+def amplitude_from_fit_noKmat(args= (7.8129217018561405, -8.9029791987581, 6.672740837966961, 4.753554879115412, 0.25482039945567525, 12.001709375759884, 0.5267874285177503, -0.09320190898238714, 19.44897530068699, 0.05323202382048686, 0.9210743497097295, 0.6849073346905623, 0.8995643811457568, 0.6623408395456626)):
     v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14 = args
     bls_ds_kmatrix_in = {
                     (0,1):atfi.complex(atfi.const(v1),atfi.const(v2)),
