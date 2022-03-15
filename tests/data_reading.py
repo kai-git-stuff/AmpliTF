@@ -20,7 +20,7 @@ def read_data_numpy(filename="/home/kai/LHCb/data/Data_LcD0K_Run2_Dalitz.root"):
 
 if __name__ == "__main__":
     data = read_data_numpy("/home/kai/LHCb/data/Data_LcD0K_Run2_Dalitz.root")
-    #plt.hist2d(data["D0K_M2"]**0.5/1e3,data["LcD0_M2"]**0.5/1e3,bins=(50,50))
-    plt.hist(data["LcK_M2"]**0.5/1e3,bins=100)
+    plt.hist2d(data["D0K_M2"]**0.5/1e3,data["LcD0_M2"]**0.5/1e3,bins=(100,100))
+    # plt.hist(data["LcK_M2"]**0.5/1e3,bins=100)
     plt.show()
     print(data)

@@ -35,7 +35,6 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     d_mesons = 1.5/1000.
 
     decay = dalitz_decay(md,ma,mb,mc,sd,sa,sb,sc,pd,pa,pb,pc,phsp=phsp)
-    
     # we will add the different Amplitudes
     bls_ds_kmatrix_in = kwargs.get('bls_ds_kmatrix_in', {
                         (0,1):atfi.complex(atfi.const(-1.8),atfi.const(4.4)),
