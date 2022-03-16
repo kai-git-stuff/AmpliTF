@@ -54,7 +54,7 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     bls_D2860_in = kwargs.get('bls_D2860_in',{(4,5):atfi.complex(atfi.const(0.32),atfi.const(-0.33))})
     bls_D2860_out = kwargs.get('bls_D2860_out',{(6,0):atfi.complex(atfi.const(-0.036),atfi.const(0.015))})
 
-    alphas = [atfi.complex(atfi.const(0.00272),atfi.const(-0.00715)), atfi.complex(atfi.const(-0.00111),atfi.const(0.00394))]
+    alphas = kwargs.get('alphas',[atfi.complex(atfi.const(0.00272),atfi.const(-0.00715)), atfi.complex(atfi.const(-0.00111),atfi.const(0.00394))])
     g0,g1,g2,g3 = kwargs.get("KmatG_factors",(-8.73, 6.54,6.6,-3.38))
     bg1, bg2 = kwargs.get("Kmatbg_values",(0.0135,0.0867))
     m11,m12,m21,m22 = mb,mc,2006.85,mc 

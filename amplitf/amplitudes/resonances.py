@@ -14,6 +14,7 @@ class BaseResonance:
         self.S,self.P = S,P
         self.d = d   # resonance radius (if None)
 
+
     @property
     def masses(self):
         raise NotImplementedError("This should return the masses of the daughters (for a scpecified channel if needed!)")
@@ -22,18 +23,23 @@ class BaseResonance:
     def M0(self):
         raise NotImplementedError("This is the peak mass or the mean of the pole masses! It is meant for use in the standard BLS versions! It must be implemented!")
 
+    @property
+    def p0(self):
+        return two_body_momentum(self.M0,*self.masses)
+
+
     def bls_out(self,s=None,d=None):
         """WARNING: do not use d != None, if the Blatt-Weisskopf FF are already used in the resonance function!"""
         bls = self._bls_out
         if s is not None:
             q = two_body_momentum(s,*self.masses)
-            q0 = two_body_momentum(self.M0,*self.masses)
+            q0 = self.p0
             bls = {LS : b * self.X(s,LS[0]) * 
                     orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), LS[0]/2) 
                     for LS, b in bls.items()}
         if self.d is not None and s is not None:
             q = two_body_momentum(s,*self.masses)
-            q0 = two_body_momentum(self.M0,*self.masses)
+            q0 = self.p0
             bls = {LS : b * blatt_weisskopf_ff(q, q0, self.d, LS[0]/2)  for LS, b in bls.items()}
         return bls
 
@@ -66,6 +72,8 @@ class BWresonance(BaseResonance):
         self.m0 = m0
         self.gamma0 = gamma0
         self._masses = (ma,mb)
+        self._p0 = two_body_momentum(self.M0, ma , mb)
+
         super().__init__(S,P,bls_in,bls_out,d)
 
     @property
@@ -75,6 +83,10 @@ class BWresonance(BaseResonance):
     @property
     def M0(self):
         return self.m0
+    
+    @property
+    def p0(self):
+        return self._p0
 
     def X(self,s,L):
         # L will be given doubled, but bw needs it normal
@@ -82,15 +94,16 @@ class BWresonance(BaseResonance):
         ma,mb = self.masses
         m = atfi.sqrt(s)
         p = two_body_momentum(m, ma, mb)
-        p0 = two_body_momentum(self.M0, ma , mb)
-        ffr = atfi.cast_real(blatt_weisskopf_ff(p, p0, self.d, L))
-        width = mass_dependent_width(m, self.m0, self.gamma0, p, p0, ffr, L)
+        ffr = atfi.cast_real(blatt_weisskopf_ff(p, self.p0, self.d, L))
+        width = mass_dependent_width(m, self.m0, self.gamma0, p, self.p0, ffr, L)
         return relativistic_breit_wigner(s,self.m0, width)
 
 class subThresholdBWresonance(BWresonance):
     def __init__(self, S, P, m0, gamma0, bls_in: dict, bls_out: dict, ma, mb,mc,md, d=5 / 1000):
         """A variation of the BW resonance, that sits beneeth a threshold for our decay products"""
         super().__init__(S, P, m0, gamma0, bls_in, bls_out, ma, mb, d)
+        p0_2 = two_body_momentum_squared(self.M0, ma , mb)
+        self._p0 = atfi.cast_complex(atfi.sqrt(p0_2)) if p0_2 > 0 else atfi.complex(atfi.const(0),atfi.sqrt(-p0_2))
 
     def X(self,s,L):
         # L will be given doubled, but bw needs it normal
@@ -98,10 +111,8 @@ class subThresholdBWresonance(BWresonance):
         ma,mb = self.masses
         m = atfi.cast_complex(atfi.sqrt(s))
         p = atfi.cast_complex(two_body_momentum(m, ma, mb))
-        p0_2 = two_body_momentum_squared(self.M0, ma , mb)
-        p0 = atfi.cast_complex(atfi.sqrt(p0_2)) if p0_2 > 0 else atfi.complex(atfi.const(0),atfi.sqrt(-p0_2))
-        ffr = blatt_weisskopf_ff(p, p0, self.d, L)
-        width = mass_dependent_width(m, atfi.cast_complex(self.m0), atfi.cast_complex(self.gamma0), p, p0, ffr, L)
+        ffr = blatt_weisskopf_ff(p, self.p0, self.d, L)
+        width = mass_dependent_width(m, atfi.cast_complex(self.m0), atfi.cast_complex(self.gamma0), p, self.p0, ffr, L)
         return relativistic_breit_wigner(atfi.cast_complex(s),self.m0, atfi.cast_complex(width))
 
 class KmatChannel:
@@ -145,6 +156,7 @@ class kmatrix(BaseResonance):
         else:
             self.width_factors = [atfi.complex(atfi.const(0.), atfi.const(0.)) for _ in range(len(self.channels))]
         self.d = d # the momentum scale for the BWff
+        self._p0 = two_body_momentum(self.M0, *self.masses)
         super().__init__(S,P,bls_in,bls_out,d)
 
     @property
@@ -159,6 +171,10 @@ class kmatrix(BaseResonance):
     def M0(self):
         """Mean of pole positions"""
         return sum(res.M for res in self.resonances)/len(self.resonances)
+
+    @property
+    def p0(self):
+        return self._p0
 
     def get_m(self,a):
         return self.channels[a].masses
