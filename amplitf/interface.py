@@ -107,7 +107,9 @@ _interface_dict = {
     "linalg_inv":"tf.linalg.inv",
     "convert_to_tensor":"tf.convert_to_tensor",
     "reshape": "tf.reshape",
-    "nansum":"tf.experimental.numpy.nansum"
+    "nansum":"tf.experimental.numpy.nansum",
+    "equal":"tf.equal",
+    "cast": "tf.cast",
 }
 
 

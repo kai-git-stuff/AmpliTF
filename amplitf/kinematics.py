@@ -1018,7 +1018,7 @@ def clebsch(j1, m1, j2, m2, J, M):
     )
 
 
-@atfi.function
+# @atfi.function does not work, because no consistent recepie for dicts
 def helicity_couplings_from_ls(ja, jb, jc, lb, lc, bls):
     """Helicity couplings from a list of LS couplings.
         ja : spin of A (decaying) particle
@@ -1098,6 +1098,9 @@ def two_body_momentum_squared(md, ma, mb):
     """
     return (md ** 2 - (ma + mb) ** 2) * (md ** 2 - (ma - mb) ** 2) / (4 * md ** 2)
 
+@atfi.function
+def two_body_momentum_squared_no_tf(md,ma,mb):
+    return (md ** 2 - (ma + mb) ** 2) * (md ** 2 - (ma - mb) ** 2) / (4 * md ** 2)
 
 @atfi.function
 def two_body_momentum(md, ma, mb):
@@ -1109,6 +1112,12 @@ def two_body_momentum(md, ma, mb):
 
     """
     return atfi.sqrt(two_body_momentum_squared(md, ma, mb))
+
+
+
+@atfi.function
+def two_body_momentum_no_tf(md, ma, mb):
+    return atfi.sqrt(two_body_momentum_squared_no_tf(md, ma, mb))
 
 
 @atfi.function

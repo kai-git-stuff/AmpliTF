@@ -3,7 +3,7 @@ This file includes different types of resonances one might want to use for fits
 """
 from amplitf.dynamics import blatt_weisskopf_ff, blatt_weisskopf_ff_squared, breit_wigner_lineshape, relativistic_breit_wigner, mass_dependent_width, orbital_barrier_factor
 import amplitf.interface as atfi
-from amplitf.kinematics import two_body_momentum, two_body_momentum_squared
+from amplitf.kinematics import two_body_momentum, two_body_momentum_squared,two_body_momentum_no_tf
 from amplitf.constants import spin as sp, angular as angular_constant
 import numpy as np
 
@@ -12,7 +12,7 @@ class BaseResonance:
         self._bls_in = bls_in
         self._bls_out = bls_out
         self.S,self.P = S,P
-        self.d = d   # resonance radius (if None)
+        self.d = atfi.const(d)   # resonance radius (if None)
 
 
     @property
@@ -25,35 +25,37 @@ class BaseResonance:
 
     @property
     def p0(self):
-        return two_body_momentum(self.M0,*self.masses)
+        return two_body_momentum(atfi.const(self.M0),*self.masses)
 
+    def breakup_momentum(self,md,s,mbachelor):
+        return two_body_momentum(md,s,mbachelor)
 
     def bls_out(self,s=None,d=None):
         """WARNING: do not use d != None, if the Blatt-Weisskopf FF are already used in the resonance function!"""
         bls = self._bls_out
         if s is not None:
-            q = two_body_momentum(s,*self.masses)
+            q = self.breakup_momentum(s,*self.masses)
             q0 = self.p0
             bls = {LS : b * self.X(s,LS[0]) * 
                     orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), LS[0]/2) 
                     for LS, b in bls.items()}
         if self.d is not None and s is not None:
-            q = two_body_momentum(s,*self.masses)
+            q = self.breakup_momentum(s,*self.masses)
             q0 = self.p0
-            bls = {LS : b * blatt_weisskopf_ff(q, q0, self.d, LS[0]/2)  for LS, b in bls.items()}
+            bls = {LS : b * blatt_weisskopf_ff(q, q0, self.d, atfi.const(LS[0]/2))  for LS, b in bls.items()}
         return bls
 
     def bls_in(self,s=None, d = None,md = None,mbachelor = None):
         bls = self._bls_in
         if s is not None and md is not None and mbachelor is not None:
-            q = two_body_momentum(md,s,mbachelor)   # this is the momentum of the isobar in the main decayings particle rest frame (particle d)
-            q0 = two_body_momentum(md,self.M0,mbachelor) # todo this might be wrong: we are allways at L_b resonance peak, so the BW_FF do not make sense here
+            q = self.breakup_momentum(atfi.const(md),s,atfi.const(mbachelor))   # this is the momentum of the isobar in the main decayings particle rest frame (particle d)
+            q0 = two_body_momentum(atfi.const(md),self.M0,atfi.const(mbachelor)) # todo this might be wrong: we are allways at L_b resonance peak, so the BW_FF do not make sense here
             if d is not None:
-                bls = {LS : b * blatt_weisskopf_ff(q, q0, d, LS[0]/2) * 
-                        orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), LS[0]/2) 
+                bls = {LS : b * blatt_weisskopf_ff(q, q0, d, atfi.const(LS[0]/2)) * 
+                        orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), atfi.const(LS[0]/2)) 
                     for LS, b in bls.items()}
             else:
-                bls = {LS : b * orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), LS[0]/2) 
+                bls = {LS : b * orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), atfi.const(LS[0]/2)) 
                     for LS, b in bls.items()}
         return bls
 
@@ -69,10 +71,10 @@ class BaseResonance:
 
 class BWresonance(BaseResonance):
     def __init__(self,S,P,m0,gamma0,bls_in : dict, bls_out :dict,ma,mb,d=5./1000.):
-        self.m0 = m0
+        self.m0 = atfi.const(m0)
         self.gamma0 = gamma0
-        self._masses = (ma,mb)
-        self._p0 = two_body_momentum(self.M0, ma , mb)
+        self._masses = (atfi.const(ma),atfi.const(mb))
+        self._p0 = two_body_momentum(self.M0, *self._masses)
 
         super().__init__(S,P,bls_in,bls_out,d)
 
@@ -94,7 +96,7 @@ class BWresonance(BaseResonance):
         ma,mb = self.masses
         m = atfi.sqrt(s)
         p = two_body_momentum(m, ma, mb)
-        ffr = atfi.cast_real(blatt_weisskopf_ff(p, self.p0, self.d, L))
+        ffr = atfi.cast_real(blatt_weisskopf_ff(p, self.p0, self.d, atfi.const(L)))
         width = mass_dependent_width(m, self.m0, self.gamma0, p, self.p0, ffr, L)
         return relativistic_breit_wigner(s,self.m0, width)
 
@@ -104,20 +106,25 @@ class subThresholdBWresonance(BWresonance):
         super().__init__(S, P, m0, gamma0, bls_in, bls_out, ma, mb, d)
         p0_2 = two_body_momentum_squared(self.M0, ma , mb)
         self._p0 = atfi.cast_complex(atfi.sqrt(p0_2)) if p0_2 > 0 else atfi.complex(atfi.const(0),atfi.sqrt(-p0_2))
+        self.d = atfi.cast_complex(self.d)
+
+    def breakup_momentum(self,md,s,mbachelor):
+        return atfi.cast_complex(two_body_momentum(md,s,mbachelor))
+
 
     def X(self,s,L):
         # L will be given doubled, but bw needs it normal
         L = L/2
         ma,mb = self.masses
         m = atfi.cast_complex(atfi.sqrt(s))
-        p = atfi.cast_complex(two_body_momentum(m, ma, mb))
-        ffr = blatt_weisskopf_ff(p, self.p0, self.d, L)
+        p = atfi.cast_complex(two_body_momentum(m, atfi.cast_complex(ma), atfi.cast_complex(mb)))
+        ffr = blatt_weisskopf_ff(p, self.p0, atfi.cast_complex(self.d), atfi.const(L))
         width = mass_dependent_width(m, atfi.cast_complex(self.m0), atfi.cast_complex(self.gamma0), p, self.p0, ffr, L)
         return relativistic_breit_wigner(atfi.cast_complex(s),self.m0, atfi.cast_complex(width))
 
 class KmatChannel:
     def __init__(self, m1,m2,L,bg,index):
-        self.masses = m1,m2
+        self.masses = atfi.const(m1),atfi.const(m2)
         self.L = L # (doubled!!!)
         # the index by which the channel is refered to
         # usually we have one specific outgoing process and look at one set of final state
@@ -129,8 +136,8 @@ class KmatChannel:
 class KmatPole:
     def __init__(self,M,couplings_out):
         self.couplings_out = couplings_out
-        self._M = atfi.cast_complex(M)
-        self._M2 = atfi.cast_complex(M**2)
+        self._M = atfi.complex(atfi.const(M),atfi.const(0))
+        self._M2 = atfi.complex(atfi.const(M**2),atfi.const(0))
         
     def coupling(self,a):
         return self.couplings_out[a]
@@ -170,7 +177,7 @@ class kmatrix(BaseResonance):
     @property
     def M0(self):
         """Mean of pole positions"""
-        return sum(res.M for res in self.resonances)/len(self.resonances)
+        return atfi.cast_real(sum(res.M for res in self.resonances)/len(self.resonances))
 
     @property
     def p0(self):
@@ -181,8 +188,8 @@ class kmatrix(BaseResonance):
 
     def q(self,s,a):
         m1,m2 = self.get_m(a)
-        s_a = m1 + m2
-        d_a = m1-m2
+        s_a = atfi.cast_complex(m1 + m2)
+        d_a = atfi.cast_complex(m1-m2)
         return atfi.sqrt(atfi.cast_complex((s-s_a**2) * (s-d_a**2)/(4*s) ))
 
     def get_channel(self,index,L):
@@ -195,7 +202,7 @@ class kmatrix(BaseResonance):
     def BWF(self,s,a):
         q = self.q(s,a)
         q0 = self.q(self.M0**2,a)
-        return blatt_weisskopf_ff(q,q0,self.d,self.L(a))
+        return blatt_weisskopf_ff(q,q0,self.d,atfi.const(self.L(a)))
 
     def gamma(self,s,a):
         return (self.q(s,a))**self.L(a) 

@@ -25,3 +25,4 @@ htmlcov/
 # Plots for debugging
 *.pdf
 *.png
+*.txt

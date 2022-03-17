@@ -83,9 +83,10 @@ def blatt_weisskopf_ff(q, q0, d, l):
     """
     z = q * d
     z0 = q0 * d
+    @tf.function(experimental_relax_shapes=True)
     def hankel1(x):
         if l == angular_constant.L_0:
-            return atfi.const(1.0)
+            return atfi.cast(atfi.const(1.0),x.dtype)
         if l == angular_constant.L_1:
             return 1 + x * x
         if l == angular_constant.L_2:
@@ -97,6 +98,7 @@ def blatt_weisskopf_ff(q, q0, d, l):
         if l == angular_constant.L_4:
             x2 = x * x
             return 11025.0 + x2 * (1575.0 + x2 * (135.0 + x2 * (10.0 + x2)))
+        return atfi.cast(atfi.const(0),x.dtype)
     return atfi.sqrt(atfi.cast_complex(hankel1(z0)) / atfi.cast_complex(hankel1(z)))
 
 
@@ -105,17 +107,17 @@ def blatt_weisskopf_ff_squared(q_squared, d, l_orbit):
     z = q_squared * d * d
 
     def _bw_ff_squared(x):
-        if l_orbit == angular_constant.L_0:
+        if atfi.equal(l_orbit , angular_constant.L_0):
             return atfi.const(1.0)
-        if l_orbit == angular_constant.L_1:
+        if atfi.equal(l_orbit , angular_constant.L_1):
             return (2 * x) / (x + 1)
-        if l_orbit == angular_constant.L_2:
+        if atfi.equal(l_orbit , angular_constant.L_2):
             return (13 * x * x) / ((x - 3) * (x - 3) + 9 * x)
-        if l_orbit == angular_constant.L_3:
+        if atfi.equal(l_orbit , angular_constant.L_3):
             return (277 * x * x * x) / (
                 x * (x - 15) * (x - 15) + 9 * (2 * x - 5) * (2 * x - 5)
             )
-        if l_orbit == angular_constant.L_4:
+        if atfi.equal(l_orbit , angular_constant.L_4):
             return (12746 * x * x * x * x) / (
                 (x * x - 45 * x + 105) * (x * x - 45 * x + 105)
                 + 25 * x * (2 * x - 21) * (2 * x - 21)
@@ -139,17 +141,16 @@ def mass_dependent_width(m, m0, gamma0, p, p0, ff, l):
         return gamma0 * ((p / p0) ** (2 * l + 1)) * (m0 / m) * (ff ** 2)
 
 
-@atfi.function
+@tf.function(experimental_relax_shapes=True)
 def orbital_barrier_factor(p, p0, l):
     """
     Orbital barrier factor
     """
-    if l == angular_constant.L_0:
+    if atfi.equal(l , angular_constant.L_0):
         return atfi.ones(p)
-    if l == angular_constant.L_1:
+    if atfi.equal(l , angular_constant.L_1):
         return p / p0
-    if l >= angular_constant.L_2:
-        return (p / p0) ** l
+    return (p / p0) ** atfi.cast_complex(l)
 
 
 @atfi.function

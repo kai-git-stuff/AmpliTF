@@ -8,6 +8,7 @@ from amplitf.phasespace.base_phasespace import PhaseSpaceSample
 import amplitf.interface as atfi
 import matplotlib.pyplot as plt
 import numpy as np
+from datetime import datetime
 from data_reading import read_data_numpy
 from iminuit import cost, Minuit
 import curses
@@ -27,12 +28,13 @@ def run_fit():
     tensor_data = atfi.cast_real(atfi.stack([atfi.convert_to_tensor(s3.values),atfi.convert_to_tensor(s1.values)],axis=1))
     smp = PhaseSpaceSample(phsp,tensor_data)
     norm_smp = PhaseSpaceSample(norm_phsp,norm_phsp.rectangular_grid_sample(80, 80, space_to_sample="DP"))
-    maxL, minL = 0,1e15
+    maxL, minL = 0, 1e15
     global_args = ()
-
+    t_last = datetime.now()
     def print_self(kwargs,args,L):
-        nonlocal maxL, minL,global_args
-        
+        nonlocal maxL, minL,global_args, t_last
+        t_now = datetime.now()
+        iteration_time, t_last = t_now - t_last, t_now
         stdscr.clear()
         stdscr.refresh()
         if -L < minL:
@@ -50,10 +52,11 @@ def run_fit():
             i += 1
         
         stdscr.addstr(i+1,0,"-Log(L)=%.3f, MAX(-Log(L))=%.3f, MIN(-Log(L))=%.3f"%(-L,maxL,minL))
+        stdscr.addstr(i+2,0,"Iterationtime = %s"%iteration_time)
         stdscr.refresh()
 
     def log_L(*args):
-        v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17,v18,v19,v20,v21,v22,v23,v24,v25,v26,v27,v28 = args
+        v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17,v18,v19,v20,v21,v22,v23,v24 = args
         bls_ds_kmatrix_in = {
                         (0,1):atfi.complex(atfi.const(v1),atfi.const(v2)),
                         (2,1):atfi.complex(atfi.const(v3),atfi.const(v4)),
@@ -67,10 +70,10 @@ def run_fit():
         bld_D2317_out = {(0,0):atfi.complex(atfi.const(1),atfi.const(0))}
 
         bls_L_2791_in = {(0,1):atfi.complex(atfi.const(v11),atfi.const(v12))}
-        bls_L_2791_out = {(0,1):atfi.complex(atfi.const(v13),atfi.const(v14))}
+        bls_L_2791_out = {(0,1):atfi.complex(atfi.const(1),atfi.const(0))}
 
-        bls_D2860_in = {(4,5):atfi.complex(atfi.const(v15),atfi.const(v16))}
-        bls_D2860_out = {(6,0):atfi.complex(atfi.const(v17),atfi.const(v18))}
+        bls_D2860_in = {(4,5):atfi.complex(atfi.const(v13),atfi.const(v15))}
+        bls_D2860_out = {(6,0):atfi.complex(atfi.const(1),atfi.const(0))}
 
         kwargs = {"bls_ds_kmatrix_in":bls_ds_kmatrix_in,
                   "bls_ds_kmatrix_out":bls_ds_kmatrix_out, 
@@ -80,22 +83,20 @@ def run_fit():
                   "bls_L_2791_out":bls_L_2791_out,
                   "bls_D2860_in":bls_D2860_in,
                   "bls_D2860_out":bls_D2860_out,
-                  "alphas":[atfi.complex(atfi.const(v19),atfi.const(v20)),atfi.complex(atfi.const(v21),atfi.const(v22))],
-                  "KmatG_factors":(v23,v24,v25,v26) ,
-                  "Kmatbg_values":(v27,v28)}
+                  "alphas":[atfi.complex(atfi.const(v15),atfi.const(v16)),atfi.complex(atfi.const(v17),atfi.const(v18))],
+                  "KmatG_factors":(v19,v20,v21,v22) ,
+                  "Kmatbg_values":(v23,v24)}
         amplitude = three_body_decay_Daliz_plot_function(smp,phsp,**kwargs)
         norm_Amplitude = three_body_decay_Daliz_plot_function(norm_smp,norm_phsp,**kwargs)
-        L = atfi.nansum(atfi.log(amplitude/atfi.sum(norm_Amplitude)))
+        L = atfi.nansum(atfi.log(amplitude) - atfi.log(atfi.sum(norm_Amplitude)))
         print_self(kwargs,args,L)
         return -L
 
     start = [-1.8,4.4,-7.05,-4.06,4.96,-4.73,-1.064,-0.722,-0.017,-0.1256,-0.53,0.69,-0.0149,-0.0259,0.32,-0.33,-0.036,0.015,0.00272,-0.00715,-0.00111,0.00394,-8.73, 6.54,6.6,-3.38,0.0135,0.0867]
     start = (-704.1926547554741,-41.970366043255474 ,-66.31037466067997,-6.279125427663395, 17.675797484023246,-6.453781130131475,
         6.987087724567761e-05, -0.0007866380886594527, 56.66440950038116,-80.1411819294869,-1361.7469687460973,1291.5372794985196,
-        -0.10454083586635789,-0.07521464172240255,-0.036,0.015,1,1,270.05081327188606,1523.782582933723, -77.61140437024824,-2289.2817099788463,
-        -8.583965382256482, 12.208191255867819, 14.654200650925823, -2.5197923784595435,
-        0.03185771051948808, 0.01480963638198652)
-    
+        -0.10454083586635789,-0.07521464172240255,-0.036,0.015,1,1,270.05081327188606,1523.782582933723, -77.61140437024824,-2289.2817099788463,0.1,0.1)
+
     print(len(start))
     stdscr = curses.initscr()
     curses.noecho()
@@ -105,6 +106,7 @@ def run_fit():
         m.migrad()
     finally:
         # automatic parameter names are assigned x0, x1, ...
+        pass
         curses.echo()
         curses.nocbreak()
         curses.endwin()
@@ -178,7 +180,7 @@ def amplitude_from_fit_Kmat(args= (-704.1926547554741,-41.970366043255474 ,-66.3
         -0.10454083586635789,-0.07521464172240255,-0.036,0.015,1,1,270.05081327188606,1523.782582933723, -77.61140437024824,-2289.2817099788463,
         -8.583965382256482, 12.208191255867819, 14.654200650925823, -2.5197923784595435,
         0.03185771051948808, 0.01480963638198652)):
-    v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17,v18,v19,v20,v21,v22,v23,v24,v25,v26,v27,v28 = args
+    v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17,v18,v19,v20,v21,v22,v23,v24 = args
     bls_ds_kmatrix_in = {
                     (0,1):atfi.complex(atfi.const(v1),atfi.const(v2)),
                     (2,1):atfi.complex(atfi.const(v3),atfi.const(v4)),
@@ -189,25 +191,25 @@ def amplitude_from_fit_Kmat(args= (-704.1926547554741,-41.970366043255474 ,-66.3
                         }
 
     bls_D2317_in = {(0,1):atfi.complex(atfi.const(v9),atfi.const(v10))}
-    bls_D2317_out = {(0,0):atfi.complex(atfi.const(1),atfi.const(0))}
+    bld_D2317_out = {(0,0):atfi.complex(atfi.const(1),atfi.const(0))}
 
     bls_L_2791_in = {(0,1):atfi.complex(atfi.const(v11),atfi.const(v12))}
-    bls_L_2791_out = {(0,1):atfi.complex(atfi.const(v13),atfi.const(v14))}
+    bls_L_2791_out = {(0,1):atfi.complex(atfi.const(1),atfi.const(0))}
 
-    bls_D2860_in = {(4,5):atfi.complex(atfi.const(v15),atfi.const(v16))}
-    bls_D2860_out = {(6,0):atfi.complex(atfi.const(v17),atfi.const(v18))}
+    bls_D2860_in = {(4,5):atfi.complex(atfi.const(v13),atfi.const(v15))}
+    bls_D2860_out = {(6,0):atfi.complex(atfi.const(1),atfi.const(0))}
 
     kwargs = {"bls_ds_kmatrix_in":bls_ds_kmatrix_in,
                 "bls_ds_kmatrix_out":bls_ds_kmatrix_out, 
                 "bls_D2317_in":bls_D2317_in,
-                "bls_D2317_out":bls_D2317_out,
+                "bls_D2317_out":bld_D2317_out,
                 "bls_L_2791_in":bls_L_2791_in,
                 "bls_L_2791_out":bls_L_2791_out,
                 "bls_D2860_in":bls_D2860_in,
-                "bls_D2860_in":bls_D2860_out,
-                "alphas":[atfi.complex(atfi.const(v19),atfi.const(v20)),atfi.complex(atfi.const(v21),atfi.const(v22))],
-                "KmatG_factors":(v23,v24,v25,v26) ,
-                "Kmatbg_values":(v27,v28)}
+                "bls_D2860_out":bls_D2860_out,
+                "alphas":[atfi.complex(atfi.const(v15),atfi.const(v16)),atfi.complex(atfi.const(v17),atfi.const(v18))],
+                "KmatG_factors":(v19,v20,v21,v22) ,
+                "Kmatbg_values":(v23,v24)}
 
     ma = 2286.46 # lambda_c spin = 0.5 parity = 1
     mb = 1864.84 # D^0 bar spin = 0 partiy = -1
