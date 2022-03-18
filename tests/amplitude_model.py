@@ -1,3 +1,4 @@
+from functools import lru_cache
 from amplitf.phasespace.dalitz_phasespace import DalitzPhaseSpace
 from amplitf.phasespace.base_phasespace import PhaseSpaceSample
 from amplitf.kinematics import *
@@ -16,7 +17,7 @@ tf.compat.v1.enable_eager_execution()
 
 
 
-def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
+def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,chains=[1,2,3],DalitzFunctions=None,**kwargs):
     jd = sp.SPIN_HALF
     pd = 1 # lambda_b  spin = 0.5 parity = +1
     pa = 1 # lambda_c spin = 0.5 parity = 1
@@ -72,8 +73,10 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     masses2 = (ma,mc)
     masses1 = (mb,mc)
 
+    chain = {1:decay.chain1,2:decay.chain2,3:decay.chain3}
+
     # from test_Kmatrix import D_kma # kmatrix with extra channel, that will lead to fall at 2.85GeV
-    resonances1 = [ 
+    resonances = {1:[ 
                     # BWresonance(sp.SPIN_0,1,atfi.cast_real(2317),30, {(0,1):atfi.complex(atfi.const(-0.017),atfi.const(-0.1256))},{(0,0):atfi.complex(atfi.const(1),atfi.const(0))},*masses1),#D_0(2317) no specific outgoing bls given :(
                     subThresholdBWresonance(sp.SPIN_0,1,atfi.cast_real(2317),30, bls_D2317_in,bls_D2317_out,*masses1,mb,md,d_mesons),
                     # BWresonance(sp.SPIN_2,1,atfi.cast_real(2573),16.9,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1), #D^*_s2(2573)
@@ -81,13 +84,23 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
                     # BWresonance(sp.SPIN_1,-1,atfi.cast_real(2860),159,bls_ds_kmatrix_in,bls_ds_kmatrix_out,*masses1,d_mesons), #D^*_s1(2860)
                     D_kma,
                     BWresonance(sp.SPIN_3,-1,atfi.cast_real(2860),53,bls_D2860_in,bls_D2860_out,*masses1,d_mesons), #D^*_s3(2860)
-                    ]  
-    resonances2 = [
+                    ],
+                2:[
                     BWresonance(sp.SPIN_HALF,-1,atfi.cast_real(2791.9),8.9,bls_L_2791_in,bls_L_2791_out,*masses2,d_mesons), # xi_c (2790)
                     BWresonance(sp.SPIN_3HALF,-1,atfi.cast_real(2815), 2.43,{},{},*masses2,d_mesons)  # xi_c (2815) no bls couplings given :(
-                    ] 
+                    ] ,
+                    3:[]
+    }
+
+    DalitzFunctions.update({(i,nu,(la,lb,lc)):chain[i](smp,nu,*[la,lb,lc],resonances[i]) for nu in sp.direction_options(decay.sd)
+                                                         for la in sp.direction_options(decay.sa)  
+                                                         for lb in sp.direction_options(decay.sb)
+                                                         for lc in sp.direction_options(decay.sc)
+                                                    for i in chains})
+
+    @lru_cache
     def O(nu,lambdas):
-        return decay.chain3(smp,nu,*lambdas,[]) + decay.chain2(smp,nu,*lambdas,resonances2) + decay.chain1(smp,nu,*lambdas,resonances1)
+        return sum( DalitzFunctions[(i,nu,lambdas)] for i in range(1,4)) 
 
     def M(Lambda,lambdas,alpha,beta,gamma):
         """
@@ -116,7 +129,7 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
 
     alpha,beta,gamma = 0,0,0
     # precompute the M components
-    M_prec = {ld:sum(M(ld,[la,0,0],alpha,beta,gamma) for la in sp.direction_options(decay.sa))  for ld in sp.direction_options(decay.sd)}
+    M_prec = {ld:sum(M(ld,(la,0,0),alpha,beta,gamma) for la in sp.direction_options(decay.sa))  for ld in sp.direction_options(decay.sd)}
 
     # ampl = sum( 
     #         spin_density(L1,L2) * 

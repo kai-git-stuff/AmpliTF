@@ -30,6 +30,7 @@ def run_fit():
     norm_smp = PhaseSpaceSample(norm_phsp,norm_phsp.rectangular_grid_sample(80, 80, space_to_sample="DP"))
     maxL, minL = 0, 1e15
     global_args = ()
+    last_args = None
     t_last = datetime.now()
     def print_self(kwargs,args,L):
         nonlocal maxL, minL,global_args, t_last
@@ -54,8 +55,16 @@ def run_fit():
         stdscr.addstr(i+1,0,"-Log(L)=%.3f, MAX(-Log(L))=%.3f, MIN(-Log(L))=%.3f"%(-L,maxL,minL))
         stdscr.addstr(i+2,0,"Iterationtime = %s"%iteration_time)
         stdscr.refresh()
-
+    DalitzFunctionsData = {}
+    DalitzFunctionsMC = {}
     def log_L(*args):
+        nonlocal last_args, DalitzFunctionsData, DalitzFunctionsMC
+        args_to_chain = [1,1,1,1,1,1,1,1,1,1,2,2,1,1,1,1,1,1,1,1,1,1,1,1]
+        if last_args is None:
+            chains = [1,2,3]
+        else:
+            chains = list({args_to_chain[i] for i,arg in enumerate(args) if arg != last_args[i]})
+        last_args = args
         v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17,v18,v19,v20,v21,v22,v23,v24 = args
         bls_ds_kmatrix_in = {
                         (0,1):atfi.complex(atfi.const(v1),atfi.const(v2)),
@@ -72,7 +81,7 @@ def run_fit():
         bls_L_2791_in = {(0,1):atfi.complex(atfi.const(v11),atfi.const(v12))}
         bls_L_2791_out = {(0,1):atfi.complex(atfi.const(1),atfi.const(0))}
 
-        bls_D2860_in = {(4,5):atfi.complex(atfi.const(v13),atfi.const(v15))}
+        bls_D2860_in = {(4,5):atfi.complex(atfi.const(v13),atfi.const(v14))}
         bls_D2860_out = {(6,0):atfi.complex(atfi.const(1),atfi.const(0))}
 
         kwargs = {"bls_ds_kmatrix_in":bls_ds_kmatrix_in,
@@ -86,8 +95,8 @@ def run_fit():
                   "alphas":[atfi.complex(atfi.const(v15),atfi.const(v16)),atfi.complex(atfi.const(v17),atfi.const(v18))],
                   "KmatG_factors":(v19,v20,v21,v22) ,
                   "Kmatbg_values":(v23,v24)}
-        amplitude = three_body_decay_Daliz_plot_function(smp,phsp,**kwargs)
-        norm_Amplitude = three_body_decay_Daliz_plot_function(norm_smp,norm_phsp,**kwargs)
+        amplitude = three_body_decay_Daliz_plot_function(smp,phsp,chains,DalitzFunctionsData,**kwargs)
+        norm_Amplitude = three_body_decay_Daliz_plot_function(norm_smp,norm_phsp,chains,DalitzFunctionsMC,**kwargs)
         L = atfi.nansum(atfi.log(amplitude) - atfi.log(atfi.sum(norm_Amplitude)))
         print_self(kwargs,args,L)
         return -L
