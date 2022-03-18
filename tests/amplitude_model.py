@@ -100,8 +100,18 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,chains=[1,2,3
                                                          for lc in sp.direction_options(decay.sc)]
                                             for i in range(1,4)}
 
-    DalitzFunctions.update({
-        (i,nu,(la,lb,lc)):v for i in chains for (smp,nu,la,lb,lc,_),v in zip(helicities[i],pool.starmap(chain[i],helicities[i])) })
+    def do_calc(ch,hel):
+        if pool is not None:
+            return pool.starmap(ch,hel)
+        else:
+            return map(ch,hel)
+
+    if pool is not None:
+        DalitzFunctions.update({
+            (i,nu,(la,lb,lc)):v for i in chains for (smp,nu,la,lb,lc,_),v in zip(helicities[i],do_calc(chain[i],helicities[i])) })
+    else:
+        DalitzFunctions.update({
+            (i,nu,(la,lb,lc)):v for i in chains for (smp,nu,la,lb,lc,_),v in zip(helicities[i],pool.starmap(chain[i],helicities[i])) })
 
     def O(nu,lambdas):
         return sum( DalitzFunctions[(i,nu,lambdas)] for i in range(1,4)) 

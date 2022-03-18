@@ -32,7 +32,7 @@ def run_fit():
     global_args = ()
     last_args = None
     t_last = datetime.now()
-    def print_self(kwargs,args,L):
+    def print_self(kwargs,args,L,chains):
         nonlocal maxL, minL,global_args, t_last
         t_now = datetime.now()
         iteration_time, t_last = t_now - t_last, t_now
@@ -52,8 +52,11 @@ def run_fit():
             stdscr.addstr(i,0,"%s: %s"%(k,s))
             i += 1
         
-        stdscr.addstr(i+1,0,"-Log(L)=%.3f, MAX(-Log(L))=%.3f, MIN(-Log(L))=%.3f"%(-L,maxL,minL))
-        stdscr.addstr(i+2,0,"Iterationtime = %s"%iteration_time)
+        stdscr.addstr(i+1,0,"Chains = %s"%(chains,))
+        stdscr.addstr(i+2,0,"Params  = %s"%(args,))
+        stdscr.addstr(i+6,0,"-Log(L)=%.3f, MAX(-Log(L))=%.3f, MIN(-Log(L))=%.3f"%(-L,maxL,minL))
+        stdscr.addstr(i+7,0,"Iterationtime = %s"%iteration_time)
+
         stdscr.refresh()
     DalitzFunctionsData = {}
     DalitzFunctionsMC = {}
@@ -98,7 +101,7 @@ def run_fit():
         amplitude = three_body_decay_Daliz_plot_function(smp.data,phsp,chains,DalitzFunctionsData,**kwargs)
         norm_Amplitude = three_body_decay_Daliz_plot_function(norm_smp.data,norm_phsp,chains,DalitzFunctionsMC,**kwargs)
         L = atfi.nansum(atfi.log(amplitude) - atfi.log(atfi.sum(norm_Amplitude)))
-        print_self(kwargs,args,L)
+        print_self(kwargs,args,L,chains)
         return -L
 
     start = [-1.8,4.4,-7.05,-4.06,4.96,-4.73,-1.064,-0.722,-0.017,-0.1256,-0.53,0.69,-0.0149,-0.0259,0.32,-0.33,-0.036,0.015,0.00272,-0.00715,-0.00111,0.00394,-8.73, 6.54,6.6,-3.38,0.0135,0.0867]
