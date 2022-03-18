@@ -81,3 +81,7 @@ class PhaseSpaceSample:
         if self.sample is None:
             return 0
         return len(self.sample)
+
+    @property
+    def data(self):
+        return self.sample

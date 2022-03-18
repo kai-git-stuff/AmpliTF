@@ -95,8 +95,8 @@ def run_fit():
                   "alphas":[atfi.complex(atfi.const(v15),atfi.const(v16)),atfi.complex(atfi.const(v17),atfi.const(v18))],
                   "KmatG_factors":(v19,v20,v21,v22) ,
                   "Kmatbg_values":(v23,v24)}
-        amplitude = three_body_decay_Daliz_plot_function(smp,phsp,chains,DalitzFunctionsData,**kwargs)
-        norm_Amplitude = three_body_decay_Daliz_plot_function(norm_smp,norm_phsp,chains,DalitzFunctionsMC,**kwargs)
+        amplitude = three_body_decay_Daliz_plot_function(smp.data,phsp,chains,DalitzFunctionsData,**kwargs)
+        norm_Amplitude = three_body_decay_Daliz_plot_function(norm_smp.data,norm_phsp,chains,DalitzFunctionsMC,**kwargs)
         L = atfi.nansum(atfi.log(amplitude) - atfi.log(atfi.sum(norm_Amplitude)))
         print_self(kwargs,args,L)
         return -L

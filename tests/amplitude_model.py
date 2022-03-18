@@ -11,13 +11,14 @@ from matplotlib.colors import LogNorm
 import tensorflow as tf
 from amplitf.amplitudes.dalitz_function import *
 from amplitf.amplitudes.resonances import *
+from multiprocessing import Pool
 
 tf.compat.v1.enable_eager_execution()
 
 
 
 
-def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,chains=[1,2,3],DalitzFunctions=None,**kwargs):
+def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,chains=[1,2,3],DalitzFunctions=None,pool=Pool(processes=8),**kwargs):
     jd = sp.SPIN_HALF
     pd = 1 # lambda_b  spin = 0.5 parity = +1
     pa = 1 # lambda_c spin = 0.5 parity = 1
@@ -89,16 +90,19 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,chains=[1,2,3
                     BWresonance(sp.SPIN_HALF,-1,atfi.cast_real(2791.9),8.9,bls_L_2791_in,bls_L_2791_out,*masses2,d_mesons), # xi_c (2790)
                     BWresonance(sp.SPIN_3HALF,-1,atfi.cast_real(2815), 2.43,{},{},*masses2,d_mesons)  # xi_c (2815) no bls couplings given :(
                     ] ,
-                    3:[]
+                3:[]
     }
 
-    DalitzFunctions.update({(i,nu,(la,lb,lc)):chain[i](smp,nu,*[la,lb,lc],resonances[i]) for nu in sp.direction_options(decay.sd)
+
+    helicities = {i:[(smp,nu,la,lb,lc,resonances[i]) for nu in sp.direction_options(decay.sd)
                                                          for la in sp.direction_options(decay.sa)  
                                                          for lb in sp.direction_options(decay.sb)
-                                                         for lc in sp.direction_options(decay.sc)
-                                                    for i in chains})
+                                                         for lc in sp.direction_options(decay.sc)]
+                                            for i in range(1,4)}
 
-    @lru_cache
+    DalitzFunctions.update({
+        (i,nu,(la,lb,lc)):v for i in chains for (smp,nu,la,lb,lc,_),v in zip(helicities[i],pool.starmap(chain[i],helicities[i])) })
+
     def O(nu,lambdas):
         return sum( DalitzFunctions[(i,nu,lambdas)] for i in range(1,4)) 
 
