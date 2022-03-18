@@ -69,6 +69,9 @@ class BaseResonance:
     def X(self,x,L):
         raise NotImplementedError("This is a base class! Do not try to use it for a resonance!")
 
+    def __ne__(self, other):
+        raise NotImplementedError("Please implement, so the Tree fitter still works")
+
 class BWresonance(BaseResonance):
     def __init__(self,S,P,m0,gamma0,bls_in : dict, bls_out :dict,ma,mb,d=5./1000.):
         self.m0 = atfi.const(m0)
@@ -99,6 +102,9 @@ class BWresonance(BaseResonance):
         ffr = atfi.cast_real(blatt_weisskopf_ff(p, self.p0, self.d, atfi.const(L)))
         width = mass_dependent_width(m, self.m0, self.gamma0, p, self.p0, ffr, L)
         return relativistic_breit_wigner(s,self.m0, width)
+    
+    def __ne__(self, other):
+        return self.gamma != other.gamma or self.M0 != other.M0
 
 class subThresholdBWresonance(BWresonance):
     def __init__(self, S, P, m0, gamma0, bls_in: dict, bls_out: dict, ma, mb,mc,md, d=5 / 1000):
