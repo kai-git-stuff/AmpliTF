@@ -105,6 +105,8 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,chains=[1,2,3
             return pool.starmap(ch,hel)
         else:
             return map(ch,hel)
+    if DalitzFunctions is None:
+        DalitzFunctions = {}
 
     if pool is not None:
         DalitzFunctions.update({

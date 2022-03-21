@@ -12,7 +12,7 @@ from datetime import datetime
 from data_reading import read_data_numpy
 from iminuit import cost, Minuit
 import curses
-
+import json
 
 def run_fit():
     ma = 2286.46 # lambda_c spin = 0.5 parity = 1
@@ -51,7 +51,9 @@ def run_fit():
                 s = v
             stdscr.addstr(i,0,"%s: %s"%(k,s))
             i += 1
-        
+        if t_now.second %30 == 0:
+            with open("fit_state.json","w") as f:
+                json.dump(global_args,f)
         stdscr.addstr(i+1,0,"Chains = %s"%(chains,))
         stdscr.addstr(i+2,0,"Params  = %s"%(args,))
         stdscr.addstr(i+6,0,"-Log(L)=%.3f, MAX(-Log(L))=%.3f, MIN(-Log(L))=%.3f"%(-L,maxL,minL))
@@ -101,13 +103,19 @@ def run_fit():
         amplitude = three_body_decay_Daliz_plot_function(smp.data,phsp,chains,DalitzFunctionsData,**kwargs)
         norm_Amplitude = three_body_decay_Daliz_plot_function(norm_smp.data,norm_phsp,chains,DalitzFunctionsMC,**kwargs)
         L = atfi.nansum(atfi.log(amplitude) - atfi.log(atfi.sum(norm_Amplitude)))
-        print_self(kwargs,args,L,chains)
+        
+        try:
+            print_self(kwargs,args,L,chains)
+        except Exception as e:
+            print(e)
         return -L
 
-    start = [-1.8,4.4,-7.05,-4.06,4.96,-4.73,-1.064,-0.722,-0.017,-0.1256,-0.53,0.69,-0.0149,-0.0259,0.32,-0.33,-0.036,0.015,0.00272,-0.00715,-0.00111,0.00394,-8.73, 6.54,6.6,-3.38,0.0135,0.0867]
-    start = (-704.1926547554741,-41.970366043255474 ,-66.31037466067997,-6.279125427663395, 17.675797484023246,-6.453781130131475,
-        6.987087724567761e-05, -0.0007866380886594527, 56.66440950038116,-80.1411819294869,-1361.7469687460973,1291.5372794985196,
-        -0.10454083586635789,-0.07521464172240255,-0.036,0.015,1,1,270.05081327188606,1523.782582933723, -77.61140437024824,-2289.2817099788463,0.1,0.1)
+    start = [-1.8,4.4,-7.05,-4.06,4.96,-4.73,-1.064,-0.722,-0.017,-0.1256,-0.53,0.69,-0.0149,-0.0259,0.32,-0.33,-0.00111,0.00394,-8.73, 6.54,6.6,-3.38,0.0135,0.0867]
+    start = (-4.0997390647818905, -8.569145833770673, -7.050187572578236, -4.060037351162219, 4.9597607808060955, -4.730072126808973, -0.21160013324459656, -0.86648314691716, 
+    -7.180039890338165, 22.996448656493513, -0.08747872885883322, -0.566200303177854, -0.37518335023873656, 0.13094320460476175, -751.5674862877551, -1970.1003751657167, -24200.672340184457, 
+    -3181.350661796871, -8.051330172840395, -14.09372484324325, 15.281755542857619, -43.79566512218444, 0.11042225014323345, -0.5304791850986086)
+
+
 
     print(len(start))
     stdscr = curses.initscr()
@@ -187,11 +195,9 @@ def amplitude_from_fit_noKmat(args= (7.8129217018561405, -8.9029791987581, 6.672
         plt.show()
         plt.close('all')
     
-def amplitude_from_fit_Kmat(args= (-704.1926547554741,-41.970366043255474 ,-66.31037466067997,-6.279125427663395, 17.675797484023246,-6.453781130131475,
-        6.987087724567761e-05, -0.0007866380886594527, 56.66440950038116,-80.1411819294869,-1361.7469687460973,1291.5372794985196,
-        -0.10454083586635789,-0.07521464172240255,-0.036,0.015,1,1,270.05081327188606,1523.782582933723, -77.61140437024824,-2289.2817099788463,
-        -8.583965382256482, 12.208191255867819, 14.654200650925823, -2.5197923784595435,
-        0.03185771051948808, 0.01480963638198652)):
+def amplitude_from_fit_Kmat(args= (-4.099734677404456, -8.56913786985447, -7.050191901660969, -4.060037916093625, 4.9597493852321675, -4.730072439124291, -0.20512145609598334, 
+-0.8702034947509745, -6.966083252607992, 22.899564644471777, -0.08485932487335121, -0.5507987242904665, -0.36955650058538664, 0.13408074003937026, -548.9523910379469, -2276.4262004965685,
+-24111.325434992275, -3698.3453267615373, -9.203941784379237, -12.31759697812728, 15.233808345924345, -44.94879841468681, 0.10964321155182125, -0.52524516351121)):
     v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17,v18,v19,v20,v21,v22,v23,v24 = args
     bls_ds_kmatrix_in = {
                     (0,1):atfi.complex(atfi.const(v1),atfi.const(v2)),
@@ -208,7 +214,7 @@ def amplitude_from_fit_Kmat(args= (-704.1926547554741,-41.970366043255474 ,-66.3
     bls_L_2791_in = {(0,1):atfi.complex(atfi.const(v11),atfi.const(v12))}
     bls_L_2791_out = {(0,1):atfi.complex(atfi.const(1),atfi.const(0))}
 
-    bls_D2860_in = {(4,5):atfi.complex(atfi.const(v13),atfi.const(v15))}
+    bls_D2860_in = {(4,5):atfi.complex(atfi.const(v13),atfi.const(v14))}
     bls_D2860_out = {(6,0):atfi.complex(atfi.const(1),atfi.const(0))}
 
     kwargs = {"bls_ds_kmatrix_in":bls_ds_kmatrix_in,
@@ -231,7 +237,7 @@ def amplitude_from_fit_Kmat(args= (-704.1926547554741,-41.970366043255474 ,-66.3
 
     smp = PhaseSpaceSample(phsp,phsp.rectangular_grid_sample(250, 250, space_to_sample="linDP"))
 
-    ampl = three_body_decay_Daliz_plot_function(smp,phsp,**kwargs)
+    ampl = three_body_decay_Daliz_plot_function(smp.data,phsp,**kwargs)
     sgma3 = phsp.m2ab(smp) # lmbda_c , D_bar
     sgma2 = phsp.m2ac(smp) # lmbda_c , k
     sgma1 = phsp.m2bc(smp) # D_bar , k
