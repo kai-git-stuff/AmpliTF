@@ -74,7 +74,7 @@ def test_2():
         S,P = sp.SPIN_HALF,-1
         sgma3 = phsp.m2ab(smp)
         m0,gamma0 = 3500,100
-        keys_in = ["bls_in_0_1_r","bls_in_0_1_i"]
+        keys_in = ["R1_bls_in_0_1_r","R1_bls_in_0_1_i"]
         bls_in_0_1_r,bls_in_0_1_i = itemgetter(*keys_in)(kwargs)
         bls_in = {(0,1):atfi.complex(atfi.const(bls_in_0_1_r),atfi.const(bls_in_0_1_i))}
         resonance = BWresonance(S,P,m0,gamma0,bls_in, {},ma,mb,d=5./1000.)
@@ -86,24 +86,36 @@ def test_2():
         sgma3 = phsp.m2ab(smp)
         S,P = sp.SPIN_HALF,-1
         m0,gamma0 = 4500,100
-        keys_in = ["bls_out_0_1_r","bls_out_0_1_i"]
+        keys_in = ["R1_bls_out_0_1_r","R1_bls_out_0_1_i"]
         bls_out_0_1_r,bls_out_0_1_i = itemgetter(*keys_in)(kwargs)
         bls_out = {(0,1):atfi.complex(atfi.const(bls_out_0_1_r),atfi.const(bls_out_0_1_i))}
         resonance = BWresonance(S,P,m0,gamma0,{}, bls_out,ma,mb,d=5./1000.)
         return resonance.bls_out(sgma3)
-    bls_out.set_func(f2)
-    bls_in.set_dependency("bls_in_0_1_i")
-    bls_in.set_dependency("bls_in_0_1_r")
-    bls_out.set_dependency("bls_out_0_1_i")
-    bls_out.set_dependency("bls_out_0_1_r")
+    bls_out.set_func(f2) 
+    bls_in.set_dependency("R1_bls_in_0_1_i")
+    bls_in.set_dependency("R1_bls_in_0_1_r")
+    bls_out.set_dependency("R1_bls_out_0_1_i")
+    bls_out.set_dependency("R1_bls_out_0_1_r")
 
     Treechain3R1 = decay.chain3(smp,1,1,0,0,bls_in,bls_out,sp.SPIN_HALF,"Resonance1(1,1,0,0)")
     
-    print(sum(Treechain3R1({"bls_out_0_1_r":1,"bls_out_0_1_i":0,"bls_in_0_1_r":1,"bls_in_0_1_i":0})))
-    print(sum(Treechain3R1({"bls_out_0_1_r":1,"bls_out_0_1_i":0,"bls_in_0_1_r":1,"bls_in_0_1_i":0})))
-    print(sum(Treechain3R1({"bls_out_0_1_r":0.5,"bls_out_0_1_i":0,"bls_in_0_1_r":1,"bls_in_0_1_i":0})))
-    print(sum(Treechain3R1({"bls_out_0_1_r":1.5,"bls_out_0_1_i":0,"bls_in_0_1_r":1.5,"bls_in_0_1_i":0})))
+    Treechain2R2 = decay.chain2(smp,1,1,0,0,bls_in,bls_out,sp.SPIN_HALF,"Resonance2(1,1,0,0)")
+    
+    Treechain1R3 = decay.chain2(smp,1,1,0,0,bls_in,bls_out,sp.SPIN_HALF,"Resonance3(1,1,0,0)")
 
+    rootAmplitude.add_branch("Chain3_Resonance1",Treechain3R1)
+    rootAmplitude.add_branch("Chain2_Resonance2",Treechain2R2)
+    rootAmplitude.add_branch("Chain1_Resonance3",Treechain1R3)
+
+    def f_main(mainTree:TreeAmplitude,kwargs):
+        return mainTree.branches["Chain3_Resonance1"](kwargs) + mainTree.branches["Chain2_Resonance2"](kwargs) + mainTree.branches["Chain1_Resonance3"](kwargs)
+
+    rootAmplitude.set_func(f_main)
+
+    print(sum(rootAmplitude({"R1_bls_out_0_1_r":1,"R1_bls_out_0_1_i":0,"R1_bls_in_0_1_r":1,"R1_bls_in_0_1_i":0})))
+    print(sum(rootAmplitude({"R1_bls_out_0_1_r":1,"R1_bls_out_0_1_i":0,"R1_bls_in_0_1_r":1,"R1_bls_in_0_1_i":0})))
+    print(sum(rootAmplitude({"R1_bls_out_0_1_r":0.5,"R1_bls_out_0_1_i":0,"R1_bls_in_0_1_r":1,"R1_bls_in_0_1_i":0})))
+    print(sum(rootAmplitude({"R1_bls_out_0_1_r":1.5,"R1_bls_out_0_1_i":0,"R1_bls_in_0_1_r":1.5,"R1_bls_in_0_1_i":0})))
 
 
 test_2()

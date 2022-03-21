@@ -104,13 +104,11 @@ class dalitz_decay:
 
         chain_ampl = TreeAmplitude(name="chain3_%s"%name)
 
-        res_ampl = TreeAmplitude(name="chain3:resonance%s"%name)
         ns = atfi.cast_complex(atfi.sqrt(atfi.const(sA+1)))
         nj = atfi.cast_complex(atfi.sqrt(atfi.const(self.sd+1)))
         
         chain_ampl.add_branch("bls_in",bls_in)
         chain_ampl.add_branch("bls_out",bls_out)
-
 
         def f(chainTree:TreeAmplitude,kwargs):
             ampl = atfi.zeros_tensor(sgma3.shape,atfi.ctype())
@@ -140,7 +138,7 @@ class dalitz_decay:
         
         return chain_ampl
 
-    def chain2(self,smp:PhaseSpaceSample,ld,la,lb,lc,resonances):
+    def chain2(self,smp:PhaseSpaceSample,ld,la,lb,lc,bls_in:TreeAmplitude,bls_out:TreeAmplitude,ResonanceSpin,name):
         """For explanation see chain3"""
         # channel 2
         # L_b -> B b : B -> (a,c)
@@ -148,7 +146,8 @@ class dalitz_decay:
         sgma2 = self.phsp.m2ac(smp)
         sgma3 = self.phsp.m2ab(smp)
         ampl = atfi.zeros_tensor(sgma2.shape,atfi.ctype())
-
+        sB = ResonanceSpin
+        ResonanceHelicities = sp.direction_options(sB)
         zeta_1 = atfi.acos(cos_zeta_1_aligned_1_in_frame_2(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
         # remember to apply (-1)**((la - la_)/2) in front of the d matrix (switch last 2 indices)
         zeta_2 = 0 # allways one is 0
@@ -157,27 +156,40 @@ class dalitz_decay:
         # remember factor of (-1)**((ld - lB + lb_)/2) because we switched indices 1 and 2
         theta = atfi.acos(cos_theta_31(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
         phsp_factor = atfi.sqrt(phasespace_factor(sgma2,self.ma,self.mc)* phasespace_factor(self.md,sgma2,self.mb))
-        for sB,pB,helicities_B,bls_in,bls_out,X in resonances:
-            ns = atfi.cast_complex(atfi.sqrt(atfi.const(sB+1)))
-            nj = atfi.cast_complex(atfi.sqrt(atfi.const(self.sd+1)))
-            bls_in = bls_in(s = sgma2,d = self.d,md = self.md,mbachelor=self.mb)
-            bls_out = bls_out(sgma2)
-            for lB in helicities_B:
+        
+        chain_ampl = TreeAmplitude(name="chain2_%s"%name)
+
+        ns = atfi.cast_complex(atfi.sqrt(atfi.const(sB+1)))
+        nj = atfi.cast_complex(atfi.sqrt(atfi.const(self.sd+1)))
+        
+        chain_ampl.add_branch("bls_in",bls_in)
+        chain_ampl.add_branch("bls_out",bls_out)
+
+        def f(chainTree:TreeAmplitude,kwargs):
+            ampl = atfi.zeros_tensor(sgma3.shape,atfi.ctype())
+            bls_in = chainTree.branches["bls_in"]
+            bls_out = chainTree.branches["bls_out"]
+
+            for lB in ResonanceHelicities:           
                 # channel 2
                 # L_b -> B b : B -> (a,c)
                 helicities_abc = helicity_options(sB,self.sa,self.sb,self.sc)
                 for la_,lb_,lc_ in helicities_abc:
                     if lb_ != lb : continue #   atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) yields delta, bc zeta_2 = 0
                     # Rotation in the isobar system
-                    H_B_b = phsp_factor * helicity_coupling_times_d(theta_hat,self.sd,sB,self.sb,lB,lb_,ld,bls_in) # ToDo why the other way arround then in the paper? 
-                    H_a_c =   helicity_coupling_times_d(theta,sB,self.sc,self.sa,lc_,la_,lB,bls_out)
+                    H_B_b = phsp_factor * helicity_coupling_times_d(theta_hat,self.sd,sB,self.sb,lB,lb_,ld,bls_in(kwargs)) # ToDo why the other way arround then in the paper? 
+                    H_a_c =   helicity_coupling_times_d(theta,sB,self.sc,self.sa,lc_,la_,lB,bls_out(kwargs))
                     H_a_c *= (-1)**((ld - lB + lb_)/2)  * (-1)**((la_ - la)/2) * ( # prefactors for index switches
                         atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) *  
                         atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc_,lc)) )
                     ampl += nj * ns * H_B_b * H_a_c 
-        return ampl
+            return ampl
 
-    def chain1(self,smp:PhaseSpaceSample,ld,la,lb,lc,resonances):
+        chain_ampl.set_func(f)
+        
+        return chain_ampl
+
+    def chain1(self,smp:PhaseSpaceSample,ld,la,lb,lc,bls_in:TreeAmplitude,bls_out:TreeAmplitude,ResonanceSpin,name):
         """For explanation see chain3"""
         # channel 1
         # L_b -> C a : C -> (b,c)  
@@ -185,6 +197,8 @@ class dalitz_decay:
         sgma2 = self.phsp.m2ac(smp)
         sgma3 = self.phsp.m2ab(smp)
         ampl = atfi.zeros_tensor(self.phsp.m2ab(smp).shape,atfi.ctype())
+        sA = ResonanceSpin
+        ResonanceHelicities = sp.direction_options(sA)
         # Rotation in the isobar system
         theta_hat =  atfi.acos(cos_theta_hat_1_canonical_1(self.md, self.ma, self.mb, self.mc, sgma1, sgma2, sgma3))
         theta_hat = 0
@@ -195,28 +209,39 @@ class dalitz_decay:
         zeta_2 = atfi.acos(cos_zeta_2_aligned_1_in_frame_2(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
         zeta_3 = atfi.acos(cos_zeta_3_aligned_3_in_frame_1(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
         # remember to apply (-1)**((lc - lc_)/2) in front of the d matrix (switch last 2 indices)
-        for sC,pC,helicities_C,bls_in,bls_out,X in resonances:
-            
-            ns = atfi.cast_complex(atfi.sqrt(atfi.const(sC+1)))
+        
+        chain_ampl = TreeAmplitude(name="chain3_%s"%name)
+
+        ns = atfi.cast_complex(atfi.sqrt(atfi.const(sA+1)))
+        nj = atfi.cast_complex(atfi.sqrt(atfi.const(self.sd+1)))
+        
+        chain_ampl.add_branch("bls_in",bls_in)
+        chain_ampl.add_branch("bls_out",bls_out)
+
+        def f(chainTree:TreeAmplitude,kwargs):
+            ns = atfi.cast_complex(atfi.sqrt(atfi.const(sA+1)))
             nj = atfi.cast_complex(atfi.sqrt(atfi.const(self.sd+1)))
 
             # getting the Blatt-Weisskopf form factors into our bls
             bls_in = bls_in(s = sgma1,d = self.d,md = self.md,mbachelor=self.ma)
             bls_out = bls_out(sgma1)
-            for lC in helicities_C:
-                helicities_abc = helicity_options(sC,self.sa,self.sb,self.sc)
+            for lA in ResonanceHelicities:           
+                helicities_abc = helicity_options(sA,self.sa,self.sb,self.sc)
                 for la_,lb_,lc_ in helicities_abc:
                     if la_ != la : continue # atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) yields delta, bc. zeta_1 = 0
-                    if lC != la_-ld: continue # bc. theta_hat = 0, the d_matrix for this is also a delta
+                    if lA != la_-ld: continue # bc. theta_hat = 0, the d_matrix for this is also a delta
                     # C -> b c
                     # Rotation in the isobar system
                     # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar #
                     H_A_c = ( atfi.sqrt(phasespace_factor(sgma1,self.mb,self.mc) * phasespace_factor(self.md,sgma1,self.ma)) * 
-                            atfi.cast_complex(helicity_couplings_from_ls(self.sd,sC,self.sa,lC,la_-ld,bls_in))  )
-                    H_b_c =  helicity_coupling_times_d(theta,sC,self.sb,self.sc,lb_,lc_,lC,bls_out)
+                            atfi.cast_complex(helicity_couplings_from_ls(self.sd,sA,self.sa,lA,la_-ld,bls_in(kwargs)))  )
+                    H_b_c =  helicity_coupling_times_d(theta,sA,self.sb,self.sc,lb_,lc_,lA,bls_out(kwargs))
                     # symmetry of the d matrices
                     H_b_c *=  (-1)**((lc - lc_)/2) * (   # prefactors for index switches  
-                         atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc_,lc)) * 
-                         atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) )
+                            atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc_,lc)) * 
+                            atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) )
                     ampl += ns * nj * H_A_c * H_b_c 
-        return ampl
+            return ampl
+
+        chain_ampl.set_func(f)
+        return chain_ampl

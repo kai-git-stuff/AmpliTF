@@ -57,6 +57,7 @@ class TreeAmplitude:
                     return True
         return False
 
+        
 
 class TreeResonance(TreeAmplitude):
     def __init__(self,resonance:BaseResonance,name=""):
