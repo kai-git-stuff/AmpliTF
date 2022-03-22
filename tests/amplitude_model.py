@@ -15,7 +15,7 @@ from amplitf.amplitudes.resonances import *
 
 
 
-@atfi.function
+@tf.function(experimental_relax_shapes=True)
 def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     jd = sp.SPIN_HALF
     pd = 1 # lambda_b  spin = 0.5 parity = +1

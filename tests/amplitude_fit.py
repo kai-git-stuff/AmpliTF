@@ -32,12 +32,9 @@ def run_fit():
 
     norm_phsp = DalitzPhaseSpace(ma,mb,mc,md)
     norm_smp = PhaseSpaceSample(norm_phsp,norm_phsp.rectangular_grid_sample(5, 5, space_to_sample="DP"))
-    maxL, minL = 0, 1e15
-    global_args = ()
 
     @tf.function
     def log_L(args):
-
         v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17,v18,v19,v20,v21,v22,v23,v24 = args
         bls_ds_kmatrix_in = {
                         (0,1):atfi.complex(v1,v2),
