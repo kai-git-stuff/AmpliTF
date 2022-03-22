@@ -110,6 +110,7 @@ _interface_dict = {
     "nansum":"tf.experimental.numpy.nansum",
     "equal":"tf.equal",
     "cast": "tf.cast",
+    "Variable":"tf.Variable",
 }
 
 

@@ -30,7 +30,7 @@ def possible_LS_states(J,s1,s2,P,p1,p2,parity_conservation=True) -> dict:
 
 def phasespace_factor(md,ma,mb):
     # phasespace factor for the dalitz functions
-    return atfi.cast_complex(4 * atfi.pi()* atfi.sqrt(md/two_body_momentum(atfi.const(md),atfi.const(ma),atfi.const(mb))))
+    return atfi.cast_complex(4 * atfi.pi()* atfi.sqrt(md/two_body_momentum(md,ma,mb)))
 
 def helicity_coupling_times_d(theta,J,s1,s2,l1,l2,nu,bls):
     if abs(l1-l2) > J or abs(nu) > J: 

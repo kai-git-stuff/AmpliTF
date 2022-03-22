@@ -52,10 +52,10 @@ class BaseResonance:
             q0 = two_body_momentum(atfi.const(md),self.M0,atfi.const(mbachelor)) # todo this might be wrong: we are allways at L_b resonance peak, so the BW_FF do not make sense here
             if d is not None:
                 bls = {LS : b * blatt_weisskopf_ff(q, q0, d, atfi.const(LS[0]/2)) * 
-                        orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), atfi.const(LS[0]/2)) 
+                        atfi.cast_complex(orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), atfi.const(LS[0]/2)))
                     for LS, b in bls.items()}
             else:
-                bls = {LS : b * orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), atfi.const(LS[0]/2)) 
+                bls = {LS : b * atfi.cast_complex(orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), atfi.const(LS[0]/2)))
                     for LS, b in bls.items()}
         return bls
 
@@ -74,7 +74,7 @@ class BaseResonance:
 
 class BWresonance(BaseResonance):
     def __init__(self,S,P,m0,gamma0,bls_in : dict, bls_out :dict,ma,mb,d=5./1000.):
-        self.m0 = atfi.const(m0)
+        self.m0 = m0 # atfi.const(m0)
         self.gamma0 = gamma0
         self._masses = (atfi.const(ma),atfi.const(mb))
         self._p0 = two_body_momentum(self.M0, *self._masses)
@@ -93,6 +93,7 @@ class BWresonance(BaseResonance):
     def p0(self):
         return self._p0
 
+    @atfi.function
     def X(self,s,L):
         # L will be given doubled, but bw needs it normal
         L = L/2
@@ -111,13 +112,13 @@ class subThresholdBWresonance(BWresonance):
         """A variation of the BW resonance, that sits beneeth a threshold for our decay products"""
         super().__init__(S, P, m0, gamma0, bls_in, bls_out, ma, mb, d)
         p0_2 = two_body_momentum_squared(self.M0, ma , mb)
-        self._p0 = atfi.cast_complex(atfi.sqrt(p0_2)) if p0_2 > 0 else atfi.complex(atfi.const(0),atfi.sqrt(-p0_2))
+        self._p0 = atfi.sqrt(atfi.cast_complex(p0_2))
         self.d = atfi.cast_complex(self.d)
 
     def breakup_momentum(self,md,s,mbachelor):
         return atfi.cast_complex(two_body_momentum(md,s,mbachelor))
 
-
+    @atfi.function
     def X(self,s,L):
         # L will be given doubled, but bw needs it normal
         L = L/2
@@ -140,7 +141,7 @@ class KmatChannel:
         self.background = bg
 
 class KmatPole:
-    def __init__(self,M,couplings_out):
+    def __init__(self,M,couplings_out:list):
         self.couplings_out = couplings_out
         self._M = atfi.complex(atfi.const(M),atfi.const(0))
         self._M2 = atfi.complex(atfi.const(M**2),atfi.const(0))
@@ -214,7 +215,7 @@ class kmatrix(BaseResonance):
         return (self.q(s,a))**self.L(a) 
 
     def phaseSpaceFactor(self,s,a):
-        return atfi.complex(atfi.const(1/(8* atfi.pi())), atfi.const(0))* self.q(s,a)/atfi.cast_complex(atfi.sqrt(s))
+        return atfi.complex(1/(8* atfi.pi()), atfi.const(0))* self.q(s,a)/atfi.cast_complex(atfi.sqrt(s))
 
     def V(self,s,a,b):
         # R = resonance index
@@ -226,18 +227,19 @@ class kmatrix(BaseResonance):
         return atfi.complex(atfi.const(0),atfi.const(1.))*(atfi.cast_complex(sigma) + self.width_factors[a])
 
     def build_D(self,s):
-        v = []
         # we calculate v directly  as 1 - v * Sigma
         # ToDo do this with tf.stack
-        v = np.zeros(list(s.shape) + [len(self.channels),len(self.channels)],dtype=np.complex128)
+        v = list()
         for a in range(len(self.channels)):
+            temp = list()
             for b in range(len(self.channels)):
                 if a == b:
-                    v[...,a,b] = 1-self.V(s,a,b)*self.Sigma(s,b) 
+                    temp.append(1 -self.V(s,a,b)*self.Sigma(s,b) )
                 else:
-                    v[...,a,b] = -self.V(s,a,b)*self.Sigma(s,b)
-        v = atfi.convert_to_tensor(v)
-        
+                    temp.append(-self.V(s,a,b)*self.Sigma(s,b))
+            v.append(atfi.stack(temp,1))
+        v = atfi.stack(v,1)
+        print(v)
         self._D = atfi.linalg_inv(v)
 
     def g(self,n,b):
@@ -252,7 +254,8 @@ class kmatrix(BaseResonance):
     def P_func(self,s,b):
         p  = self.channels[b].background + sum( (res.coupling(b) * alpha )/atfi.cast_complex(res.M2-s)   for res,alpha in zip(self.resonances,self.alphas))
         return p
-
+    
+    @atfi.function
     def A_H(self,s,a):
         # s: squared energy
         # a: channel number
@@ -261,6 +264,7 @@ class kmatrix(BaseResonance):
         a_h = sum( self.D(s,a,b) * self.P_func(s,b) for b in range(len(self.channels))) # because The barrier factors are sourced out of the resonance lineshape
         return a_h
 
+    @atfi.function
     def X(self,s,L):
         # return the Lineshape for the specific outchannel
         channel_number = self.get_channel(self.out_channel,L)
