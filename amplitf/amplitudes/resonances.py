@@ -239,7 +239,6 @@ class kmatrix(BaseResonance):
                     temp.append(-self.V(s,a,b)*self.Sigma(s,b))
             v.append(atfi.stack(temp,1))
         v = atfi.stack(v,1)
-        print(v)
         self._D = atfi.linalg_inv(v)
 
     def g(self,n,b):
