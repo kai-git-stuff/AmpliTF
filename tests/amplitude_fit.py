@@ -7,6 +7,7 @@ from amplitf.phasespace.dalitz_phasespace import DalitzPhaseSpace
 from amplitf.phasespace.base_phasespace import PhaseSpaceSample
 import amplitf.interface as atfi
 import matplotlib.pyplot as plt
+from iminuit import Minuit
 import numpy as np
 from datetime import datetime
 from data_reading import read_data_numpy
@@ -80,23 +81,49 @@ def run_fit():
     start = (-4.0997390647818905, -8.569145833770673, -7.050187572578236, -4.060037351162219, 4.9597607808060955, -4.730072126808973, -0.21160013324459656, -0.86648314691716, 
     -7.180039890338165, 22.996448656493513, -0.08747872885883322, -0.566200303177854, -0.37518335023873656, 0.13094320460476175, -751.5674862877551, -1970.1003751657167, -24200.672340184457, 
     -3181.350661796871, -8.051330172840395, -14.09372484324325, 15.281755542857619, -43.79566512218444, 0.11042225014323345, -0.5304791850986086)
-    start = [atfi.Variable(v,dtype=atfi.fptype()) for v in start]
-    print("Setup Gradient Tape")
-    log_L = log_L(start)
+    vars = [atfi.Variable(v,dtype=atfi.fptype()) for v in start]
+    gradient = None
+    f = log_L(vars)
 
-    def fit_func(args):
-        nonlocal start
-        tmp = [v.assign(new_v) for v,new_v in zip(start,args)]
-        with tf.GradientTape(persistent=True) as tape:
-            print("Start")
-            L = log_L(start)
-        grads = tape.gradient(L, start)
-
-        return grads, L
-    
     for i in tqdm(range(100)):
-        grads,L = fit_func(np.random.random(24))
-        print(L,grads[3])
+        with tf.GradientTape(persistent=False) as tape:
+            L = f(vars)
+        grads = tape.gradient(L, vars)
+        gradient = [g.numpy() for g in grads]
+        print(L)
+        vars[-1].assign_add(0.1)
+
+
+
+    class fit_func:
+        def __init__(self) -> None:
+            self.f = log_L(vars)
+        def __call__(self,*args):
+            nonlocal vars, gradient
+            tmp = [v.assign(new_v) for v,new_v in zip(vars,args)]
+            with tf.GradientTape(persistent=True) as tape:
+                L = self.f(vars)
+            grads = tape.gradient(L, vars)
+            gradient = [g.numpy() for g in grads]
+            print(L)
+            return L
+        
+        def grad(self,*args):
+            nonlocal vars, gradient
+            tmp = [v.assign(new_v) for v,new_v in zip(vars,args)]
+            with tf.GradientTape(persistent=True) as tape:
+                L = self.f(vars)
+            grads = tape.gradient(L, vars)
+            gradient = [g.numpy() for g in grads]
+            print(gradient)
+            print("Gradient for L= %s"%L)
+
+            gradient = [g.numpy() for g in grads]
+            return gradient
+    f = fit_func()
+    m = Minuit(f,*vars,grad=f.grad)
+    m.strategy = 0
+    m.migrad()
 
     # amplitude_from_fit_Kmat(global_args)
 

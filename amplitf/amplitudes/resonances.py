@@ -12,13 +12,13 @@ class BaseResonance:
         self._bls_in = bls_in
         self._bls_out = bls_out
         self.S,self.P = S,P
-        self.d = atfi.const(d)   # resonance radius (if None)
+        self.d = atfi.cast_real(d)   # resonance radius (if None)
 
     def update(self,S,P,bls_in : dict, bls_out :dict, d = None):
         self._bls_in = bls_in
         self._bls_out = bls_out
         self.S,self.P = S,P
-        self.d = atfi.const(d)   # resonance radius (if None)
+        self.d = atfi.cast_real(d)   # resonance radius (if None)
 
     @property
     def masses(self):
@@ -213,9 +213,24 @@ class kmatrix(BaseResonance):
         raise(ValueError("No channel for given index %s found!"%self.out_channel))
         return None
 
-    def update(self, S, P,alphas, bls_in: dict, bls_out: dict, d=None):
-        self.alphas = alphas
-        super().update(S, P, bls_in, bls_out, d)
+    # def update(self, S, P,alphas, bls_in: dict, bls_out: dict, d=None):
+    #     self.alphas = alphas
+    #     super().update(S, P, bls_in, bls_out, d)
+    
+    def update(self,S,P,d,alphas,channels:list,resonances:list,bls_in,bls_out ,width_factors=None,out_channel = 0):
+        self.alphas = alphas # couplings of channel to resonance
+        self.channels = channels # list of channels: type = KmatChannel
+        self.resonances = resonances # list of contributing poles (resonances)
+        self._D = None # D matrix in storage to prevent us from computing it over and over, if it is not needed
+        self.out_channel = out_channel # if the lineshape funktion is called, this is the channel we assume we want the lineshape for
+        self.channel_LS = {(c.index,c.L):i for i,c in enumerate(channels)} # we have to figure out the correct channel for a decay with a given L
+        if width_factors is not None:
+            self.width_factors = width_factors
+        else:
+            self.width_factors = [atfi.complex(atfi.const(0.), atfi.const(0.)) for _ in range(len(self.channels))]
+        self.d = d # the momentum scale for the BWff
+        self._p0 = two_body_momentum(self.M0, *self.masses)
+        super().update(S,P,bls_in,bls_out,d)
 
     @property
     def M0(self):
@@ -231,6 +246,7 @@ class kmatrix(BaseResonance):
 
     def q(self,s,a):
         m1,m2 = self.get_m(a)
+        return atfi.cast_complex(two_body_momentum(s,atfi.cast_complex(m1),atfi.cast_complex(m2)))
         s_a = atfi.cast_complex(m1 + m2)
         d_a = atfi.cast_complex(m1-m2)
         return atfi.sqrt(atfi.cast_complex((s-s_a**2) * (s-d_a**2)/(4*s) ))
