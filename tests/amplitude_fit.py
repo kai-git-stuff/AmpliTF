@@ -13,7 +13,7 @@ from data_reading import read_data_numpy
 import tensorflow as tf
 import curses
 import json
-
+from tqdm import tqdm
 def run_fit():
     ma = 2286.46 # lambda_c spin = 0.5 parity = 1
     mb = 1864.84 # D^0 bar spin = 0 partiy = -1
@@ -28,48 +28,53 @@ def run_fit():
     # smp = PhaseSpaceSample(phsp,tensor_data)
     
     phsp = DalitzPhaseSpace(ma,mb,mc,md)
-    smp = PhaseSpaceSample(phsp,phsp.rectangular_grid_sample(5, 5, space_to_sample="DP"))
+    smp = PhaseSpaceSample(phsp,phsp.rectangular_grid_sample(250, 250, space_to_sample="DP"))
 
     norm_phsp = DalitzPhaseSpace(ma,mb,mc,md)
-    norm_smp = PhaseSpaceSample(norm_phsp,norm_phsp.rectangular_grid_sample(5, 5, space_to_sample="DP"))
+    norm_smp = PhaseSpaceSample(norm_phsp,norm_phsp.rectangular_grid_sample(250, 250, space_to_sample="DP"))
 
-    @tf.function
     def log_L(args):
-        v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17,v18,v19,v20,v21,v22,v23,v24 = args
-        bls_ds_kmatrix_in = {
-                        (0,1):atfi.complex(v1,v2),
-                        (2,1):atfi.complex(v3,v4),
-                        (2,3):atfi.complex(v5,v6)
-                         }
-        bls_ds_kmatrix_out = {
-                            (2,0):atfi.complex(v7,v8)
+        def get_kwargs_from_args(args):
+            # tf.print("kwargs %s"%args[0])
+            v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17,v18,v19,v20,v21,v22,v23,v24 = args
+            bls_ds_kmatrix_in = {
+                            (0,1):atfi.complex(v1,v2),
+                            (2,1):atfi.complex(v3,v4),
+                            (2,3):atfi.complex(v5,v6)
                             }
+            bls_ds_kmatrix_out = {
+                                (2,0):atfi.complex(v7,v8)
+                                }
 
-        bls_D2317_in = {(0,1):atfi.complex(v9,v10)}
-        bld_D2317_out = {(0,0):atfi.complex(atfi.const(1),atfi.const(0))}
+            bls_D2317_in = {(0,1):atfi.complex(v9,v10)}
+            bld_D2317_out = {(0,0):atfi.complex(atfi.const(1),atfi.const(0))}
 
-        bls_L_2791_in = {(0,1):atfi.complex(v11,v12)}
-        bls_L_2791_out = {(0,1):atfi.complex(atfi.const(1),atfi.const(0))}
+            bls_L_2791_in = {(0,1):atfi.complex(v11,v12)}
+            bls_L_2791_out = {(0,1):atfi.complex(atfi.const(1),atfi.const(0))}
 
-        bls_D2860_in = {(4,5):atfi.complex(v13,v14)}
-        bls_D2860_out = {(6,0):atfi.complex(atfi.const(1),atfi.const(0))}
+            bls_D2860_in = {(4,5):atfi.complex(v13,v14)}
+            bls_D2860_out = {(6,0):atfi.complex(atfi.const(1),atfi.const(0))}
 
-        kwargs = {"bls_ds_kmatrix_in":bls_ds_kmatrix_in,
-                  "bls_ds_kmatrix_out":bls_ds_kmatrix_out, 
-                  "bls_D2317_in":bls_D2317_in,
-                  "bls_D2317_out":bld_D2317_out,
-                  "bls_L_2791_in":bls_L_2791_in,
-                  "bls_L_2791_out":bls_L_2791_out,
-                  "bls_D2860_in":bls_D2860_in,
-                  "bls_D2860_out":bls_D2860_out,
-                  "alphas":[atfi.complex(v15,v16),atfi.complex(v17,v18)],
-                  "KmatG_factors":[atfi.cast_complex(k) for k in [v19,v20,v21,v22]] ,
-                  "Kmatbg_values":[atfi.cast_complex(v23),atfi.cast_complex(v24)]}
-        amplitude = three_body_decay_Daliz_plot_function(smp.data,phsp,**kwargs)
+            kwargs = {"bls_ds_kmatrix_in":bls_ds_kmatrix_in,
+                    "bls_ds_kmatrix_out":bls_ds_kmatrix_out, 
+                    "bls_D2317_in":bls_D2317_in,
+                    "bls_D2317_out":bld_D2317_out,
+                    "bls_L_2791_in":bls_L_2791_in,
+                    "bls_L_2791_out":bls_L_2791_out,
+                    "bls_D2860_in":bls_D2860_in,
+                    "bls_D2860_out":bls_D2860_out,
+                    "alphas":[atfi.complex(v15,v16),atfi.complex(v17,v18)],
+                    "KmatG_factors":[atfi.cast_complex(k) for k in [v19,v20,v21,v22]] ,
+                    "Kmatbg_values":[atfi.cast_complex(v23),atfi.cast_complex(v24)]}
+            return kwargs
+        kwargs = get_kwargs_from_args(args)
+        amplitude= three_body_decay_Daliz_plot_function(smp.data,phsp,**kwargs)
         norm_Amplitude = three_body_decay_Daliz_plot_function(norm_smp.data,norm_phsp,**kwargs)
-        L = atfi.nansum(atfi.log(amplitude) - atfi.log(atfi.reduce_sum(norm_Amplitude)))
-
-        return -L
+        def f(args):
+            kwargs = get_kwargs_from_args(args)
+            L = atfi.nansum(atfi.log(amplitude(kwargs)) - atfi.log(atfi.reduce_sum(norm_Amplitude(kwargs))))
+            return -L
+        return f
 
     start = [-1.8,4.4,-7.05,-4.06,4.96,-4.73,-1.064,-0.722,-0.017,-0.1256,-0.53,0.69,-0.0149,-0.0259,0.32,-0.33,-0.00111,0.00394,-8.73, 6.54,6.6,-3.38,0.0135,0.0867]
     start = (-4.0997390647818905, -8.569145833770673, -7.050187572578236, -4.060037351162219, 4.9597607808060955, -4.730072126808973, -0.21160013324459656, -0.86648314691716, 
@@ -77,12 +82,22 @@ def run_fit():
     -3181.350661796871, -8.051330172840395, -14.09372484324325, 15.281755542857619, -43.79566512218444, 0.11042225014323345, -0.5304791850986086)
     start = [atfi.Variable(v,dtype=atfi.fptype()) for v in start]
     print("Setup Gradient Tape")
-    with tf.GradientTape() as tape:
-        print("Start")
-        L = log_L(start)
-        print(L)
+    log_L = log_L(start)
+
+    def fit_func(args):
+        nonlocal start
+        tmp = [v.assign(new_v) for v,new_v in zip(start,args)]
+        with tf.GradientTape(persistent=True) as tape:
+            print("Start")
+            L = log_L(start)
         grads = tape.gradient(L, start)
-        print(grads)
+
+        return grads, L
+    
+    for i in tqdm(range(100)):
+        grads,L = fit_func(np.random.random(24))
+        print(L,grads[3])
+
     # amplitude_from_fit_Kmat(global_args)
 
 def amplitude_from_fit_noKmat(args= (7.8129217018561405, -8.9029791987581, 6.672740837966961, 4.753554879115412, 0.25482039945567525, 12.001709375759884, 0.5267874285177503, -0.09320190898238714, 19.44897530068699, 0.05323202382048686, 0.9210743497097295, 0.6849073346905623, 0.8995643811457568, 0.6623408395456626)):

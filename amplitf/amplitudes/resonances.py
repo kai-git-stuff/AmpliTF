@@ -14,6 +14,11 @@ class BaseResonance:
         self.S,self.P = S,P
         self.d = atfi.const(d)   # resonance radius (if None)
 
+    def update(self,S,P,bls_in : dict, bls_out :dict, d = None):
+        self._bls_in = bls_in
+        self._bls_out = bls_out
+        self.S,self.P = S,P
+        self.d = atfi.const(d)   # resonance radius (if None)
 
     @property
     def masses(self):
@@ -81,6 +86,13 @@ class BWresonance(BaseResonance):
 
         super().__init__(S,P,bls_in,bls_out,d)
 
+    def update(self,S,P,m0,gamma0,bls_in : dict, bls_out :dict,ma,mb,d=5./1000.):
+        self.m0 = m0 # atfi.const(m0)
+        self.gamma0 = gamma0
+        self._masses = (atfi.const(ma),atfi.const(mb))
+        self._p0 = two_body_momentum(self.M0, *self._masses)
+        super().update(S,P,bls_in,bls_out,d)
+
     @property
     def masses(self):
         return self._masses
@@ -115,6 +127,12 @@ class subThresholdBWresonance(BWresonance):
         self._p0 = atfi.sqrt(atfi.cast_complex(p0_2))
         self.d = atfi.cast_complex(self.d)
 
+    def update(self, S, P, m0, gamma0, bls_in: dict, bls_out: dict, ma, mb,mc,md, d=5 / 1000):
+        super().update(S, P, m0, gamma0, bls_in, bls_out, ma, mb, d)
+        p0_2 = two_body_momentum_squared(self.M0, ma , mb)
+        self._p0 = atfi.sqrt(atfi.cast_complex(p0_2))
+        self.d = atfi.cast_complex(self.d)
+
     def breakup_momentum(self,md,s,mbachelor):
         return atfi.cast_complex(two_body_momentum(md,s,mbachelor))
 
@@ -139,7 +157,16 @@ class KmatChannel:
         # final state partial waves we can find the proper channel with (index, L)
         self.index = index 
         self.background = bg
-
+    
+    def update(self, m1,m2,L,bg,index):
+        self.masses = atfi.const(m1),atfi.const(m2)
+        self.L = L # (doubled!!!)
+        # the index by which the channel is refered to
+        # usually we have one specific outgoing process and look at one set of final state
+        # particles. Then we want all states with those particles as one index, so for the 
+        # final state partial waves we can find the proper channel with (index, L)
+        self.index = index 
+        self.background = bg
 class KmatPole:
     def __init__(self,M,couplings_out:list):
         self.couplings_out = couplings_out
@@ -148,6 +175,11 @@ class KmatPole:
         
     def coupling(self,a):
         return self.couplings_out[a]
+    
+    def update(self,M,couplings_out:list):
+        self.couplings_out = couplings_out
+        self._M = atfi.complex(atfi.const(M),atfi.const(0))
+        self._M2 = atfi.complex(atfi.const(M**2),atfi.const(0))
     
     @property
     def M(self):
@@ -180,6 +212,10 @@ class kmatrix(BaseResonance):
                 return channel.masses
         raise(ValueError("No channel for given index %s found!"%self.out_channel))
         return None
+
+    def update(self, S, P,alphas, bls_in: dict, bls_out: dict, d=None):
+        self.alphas = alphas
+        super().update(S, P, bls_in, bls_out, d)
 
     @property
     def M0(self):

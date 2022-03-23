@@ -15,7 +15,7 @@ from amplitf.amplitudes.resonances import *
 
 
 
-@tf.function(experimental_relax_shapes=True)
+# @tf.function(experimental_relax_shapes=True)
 def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     jd = sp.SPIN_HALF
     pd = 1 # lambda_b  spin = 0.5 parity = +1
@@ -80,47 +80,78 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
                     BWresonance(sp.SPIN_HALF,-1,atfi.cast_real(2791.9),8.9,bls_L_2791_in,bls_L_2791_out,*masses2,d_mesons), # xi_c (2790)
                     BWresonance(sp.SPIN_3HALF,-1,atfi.cast_real(2815), 2.43,{},{},*masses2,d_mesons)  # xi_c (2815) no bls couplings given :(
                     ] 
-    def O(nu,lambdas):
-        return decay.chain3(smp,nu,*lambdas,[]) + decay.chain2(smp,nu,*lambdas,resonances2) + decay.chain1(smp,nu,*lambdas,resonances1)
+    def f(kwargs):
+        bls_ds_kmatrix_in = kwargs['bls_ds_kmatrix_in']
+        bls_ds_kmatrix_out = kwargs['bls_ds_kmatrix_out']
 
-    def M(Lambda,lambdas,alpha,beta,gamma):
-        """
-        alpha,beta,gamma = euler angles
-        Lambda and nu are the polarisation of the particle 0 in the labframe and outer frame
-        """
-        return sum(wigner_capital_d(alpha,beta,gamma,decay.sd,Lambda,nu) * O(nu,lambdas) for nu in sp.direction_options(decay.sd))
-    
+        bls_D2317_in = kwargs['bls_D2317_in']
+        bls_D2317_out = kwargs['bls_D2317_out']
 
-    # ampl = sum(sum(abs(M(ld,[la,0,0],0.5,1,0))**2  for la in sp.direction_options(decay.sa))for ld in [1])
+        bls_L_2791_in = kwargs['bls_L_2791_in']
+        bls_L_2791_out = kwargs['bls_L_2791_out']
 
-    def spin_density(l1,l2):
-        m = np.asarray(
-            [[1,0,],
-             [0,1]])
-        i1 = (l1 + 1)//2 
-        i2 = (l2 + 1)//2
-        return m[i1,i2]
+        bls_D2860_in = kwargs['bls_D2860_in']
+        bls_D2860_out = kwargs['bls_D2860_out']
 
-    def ll():
-        a = []
-        for s1 in sp.direction_options(decay.sd):
-            for s2 in sp.direction_options(decay.sd):
-                a.append((s1,s2))
-        return a
+        alphas = kwargs['alphas']
+        g0,g1,g2,g3 = kwargs["KmatG_factors"]
+        bg1, bg2 = kwargs["Kmatbg_values"]
+        m11,m12,m21,m22 = mb,mc,2006.85,mc 
+        channels = [
+            KmatChannel(m11,m12,2,bg1,index=0), # this is the decay channel we will see
+            KmatChannel(m21,m22,2,bg2,index=1) # this is the channel that may cause interference
+        ]
+        channels[0].update(m11,m12,2,bg1,index=0)
+        channels[1].update(m21,m22,2,bg2,index=1)
+        resonances[0].update(2713.6,[g0,g1])
+        resonances[1].update(2967.1,[g2,g3])
+        
+        resonances1[0].update(sp.SPIN_0,1,atfi.cast_real(2317),30, bls_D2317_in,bls_D2317_out,*masses1,mb,md,d_mesons)
+        resonances1[1].update(sp.SPIN_1, -1,alphas ,bls_ds_kmatrix_in, bls_ds_kmatrix_out, d=5./1000.)
+        resonances1[2].update(sp.SPIN_3,-1,atfi.cast_real(2860),53,bls_D2860_in,bls_D2860_out,*masses1,d_mesons)
 
-    alpha,beta,gamma = 0,0,0
-    # precompute the M components
-    M_prec = {ld:sum(M(ld,[la,0,0],alpha,beta,gamma) for la in sp.direction_options(decay.sa))  for ld in sp.direction_options(decay.sd)}
+        resonances2[0].update(sp.SPIN_HALF,-1,atfi.cast_real(2791.9),8.9,bls_L_2791_in,bls_L_2791_out,*masses2,d_mesons)
+        def O(nu,lambdas):
+            return decay.chain3(smp,nu,*lambdas,[]) + decay.chain2(smp,nu,*lambdas,resonances2) + decay.chain1(smp,nu,*lambdas,resonances1)
 
-    # ampl = sum( 
-    #         spin_density(L1,L2) * 
-    #                     M_prec[L1] * atfi.conjugate(M_prec[L2]) 
-    #             for L1,L2 in ll()
-    #             )
+        def M(Lambda,lambdas,alpha,beta,gamma):
+            """
+            alpha,beta,gamma = euler angles
+            Lambda and nu are the polarisation of the particle 0 in the labframe and outer frame
+            """
+            return sum(wigner_capital_d(alpha,beta,gamma,decay.sd,Lambda,nu) * O(nu,lambdas) for nu in sp.direction_options(decay.sd))
+        
 
-    # print(max(abs(ampl)- atfi.real(ampl)))
-    return sum(abs(M_prec[L1])**2 for L1 in sp.direction_options(decay.sd))
-    return abs(ampl)
+        # ampl = sum(sum(abs(M(ld,[la,0,0],0.5,1,0))**2  for la in sp.direction_options(decay.sa))for ld in [1])
+
+        def spin_density(l1,l2):
+            m = np.asarray(
+                [[1,0,],
+                [0,1]])
+            i1 = (l1 + 1)//2 
+            i2 = (l2 + 1)//2
+            return m[i1,i2]
+
+        def ll():
+            a = []
+            for s1 in sp.direction_options(decay.sd):
+                for s2 in sp.direction_options(decay.sd):
+                    a.append((s1,s2))
+            return a
+
+        alpha,beta,gamma = 0,0,0
+        # precompute the M components
+        M_prec = {ld:sum(M(ld,[la,0,0],alpha,beta,gamma) for la in sp.direction_options(decay.sa))  for ld in sp.direction_options(decay.sd)}
+
+        # ampl = sum( 
+        #         spin_density(L1,L2) * 
+        #                     M_prec[L1] * atfi.conjugate(M_prec[L2]) 
+        #             for L1,L2 in ll()
+        #             )
+
+        # print(max(abs(ampl)- atfi.real(ampl)))
+        return sum(abs(M_prec[L1])**2 for L1 in sp.direction_options(decay.sd))
+    return f
 
 
 if __name__ == "__main__":
