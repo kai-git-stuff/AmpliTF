@@ -21,18 +21,24 @@ def run_fit():
     mc = 493.677 # K-  spin = 0 parity = -1
     md = 5619.60  # lambda_b  spin = 0.5 parity = +1
 
-    # data = read_data_numpy()
-    # s1,s2,s3 = data["D0K_M2"],data["LcK_M2"],data["LcD0_M2"]
-    # md_tensor = atfi.convert_to_tensor(data["Lb_M"])
-    # phsp = DalitzPhaseSpace(ma,mb,mc,md_tensor)
-    # tensor_data = atfi.cast_real(atfi.stack([atfi.convert_to_tensor(s3.values),atfi.convert_to_tensor(s1.values)],axis=1))
-    # smp = PhaseSpaceSample(phsp,tensor_data)
+    data = read_data_numpy()
+    s1,s2,s3 = data["D0K_M2"],data["LcK_M2"],data["LcD0_M2"]
+    md_tensor = atfi.convert_to_tensor(data["Lb_M"])
+    phsp = DalitzPhaseSpace(ma,mb,mc,md_tensor)
+    tensor_data = atfi.cast_real(atfi.stack([atfi.convert_to_tensor(s3.values),atfi.convert_to_tensor(s1.values)],axis=1))
+    smp = PhaseSpaceSample(phsp,tensor_data)
     
-    phsp = DalitzPhaseSpace(ma,mb,mc,md)
-    smp = PhaseSpaceSample(phsp,phsp.rectangular_grid_sample(250, 250, space_to_sample="DP"))
+    data = read_data_numpy("15296020LcD0K15D.root")
+    s1,s2,s3 = data["D0K_M2"],data["LcK_M2"],data["LcD0_M2"]
+    md_tensor = atfi.convert_to_tensor(data["Lb_M"])
+    norm_phsp = DalitzPhaseSpace(ma,mb,mc,md_tensor)
+    tensor_data = atfi.cast_real(atfi.stack([atfi.convert_to_tensor(s3.values),atfi.convert_to_tensor(s1.values)],axis=1))
+    norm_smp = PhaseSpaceSample(phsp,tensor_data)
+    # phsp = DalitzPhaseSpace(ma,mb,mc,md)
+    # smp = PhaseSpaceSample(phsp,phsp.rectangular_grid_sample(250, 250, space_to_sample="DP"))
 
-    norm_phsp = DalitzPhaseSpace(ma,mb,mc,md)
-    norm_smp = PhaseSpaceSample(norm_phsp,norm_phsp.rectangular_grid_sample(250, 250, space_to_sample="DP"))
+    # norm_phsp = DalitzPhaseSpace(ma,mb,mc,md)
+    # norm_smp = PhaseSpaceSample(norm_phsp,norm_phsp.rectangular_grid_sample(250, 250, space_to_sample="DP"))
 
     def log_L(args):
         def get_kwargs_from_args(args):
