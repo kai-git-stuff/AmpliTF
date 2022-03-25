@@ -32,6 +32,8 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     mc = 493.677 # K-  spin = 0 parity = -1
     md = 5619.60  # lambda_b  spin = 0.5 parity = +1
 
+    ma,mb,mc,md = phsp.masses
+
     d_mesons = 1.5/1000.
 
     decay = dalitz_decay(md,ma,mb,mc,sd,sa,sb,sc,pd,pa,pb,pc,phsp=phsp)
@@ -110,13 +112,14 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
             KmatPole(2713.6,[g0,g1]),  # D^*_s1(2700)
             KmatPole(2967.1,[g2,g3])  # D^*_s1(2860)    # ToDo find if we assigned the g values correctly #D^*_s1(2860)
         ]
-        # resonances1[1].update(sp.SPIN_1, -1,alphas ,bls_ds_kmatrix_in, bls_ds_kmatrix_out, d=5./1000.)
+        # resonances1[1].update(sp.SPIN_1,-1,5./1000.,alphas,channels,resonances,
+        #              bls_ds_kmatrix_in,bls_ds_kmatrix_out,out_channel=0)
 
-        resonances1[1].update(sp.SPIN_1,-1,5./1000.,alphas,channels,resonances,
-                bls_ds_kmatrix_in,bls_ds_kmatrix_out,out_channel=0)
-        # D_kma = kmatrix(sp.SPIN_1,-1,5./1000.,alphas,channels,resonances,
-        #             bls_ds_kmatrix_in,bls_ds_kmatrix_out,out_channel=0)
-        # resonances1[1] = D_kma
+        # resonances1[1].update(sp.SPIN_1,-1,5./1000.,alphas,channels,resonances,
+        #         bls_ds_kmatrix_in,bls_ds_kmatrix_out,out_channel=0)
+        D_kma = kmatrix(sp.SPIN_1,-1,5./1000.,alphas,channels,resonances,
+                     bls_ds_kmatrix_in,bls_ds_kmatrix_out,out_channel=0)
+        resonances1[1] = D_kma
 
         resonances1[0].update(sp.SPIN_0,1,atfi.cast_real(2317),30, bls_D2317_in,bls_D2317_out,*masses1,mb,md,d_mesons)
 

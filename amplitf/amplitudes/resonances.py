@@ -1,6 +1,7 @@
 """
 This file includes different types of resonances one might want to use for fits
 """
+from sympy import S
 from amplitf.dynamics import blatt_weisskopf_ff, blatt_weisskopf_ff_squared, breit_wigner_lineshape, relativistic_breit_wigner, mass_dependent_width, orbital_barrier_factor
 import amplitf.interface as atfi
 from amplitf.kinematics import two_body_momentum, two_body_momentum_squared,two_body_momentum_no_tf
@@ -281,16 +282,19 @@ class kmatrix(BaseResonance):
     def build_D(self,s):
         # we calculate v directly  as 1 - v * Sigma
         # ToDo do this with tf.stack
+        # v = atfi.zeros(list(s.shape) + [len(self.channels),len(self.channels)] )
         v = list()
         for a in range(len(self.channels)):
             temp = list()
             for b in range(len(self.channels)):
                 if a == b:
+                    # temp.append(atfi.ones(s) * b)
                     temp.append(1 -self.V(s,a,b)*self.Sigma(s,b) )
                 else:
+                    # temp.append(atfi.ones(s) * b)
                     temp.append(-self.V(s,a,b)*self.Sigma(s,b))
-            v.append(atfi.stack(temp,1))
-        v = atfi.stack(v,1)
+            v.append(atfi.stack(temp,-1))
+        v = atfi.stack(v,-2)
         self._D = atfi.linalg_inv(v)
 
     def g(self,n,b):

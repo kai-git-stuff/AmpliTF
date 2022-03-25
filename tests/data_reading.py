@@ -3,12 +3,17 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-def read_data_numpy(filename="LcD0K15.root",folder="/home/kai/LHCb/data/Marian/InUse/"):
+def read_data_numpy(filename="LcD0K15.root",folder="/home/kai/LHCb/data/Marian/InUse/",MC=False):
     filename= folder+filename
     print(filename)
 
     with uproot.open(filename) as file:
-        tree = file['t']
+        if MC:
+            f = file["Reco"]
+        else:
+            f = file
+
+        tree = f['t']
         v = str(tree.values())
         names = [n for i,n in enumerate(v.split("'")) if i%2 != 0]
         names = [n for n in names if "Lc_M" in n]
@@ -16,7 +21,7 @@ def read_data_numpy(filename="LcD0K15.root",folder="/home/kai/LHCb/data/Marian/I
         wanted_params = ["Lb_M","D0_MM"]
         def add_partice(v):
             nonlocal wanted_params
-            wanted_params.extend(["%s_%s"%(v,p) for p in ["PE","PX","PY","PZ"]])
+            wanted_params.extend(["%s_%s"%(v,p) for p in ["PE","PX","PY","PZ","M"]])
         add_partice("D0")
         add_partice("K")
         add_partice("Lc")
@@ -38,7 +43,7 @@ def read_data_numpy(filename="LcD0K15.root",folder="/home/kai/LHCb/data/Marian/I
         Lc_M2 = single_mass("Lc")
         s1,s2,s3 = mass("D0","K"), mass("Lc","K"), mass("Lc","D0")
 
-        return s1,s2,s3, data["Lb_M"]
+        return s1,s2,s3, data["Lb_M"], data["Lc_M"],data["D0_M"],data["K_M"]
 
 
 if __name__ == "__main__":

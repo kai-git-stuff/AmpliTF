@@ -128,6 +128,23 @@ class DalitzPhaseSpace(BasePhaseSpace):
     def filter(self, x):
         return tf.boolean_mask(x, self.inside(x))
 
+    @atfi.function
+    def filter_with_masses(self,x):
+        ma = self.filter_by(x,self.ma)
+        mb = self.filter_by(x,self.mb)
+        mc = self.filter_by(x,self.mc)
+        md = self.filter_by(x,self.md)
+        x = self.filter(x)
+        return x,ma,mb,mc,md
+
+    @atfi.function
+    def filter_by(self,x,b):
+        return tf.boolean_mask(b, self.inside(x))
+
+    @property
+    def masses(self):
+        return self.ma, self.mb, self.mc, self.md
+
     #@atfi.function
     def unfiltered_sample(self, size, maximum=None):
         """

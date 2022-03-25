@@ -1,5 +1,4 @@
 
-import enum
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from amplitude_model import three_body_decay_Daliz_plot_function
@@ -22,18 +21,26 @@ def run_fit():
     md = 5619.60  # lambda_b  spin = 0.5 parity = +1
 
     data = read_data_numpy()
-    s1,s2,s3,md_dat = data
+    s1,s2,s3,md_dat,_,_,_ = data
     md_tensor = atfi.convert_to_tensor(md_dat)
-    phsp = DalitzPhaseSpace(ma,mb,mc,md_tensor)
+    phsp = DalitzPhaseSpace(ma,mb,mc,md)
     tensor_data = atfi.cast_real(atfi.stack([atfi.convert_to_tensor(s3.values),atfi.convert_to_tensor(s1.values)],axis=1))
-    smp = PhaseSpaceSample(phsp,tensor_data)
+    # filtered_data,ma,mb,mc,md = phsp.filter_with_masses(tensor_data)
+    # phsp = DalitzPhaseSpace(ma,mb,mc,md)  
+    filtered_data = phsp.filter(tensor_data)  
+    print(tensor_data.shape,filtered_data.shape)
+    smp = PhaseSpaceSample(phsp,filtered_data)
     
-    data = read_data_numpy("15296020LcD0K15D.root")
-    s1,s2,s3,md_dat = data
+    data = read_data_numpy("15296020LcD0K15D.root",MC=True)
+    s1,s2,s3,md_dat,_,_,_ = data
     md_tensor = atfi.convert_to_tensor(md_dat)
-    norm_phsp = DalitzPhaseSpace(ma,mb,mc,md_tensor)
+    norm_phsp = DalitzPhaseSpace(ma,mb,mc,md)
     tensor_data = atfi.cast_real(atfi.stack([atfi.convert_to_tensor(s3.values),atfi.convert_to_tensor(s1.values)],axis=1))
-    norm_smp = PhaseSpaceSample(phsp,tensor_data)
+    # filtered_data,ma,mb,mc,md = norm_phsp.filter_with_masses(tensor_data)
+    # norm_phsp = DalitzPhaseSpace(ma,mb,mc,md)
+    filtered_data = norm_phsp.filter(tensor_data)  
+    print(tensor_data.shape,filtered_data.shape)
+    norm_smp = PhaseSpaceSample(norm_phsp,filtered_data)
     # phsp = DalitzPhaseSpace(ma,mb,mc,md)
     # smp = PhaseSpaceSample(phsp,phsp.rectangular_grid_sample(250, 250, space_to_sample="DP"))
 
@@ -79,7 +86,7 @@ def run_fit():
         norm_Amplitude = three_body_decay_Daliz_plot_function(norm_smp.data,norm_phsp,**kwargs)
         def f(args):
             kwargs = get_kwargs_from_args(args)
-            L = atfi.nansum(atfi.log(amplitude(kwargs)) - atfi.log(atfi.reduce_sum(norm_Amplitude(kwargs))))
+            L = atfi.nansum(atfi.log(amplitude(kwargs))) - atfi.log(atfi.nansum(norm_Amplitude(kwargs)))
             return -L
         return f
 
@@ -91,45 +98,57 @@ def run_fit():
     gradient = None
     f = log_L(vars)
 
-    for i in tqdm(range(100)):
+    # for i in tqdm(range(100)):
+    #     with tf.GradientTape(persistent=False) as tape:
+    #         L = f(vars)
+    #     grads = tape.gradient(L, vars)
+    #     gradient = [g.numpy() for g in grads]
+    #     print(L)
+    #     print(gradient)
+    #     print(grads)
+    #     vars[-1].assign_add(0.1)
+    optimizer = tf.keras.optimizers.SGD()
+    def step():
         with tf.GradientTape(persistent=False) as tape:
             L = f(vars)
         grads = tape.gradient(L, vars)
         gradient = [g.numpy() for g in grads]
         print(L)
-        vars[-1].assign_add(0.1)
+        print(gradient)
+        optimizer.apply_gradients(zip(grads,vars))
 
+    for _ in tqdm(range(100)):
+        step()
 
-
-    class fit_func:
-        def __init__(self) -> None:
-            self.f = log_L(vars)
-        def __call__(self,*args):
-            nonlocal vars, gradient
-            tmp = [v.assign(new_v) for v,new_v in zip(vars,args)]
-            with tf.GradientTape(persistent=True) as tape:
-                L = self.f(vars)
-            grads = tape.gradient(L, vars)
-            gradient = [g.numpy() for g in grads]
-            print(L)
-            return L
+    # class fit_func:
+    #     def __init__(self) -> None:
+    #         self.f = log_L(vars)
+    #     def __call__(self,*args):
+    #         nonlocal vars, gradient
+    #         tmp = [v.assign(new_v) for v,new_v in zip(vars,args)]
+    #         with tf.GradientTape(persistent=True) as tape:
+    #             L = self.f(vars)
+    #         grads = tape.gradient(L, vars)
+    #         gradient = [g.numpy() for g in grads]
+    #         print(L)
+    #         return L
         
-        def grad(self,*args):
-            nonlocal vars, gradient
-            tmp = [v.assign(new_v) for v,new_v in zip(vars,args)]
-            with tf.GradientTape(persistent=True) as tape:
-                L = self.f(vars)
-            grads = tape.gradient(L, vars)
-            gradient = [g.numpy() for g in grads]
-            print(gradient)
-            print("Gradient for L= %s"%L)
+    #     def grad(self,*args):
+    #         nonlocal vars, gradient
+    #         tmp = [v.assign(new_v) for v,new_v in zip(vars,args)]
+    #         with tf.GradientTape(persistent=True) as tape:
+    #             L = self.f(vars)
+    #         grads = tape.gradient(L, vars)
+    #         gradient = [g.numpy() for g in grads]
+    #         print(gradient)
+    #         print("Gradient for L= %s"%L)
 
-            gradient = [g.numpy() for g in grads]
-            return gradient
-    f = fit_func()
-    m = Minuit(f,*vars,grad=f.grad)
-    m.strategy = 0
-    m.migrad()
+    #         gradient = [g.numpy() for g in grads]
+    #         return gradient
+    # f = fit_func()
+    # m = Minuit(f,*vars,grad=f.grad)
+    # m.strategy = 0
+    # m.migrad()
 
     # amplitude_from_fit_Kmat(global_args)
 
