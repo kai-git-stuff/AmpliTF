@@ -38,7 +38,7 @@ def read_data_numpy(filename="LcD0K15.root",folder="/home/kai/LHCb/data/Marian/I
         Lc_M2 = single_mass("Lc")
         s1,s2,s3 = mass("D0","K"), mass("Lc","K"), mass("Lc","D0")
 
-        return s1,s2,s3
+        return s1,s2,s3, data["Lb_M"]
 
 
 if __name__ == "__main__":

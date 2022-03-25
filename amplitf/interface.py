@@ -84,6 +84,7 @@ _interface_dict = {
     "pow": "tf.pow",
     "zeros_like": "tf.zeros_like",
     "ones": "tf.ones_like",
+    "zeros":"tf.zeros",
     "cross": "tf.linalg.cross",
     "reduce_max": "tf.reduce_max",
     "reduce_sum": "tf.reduce_sum",
