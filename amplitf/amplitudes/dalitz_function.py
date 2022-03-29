@@ -188,12 +188,12 @@ class dalitz_decay:
                 helicities_abc = helicity_options(sC,self.sa,self.sb,self.sc)
                 for la_,lb_,lc_ in helicities_abc:
                     if la_ != la : continue # atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) yields delta, bc. zeta_1 = 0
-                    if lC != la_-ld: continue # bc. theta_hat = 0, the d_matrix for this is also a delta
+                    if ld != la_-lC : continue # bc. theta_hat = 0, the d_matrix for this is also a delta
                     # C -> b c
                     # Rotation in the isobar system
                     # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar #
                     H_A_c = ( atfi.sqrt(phasespace_factor(sgma1,self.mb,self.mc) * phasespace_factor(self.md,sgma1,self.ma)) * 
-                            atfi.cast_complex(helicity_couplings_from_ls(self.sd,sC,self.sa,lC,la_-ld,bls_in))  )
+                            atfi.cast_complex(helicity_couplings_from_ls(self.sd,sC,self.sa,lC,la_,bls_in))  )
                     H_b_c =  helicity_coupling_times_d(theta,sC,self.sb,self.sc,lb_,lc_,lC,bls_out)
                     # symmetry of the d matrices
                     H_b_c *=  (-1)**((lc - lc_)/2) * (   # prefactors for index switches  

@@ -47,8 +47,9 @@ def read_data_numpy(filename="LcD0K15.root",folder="/home/kai/LHCb/data/Marian/I
 
 
 if __name__ == "__main__":
-    s1,s2,s3 = data =read_data_numpy()
-    #plt.hist2d(s1**0.5/1e3,s3**0.5/1e3,bins=(100,100))
-    plt.hist(s1**0.5/1e3,bins=100)
+    s1,s2,s3,_,_,_,_ = data =read_data_numpy("15296020LcD0K15D.root",MC=True)
+    plt.hist2d(s1/1e6,s3/1e6,bins=(100,100))
+    #plt.hist(s1**0.5/1e3,bins=100)
+    plt.savefig("data.png")
     plt.show()
     print(data)

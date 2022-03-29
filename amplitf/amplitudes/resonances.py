@@ -20,6 +20,7 @@ class BaseResonance:
         self._bls_out = bls_out
         self.S,self.P = S,P
         self.d = atfi.cast_real(d)   # resonance radius (if None)
+        print("Update")
 
     @property
     def masses(self):
@@ -247,7 +248,7 @@ class kmatrix(BaseResonance):
 
     def q(self,s,a):
         m1,m2 = self.get_m(a)
-        return atfi.cast_complex(two_body_momentum(s,atfi.cast_complex(m1),atfi.cast_complex(m2)))
+        # return atfi.cast_complex(two_body_momentum(s,atfi.cast_complex(m1),atfi.cast_complex(m2)))
         s_a = atfi.cast_complex(m1 + m2)
         d_a = atfi.cast_complex(m1-m2)
         return atfi.sqrt(atfi.cast_complex((s-s_a**2) * (s-d_a**2)/(4*s) ))
@@ -309,12 +310,11 @@ class kmatrix(BaseResonance):
     def P_func(self,s,b):
         p  = self.channels[b].background + sum( (res.coupling(b) * alpha )/atfi.cast_complex(res.M2-s)   for res,alpha in zip(self.resonances,self.alphas))
         return p
-    
+        
     @atfi.function
     def A_H(self,s,a):
         # s: squared energy
         # a: channel number
-        self.build_D(s)
         #a_h = self.gamma(s,a) * sum( self.D(s,a,b) * self.P_func(s,b) for b in range(len(self.channels)))
         a_h = sum( self.D(s,a,b) * self.P_func(s,b) for b in range(len(self.channels))) # because The barrier factors are sourced out of the resonance lineshape
         return a_h
@@ -324,4 +324,5 @@ class kmatrix(BaseResonance):
         # return the Lineshape for the specific outchannel
         channel_number = self.get_channel(self.out_channel,L)
         s = atfi.cast_complex(s)
+        self.build_D(s)
         return self.A_H(s,channel_number) 

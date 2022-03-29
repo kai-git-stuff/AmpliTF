@@ -126,6 +126,7 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
         resonances1[2].update(sp.SPIN_3,-1,atfi.cast_real(2860),53,bls_D2860_in,bls_D2860_out,*masses1,d_mesons)
 
         resonances2[0].update(sp.SPIN_HALF,-1,atfi.cast_real(2791.9),8.9,bls_L_2791_in,bls_L_2791_out,*masses2,d_mesons)
+        
         def O(nu,lambdas):
             return decay.chain3(smp,nu,*lambdas,[]) + decay.chain2(smp,nu,*lambdas,resonances2) + decay.chain1(smp,nu,*lambdas,resonances1)
 
@@ -136,36 +137,8 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
             """
             return sum(wigner_capital_d(alpha,beta,gamma,decay.sd,Lambda,nu) * O(nu,lambdas) for nu in sp.direction_options(decay.sd))
         
-
-        # ampl = sum(sum(abs(M(ld,[la,0,0],0.5,1,0))**2  for la in sp.direction_options(decay.sa))for ld in [1])
-
-        def spin_density(l1,l2):
-            m = np.asarray(
-                [[1,0,],
-                [0,1]])
-            i1 = (l1 + 1)//2 
-            i2 = (l2 + 1)//2
-            return m[i1,i2]
-
-        def ll():
-            a = []
-            for s1 in sp.direction_options(decay.sd):
-                for s2 in sp.direction_options(decay.sd):
-                    a.append((s1,s2))
-            return a
-
-        alpha,beta,gamma = 0,0,0
-        # precompute the M components
-        M_prec = {ld:sum(M(ld,[la,0,0],alpha,beta,gamma) for la in sp.direction_options(decay.sa))  for ld in sp.direction_options(decay.sd)}
-
-        # ampl = sum( 
-        #         spin_density(L1,L2) * 
-        #                     M_prec[L1] * atfi.conjugate(M_prec[L2]) 
-        #             for L1,L2 in ll()
-        #             )
-
-        # print(max(abs(ampl)- atfi.real(ampl)))
-        return sum(abs(M_prec[L1])**2 for L1 in sp.direction_options(decay.sd))
+        ampl = sum(sum(abs(O(ld,[la,0,0]))**2  for la in sp.direction_options(decay.sa))for ld in sp.direction_options(sd))
+        return  ampl
     return f
 
 
