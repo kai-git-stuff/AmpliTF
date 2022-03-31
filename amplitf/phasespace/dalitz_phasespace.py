@@ -498,13 +498,13 @@ class DalitzPhaseSpace(BasePhaseSpace):
         cos_theta_c = (p_a * p_a + p_c * p_c - p_b * p_b) / (2.0 * p_a * p_c)
 
         p4a = atfk.lorentz_vector(
-            atfk.vector(atfi.zeros(p_a), atfi.zeros(p_a), p_a),
+            atfk.vector(atfi.zeros_like(p_a), atfi.zeros_like(p_a), p_a),
             atfi.sqrt(p_a ** 2 + self.ma2),
         )
         p4b = atfk.lorentz_vector(
             atfk.vector(
                 p_b * atfi.sqrt(1.0 - cos_theta_b ** 2),
-                atfi.zeros(p_b),
+                atfi.zeros_like(p_b),
                 -p_b * cos_theta_b,
             ),
             atfi.sqrt(p_b ** 2 + self.mb2),
@@ -512,7 +512,7 @@ class DalitzPhaseSpace(BasePhaseSpace):
         p4c = atfk.lorentz_vector(
             atfk.vector(
                 -p_c * atfi.sqrt(1.0 - cos_theta_c ** 2),
-                atfi.zeros(p_c),
+                atfi.zeros_like(p_c),
                 -p_c * cos_theta_c,
             ),
             atfi.sqrt(p_c ** 2 + self.mc2),

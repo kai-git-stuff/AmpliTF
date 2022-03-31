@@ -45,13 +45,13 @@ def bls_out_func(bls,X,s,masses,p0,d):
     bls = {LS : b * X * 
             orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), LS[0]/2) 
             for LS, b in bls.items()}
-    bls = {LS : b * blatt_weisskopf_ff(q, q0, d, atfi.const(LS[0]/2))  for LS, b in bls.items()}
+    bls = {LS : b * atfi.cast_complex(blatt_weisskopf_ff(q, q0, d, atfi.const(LS[0]/2)))  for LS, b in bls.items()}
     return bls
 
 def bls_in_func(bls,s,M0, d ,md ,mbachelor):
     q = two_body_momentum(atfi.const(md),s,atfi.const(mbachelor))   # this is the momentum of the isobar in the main decayings particle rest frame (particle d)
     q0 = two_body_momentum(atfi.const(md),M0,atfi.const(mbachelor)) # todo this might be wrong: we are allways at L_b resonance peak, so the BW_FF do not make sense here
-    bls = {LS : b * blatt_weisskopf_ff(q, q0, d, atfi.const(LS[0]/2)) * 
+    bls = {LS : b * atfi.cast_complex(blatt_weisskopf_ff(q, q0, d, atfi.const(LS[0]/2))) * 
             atfi.cast_complex(orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), atfi.const(LS[0]/2)))
         for LS, b in bls.items()}
     return bls

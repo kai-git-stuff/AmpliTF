@@ -99,7 +99,7 @@ def blatt_weisskopf_ff(q, q0, d, l):
             x2 = x * x
             return 11025.0 + x2 * (1575.0 + x2 * (135.0 + x2 * (10.0 + x2)))
         return atfi.cast(atfi.const(0),x.dtype)
-    return atfi.sqrt(atfi.cast_complex(hankel1(z0)) / atfi.cast_complex(hankel1(z)))
+    return atfi.sqrt(hankel1(z0) /hankel1(z))
 
 
 @atfi.function
@@ -150,7 +150,8 @@ def orbital_barrier_factor(p, p0, l):
         return atfi.ones(p)
     if atfi.equal(l , angular_constant.L_1):
         return p / p0
-    return (p / p0) ** atfi.cast_complex(l)
+    a = (p / p0)
+    return a ** atfi.cast(l,a.dtype)
 
 
 @atfi.function

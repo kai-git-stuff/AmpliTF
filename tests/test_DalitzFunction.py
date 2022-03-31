@@ -190,7 +190,6 @@ if __name__ == "__main__":
     def nll():
         return unbinned_nll(model(args),integral(model(args)))
     ampl = nll()
-
     for i in tqdm(range(100)):
         with tf.GradientTape(persistent=False) as t:
             ampl = nll()
