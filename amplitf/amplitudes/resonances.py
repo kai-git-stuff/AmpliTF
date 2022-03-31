@@ -15,6 +15,7 @@ class BaseResonance:
         self.S,self.P = S,P
         self.d = atfi.cast_real(d)   # resonance radius (if None)
 
+
     def update(self,S,P,bls_in : dict, bls_out :dict, d = None):
         self._bls_in = bls_in
         self._bls_out = bls_out
@@ -66,7 +67,7 @@ class BaseResonance:
         return bls
 
     def __iter__(self):
-        return iter((self.S,self.P,self.helicities,self.bls_in,self.bls_out,self.X))
+        return iter((self.S,self.P,self.helicities,self.X,self.M0,self.d,self.p0))
     
     @property
     def helicities(self) -> list:
@@ -79,12 +80,15 @@ class BaseResonance:
         raise NotImplementedError("Please implement, so the Tree fitter still works")
 
 class BWresonance(BaseResonance):
-    def __init__(self,S,P,m0,gamma0,bls_in : dict, bls_out :dict,ma,mb,d=5./1000.):
+    def __init__(self,S,P,m0,gamma0,bls_in : dict, bls_out :dict,ma,mb,d=5./1000.,s=None):
         self.m0 = m0 # atfi.const(m0)
         self.gamma0 = gamma0
         self._masses = (atfi.const(ma),atfi.const(mb))
         self._p0 = two_body_momentum(self.M0, *self._masses)
-
+        if s is not None:
+            self._X = self.X(s,0) # angular momentum not relevant for pure lineshape
+        else:
+            self._X = None
         super().__init__(S,P,bls_in,bls_out,d)
 
     def update(self,S,P,m0,gamma0,bls_in : dict, bls_out :dict,ma,mb,d=5./1000.):
@@ -108,6 +112,8 @@ class BWresonance(BaseResonance):
 
     @atfi.function
     def X(self,s,L):
+        if self._X is not None:
+            return self._X
         # L will be given doubled, but bw needs it normal
         L = L/2
         ma,mb = self.masses
@@ -168,6 +174,7 @@ class KmatChannel:
         # final state partial waves we can find the proper channel with (index, L)
         self.index = index 
         self.background = bg
+
 class KmatPole:
     def __init__(self,M,couplings_out:list):
         self.couplings_out = couplings_out
@@ -213,25 +220,6 @@ class kmatrix(BaseResonance):
                 return channel.masses
         raise(ValueError("No channel for given index %s found!"%self.out_channel))
         return None
-
-    # def update(self, S, P,alphas, bls_in: dict, bls_out: dict, d=None):
-    #     self.alphas = alphas
-    #     super().update(S, P, bls_in, bls_out, d)
-    
-    def update(self,S,P,d,alphas,channels:list,resonances:list,bls_in,bls_out ,width_factors=None,out_channel = 0):
-        self.alphas = alphas # couplings of channel to resonance
-        self.channels = channels # list of channels: type = KmatChannel
-        self.resonances = resonances # list of contributing poles (resonances)
-        self._D = None # D matrix in storage to prevent us from computing it over and over, if it is not needed
-        self.out_channel = out_channel # if the lineshape funktion is called, this is the channel we assume we want the lineshape for
-        self.channel_LS = {(c.index,c.L):i for i,c in enumerate(channels)} # we have to figure out the correct channel for a decay with a given L
-        if width_factors is not None:
-            self.width_factors = width_factors
-        else:
-            self.width_factors = [atfi.complex(atfi.const(0.), atfi.const(0.)) for _ in range(len(self.channels))]
-        self.d = d # the momentum scale for the BWff
-        self._p0 = two_body_momentum(self.M0, *self.masses)
-        super().update(S,P,bls_in,bls_out,d)
 
     @property
     def M0(self):

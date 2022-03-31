@@ -1,6 +1,6 @@
 from amplitf.phasespace.dalitz_phasespace import DalitzPhaseSpace
 from amplitf.phasespace.base_phasespace import PhaseSpaceSample
-from amplitf.dynamics import breit_wigner_decay_lineshape
+from amplitf.dynamics import blatt_weisskopf_ff, orbital_barrier_factor
 from amplitf.kinematics import *
 from amplitf.dalitz_decomposition import *
 import amplitf.interface as atfi
@@ -37,6 +37,24 @@ def helicity_coupling_times_d(theta,J,s1,s2,l1,l2,nu,bls):
         return 0
     return (atfi.cast_complex(helicity_couplings_from_ls(J,s1,s2,l1,l2,bls)) * # helicity based
             atfi.cast_complex(wigner_small_d(theta,J,nu,l1-l2)) ) * (-1)**((s2-l2)/2) # spin orientation based -> -l2 = m2 (z-achsis is along l1)
+
+def bls_out_func(bls,X,s,masses,p0,d):
+    """WARNING: do not use d != None, if the Blatt-Weisskopf FF are already used in the resonance function!"""
+    q0 = p0
+    q = atfi.cast(two_body_momentum(s,*masses),p0.dtype)
+    bls = {LS : b * X(s,LS[0]) * 
+            orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), LS[0]/2) 
+            for LS, b in bls.items()}
+    bls = {LS : b * blatt_weisskopf_ff(q, q0, d, atfi.const(LS[0]/2))  for LS, b in bls.items()}
+    return bls
+
+def bls_in_func(bls,s,M0, d ,md ,mbachelor):
+    q = two_body_momentum(atfi.const(md),s,atfi.const(mbachelor))   # this is the momentum of the isobar in the main decayings particle rest frame (particle d)
+    q0 = two_body_momentum(atfi.const(md),M0,atfi.const(mbachelor)) # todo this might be wrong: we are allways at L_b resonance peak, so the BW_FF do not make sense here
+    bls = {LS : b * blatt_weisskopf_ff(q, q0, d, atfi.const(LS[0]/2)) * 
+            atfi.cast_complex(orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), atfi.const(LS[0]/2)))
+        for LS, b in bls.items()}
+    return bls
 
 class dalitz_decay:
     """
@@ -99,7 +117,7 @@ class dalitz_decay:
             }
             }
 
-    def chain3(self,smp:PhaseSpaceSample,ld,la,lb,lc,resonances):
+    def chain3(self,smp:PhaseSpaceSample,ld,la,lb,lc,resonances,bls_ins:dict,bls_outs:dict):
         """
         ld: helicity of mother particle in CMS sytem of mother (see https://arxiv.org/pdf/1910.04566.pdf)
         la,lb,lc helicites of decay products
@@ -119,11 +137,11 @@ class dalitz_decay:
         zeta_3 = 0
         # aligned system
 
-        for sA,pA,helicities_A,bls_in,bls_out,X in resonances:
+        for (sA,pA,helicities_A,X,M0,d,p0),bls_in,bls_out in zip(resonances,bls_ins,bls_outs):
             ns = atfi.cast_complex(atfi.sqrt(atfi.const(sA+1)))
             nj = atfi.cast_complex(atfi.sqrt(atfi.const(self.sd+1)))
-            bls_in = bls_in(s = sgma3,d = self.d,md = self.md,mbachelor=self.mc)
-            bls_out = bls_out(sgma3)
+            bls_in = bls_in_func(bls_in,sgma3,M0, self.d ,self.md ,self.mc)
+            bls_out = bls_out_func(bls_out,X,sgma3,(self.ma,self.mb),p0,d)
             for lA in helicities_A:           
                 helicities_abc = helicity_options(sA,self.sa,self.sb,self.sc)
                 for la_,lb_,lc_ in helicities_abc:
@@ -140,7 +158,7 @@ class dalitz_decay:
                     ampl +=nj * ns* H_A_c * H_a_b 
         return ampl
 
-    def chain2(self,smp:PhaseSpaceSample,ld,la,lb,lc,resonances):
+    def chain2(self,smp:PhaseSpaceSample,ld,la,lb,lc,resonances,bls_ins:dict,bls_outs:dict):
         """For explanation see chain3"""
         # channel 2
         # L_b -> B b : B -> (a,c)
@@ -155,11 +173,11 @@ class dalitz_decay:
         # remember factor of (-1)**((ld - lB + lb_)/2) because we switched indices 1 and 2
         theta = self.chainVars[2]["theta"]
         phsp_factor = atfi.sqrt(phasespace_factor(sgma2,self.ma,self.mc)* phasespace_factor(self.md,sgma2,self.mb))
-        for sB,pB,helicities_B,bls_in,bls_out,X in resonances:
+        for (sB,pB,helicities_B,X,M0,d,p0),bls_in,bls_out, in zip(resonances,bls_ins,bls_outs):
             ns = atfi.cast_complex(atfi.sqrt(atfi.const(sB+1)))
             nj = atfi.cast_complex(atfi.sqrt(atfi.const(self.sd+1)))
-            bls_in = bls_in(s = sgma2,d = self.d,md = self.md,mbachelor=self.mb)
-            bls_out = bls_out(sgma2)
+            bls_in = bls_in_func(bls_in,sgma2,M0, self.d ,self.md ,self.mb)
+            bls_out = bls_out_func(bls_out,X,sgma2,(self.ma,self.mc),p0,d)
             for lB in helicities_B:
                 # channel 2
                 # L_b -> B b : B -> (a,c)
@@ -175,7 +193,7 @@ class dalitz_decay:
                     ampl += nj * ns * H_B_b * H_a_c 
         return ampl
 
-    def chain1(self,smp:PhaseSpaceSample,ld,la,lb,lc,resonances):
+    def chain1(self,smp:PhaseSpaceSample,ld,la,lb,lc,resonances,bls_ins:dict,bls_outs:dict):
         """For explanation see chain3"""
         # channel 1
         # L_b -> C a : C -> (b,c)  
@@ -191,14 +209,14 @@ class dalitz_decay:
         zeta_2 = self.chainVars[1]["zeta_2"]
         zeta_3 = self.chainVars[1]["zeta_3"]
         # remember to apply (-1)**((lc - lc_)/2) in front of the d matrix (switch last 2 indices)
-        for sC,pC,helicities_C,bls_in,bls_out,X in resonances:
+        for (sC,pC,helicities_C,X,M0,d,p0),bls_in,bls_out, in zip(resonances,bls_ins,bls_outs):
             
             ns = atfi.cast_complex(atfi.sqrt(atfi.const(sC+1)))
             nj = atfi.cast_complex(atfi.sqrt(atfi.const(self.sd+1)))
 
             # getting the Blatt-Weisskopf form factors into our bls
-            bls_in = bls_in(s = sgma1,d = self.d,md = self.md,mbachelor=self.ma)
-            bls_out = bls_out(sgma1)
+            bls_in = bls_in_func(bls_in,sgma1,M0, self.d ,self.md ,self.ma)
+            bls_out = bls_out_func(bls_out,X,sgma1,(self.mb,self.mc),p0,d)
             for lC in helicities_C:
                 helicities_abc = helicity_options(sC,self.sa,self.sb,self.sc)
                 for la_,lb_,lc_ in helicities_abc:

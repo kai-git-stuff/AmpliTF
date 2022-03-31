@@ -21,7 +21,7 @@ import sys
 _fptype = tf.float64
 _ctype = tf.complex128
 
-function = tf.function(autograph=False, experimental_relax_shapes=True)
+function = tf.function(autograph=False, experimental_relax_shapes=False)
 # function = tf.function(autograph=False)
 # def function(f) : return f
 
