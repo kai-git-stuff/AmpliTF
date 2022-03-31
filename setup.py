@@ -1,6 +1,5 @@
 import setuptools
 
-
 def long_description():
     """Parse long description from readme."""
     with open("README.md", "r") as readme_file:
@@ -9,7 +8,7 @@ def long_description():
 
 setuptools.setup(
     name="amplitf",
-    version="0.0.2",
+    version="0.0.2.1",
     long_description=long_description(),
     long_description_content_type="text/markdown",
     url="https://github.com/apoluekt/AmpliTF",

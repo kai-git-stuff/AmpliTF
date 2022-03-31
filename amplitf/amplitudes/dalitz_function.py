@@ -52,7 +52,7 @@ class dalitz_decay:
     This is best done by overwritng the bls method from BaseResonance in your resonance classes,
     because all angular momentum based funtions should live in the bls couplings
     """
-    def __init__(self,md,ma,mb,mc,sd,sa,sb,sc,pd,pa,pb,pc,d=1.5/1000.,phsp = None):
+    def __init__(self,md,ma,mb,mc,sd,sa,sb,sc,pd,pa,pb,pc,smp,d=1.5/1000.,phsp = None):
         self.pd = pd 
         self.pa = pa 
         self.pb = pb 
@@ -75,6 +75,29 @@ class dalitz_decay:
             self.phsp = DalitzPhaseSpace(ma,mb,mc,md)
         else:
             self.phsp = phsp
+        self.sgma1 = self.phsp.m2bc(smp)
+        self.sgma2 = self.phsp.m2ac(smp)
+        self.sgma3 = self.phsp.m2ab(smp)
+        sgma1, sgma2,sgma3  = self.sgma1, self.sgma2,self.sgma3
+        self.chainVars = {
+            3:{
+                "theta_hat":atfi.acos(cos_theta_hat_3_canonical_1(self.md, self.ma, self.mb, self.mc, sgma1, sgma2, sgma3)),
+                "theta": atfi.acos(cos_theta_12(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3)),
+                "zeta_1": atfi.acos(cos_zeta_1_aligned_3_in_frame_1(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3)),
+                "zeta_2": atfi.acos(cos_zeta_2_aligned_2_in_frame_3(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
+                },
+            2:{
+                "theta_hat": atfi.acos(cos_theta_hat_1_canonical_2(self.md, self.ma, self.mb, self.mc, sgma1, sgma2, sgma3)),
+                "theta": atfi.acos(cos_theta_31(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3)),
+                "zeta_1": atfi.acos(cos_zeta_1_aligned_1_in_frame_2(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3)),
+                "zeta_3": atfi.acos(cos_zeta_3_aligned_2_in_frame_3(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
+            },
+            1:{
+                "theta":atfi.acos(cos_theta_23(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3)),
+                "zeta_2": atfi.acos(cos_zeta_2_aligned_1_in_frame_2(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3)),
+                "zeta_3": atfi.acos(cos_zeta_3_aligned_3_in_frame_1(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
+            }
+            }
 
     def chain3(self,smp:PhaseSpaceSample,ld,la,lb,lc,resonances):
         """
@@ -84,17 +107,14 @@ class dalitz_decay:
         """
         # channel 3   
         # d -> A c : A -> a b
-        sgma1 = self.phsp.m2bc(smp)
-        sgma2 = self.phsp.m2ac(smp)
-        sgma3 = self.phsp.m2ab(smp)
+        sgma1, sgma2,sgma3  = self.sgma1, self.sgma2,self.sgma3 
         ampl = atfi.zeros_tensor(sgma3.shape,atfi.ctype())
-        
         # Rotation in the isobar system
         # angle between momentum of L_b and spectator 
-        theta_hat = atfi.acos(cos_theta_hat_3_canonical_1(self.md, self.ma, self.mb, self.mc, sgma1, sgma2, sgma3))
-        theta = atfi.acos(cos_theta_12(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
-        zeta_1 = atfi.acos(cos_zeta_1_aligned_3_in_frame_1(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
-        zeta_2 = atfi.acos(cos_zeta_2_aligned_2_in_frame_3(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
+        theta_hat = self.chainVars[3]["theta_hat"]
+        theta = self.chainVars[3]["theta"]
+        zeta_1 = self.chainVars[3]["zeta_1"]
+        zeta_2 = self.chainVars[3]["zeta_2"]
         # remember to apply (-1)**((lb_ - lb)/2) in front of the d matrix (switch last 2 indices)
         zeta_3 = 0
         # aligned system
@@ -111,7 +131,6 @@ class dalitz_decay:
                     H_A_c = ( atfi.sqrt(phasespace_factor(self.md,sgma3,self.mc)* phasespace_factor(sgma3,self.ma,self.mb)) * 
                         helicity_coupling_times_d(theta_hat,self.sd,sA,self.sc,lA,lc_,ld,bls_in) 
                         )
-
                     # Rotation in the isobar system
                     # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
                     H_a_b =  helicity_coupling_times_d(theta,sA,self.sa,self.sb,la_,lb_,lA,bls_out)
@@ -125,18 +144,16 @@ class dalitz_decay:
         """For explanation see chain3"""
         # channel 2
         # L_b -> B b : B -> (a,c)
-        sgma1 = self.phsp.m2bc(smp)
-        sgma2 = self.phsp.m2ac(smp)
-        sgma3 = self.phsp.m2ab(smp)
+        sgma1, sgma2,sgma3  = self.sgma1, self.sgma2,self.sgma3 
         ampl = atfi.zeros_tensor(sgma2.shape,atfi.ctype())
 
-        zeta_1 = atfi.acos(cos_zeta_1_aligned_1_in_frame_2(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
+        zeta_1 = self.chainVars[2]["zeta_1"]
         # remember to apply (-1)**((la - la_)/2) in front of the d matrix (switch last 2 indices)
         zeta_2 = 0 # allways one is 0
-        zeta_3 = atfi.acos(cos_zeta_3_aligned_2_in_frame_3(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
-        theta_hat =  atfi.acos(cos_theta_hat_1_canonical_2(self.md, self.ma, self.mb, self.mc, sgma1, sgma2, sgma3))
+        zeta_3 = self.chainVars[2]["zeta_3"]
+        theta_hat =  self.chainVars[2]["theta_hat"]
         # remember factor of (-1)**((ld - lB + lb_)/2) because we switched indices 1 and 2
-        theta = atfi.acos(cos_theta_31(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
+        theta = self.chainVars[2]["theta"]
         phsp_factor = atfi.sqrt(phasespace_factor(sgma2,self.ma,self.mc)* phasespace_factor(self.md,sgma2,self.mb))
         for sB,pB,helicities_B,bls_in,bls_out,X in resonances:
             ns = atfi.cast_complex(atfi.sqrt(atfi.const(sB+1)))
@@ -162,19 +179,17 @@ class dalitz_decay:
         """For explanation see chain3"""
         # channel 1
         # L_b -> C a : C -> (b,c)  
-        sgma1 = self.phsp.m2bc(smp)
-        sgma2 = self.phsp.m2ac(smp)
-        sgma3 = self.phsp.m2ab(smp)
+        sgma1, sgma2,sgma3  = self.sgma1, self.sgma2,self.sgma3 
+
         ampl = atfi.zeros_tensor(self.phsp.m2ab(smp).shape,atfi.ctype())
         # Rotation in the isobar system
-        theta_hat =  atfi.acos(cos_theta_hat_1_canonical_1(self.md, self.ma, self.mb, self.mc, sgma1, sgma2, sgma3))
         theta_hat = 0
         # will just return one, as we are in the alligned system anyways
-        theta = atfi.acos(cos_theta_23(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
+        theta = self.chainVars[1]["theta"]
         zeta_1 = 0
         # own system
-        zeta_2 = atfi.acos(cos_zeta_2_aligned_1_in_frame_2(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
-        zeta_3 = atfi.acos(cos_zeta_3_aligned_3_in_frame_1(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
+        zeta_2 = self.chainVars[1]["zeta_2"]
+        zeta_3 = self.chainVars[1]["zeta_3"]
         # remember to apply (-1)**((lc - lc_)/2) in front of the d matrix (switch last 2 indices)
         for sC,pC,helicities_C,bls_in,bls_out,X in resonances:
             
