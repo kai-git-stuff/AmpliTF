@@ -67,7 +67,7 @@ class BaseResonance:
         return bls
 
     def __iter__(self):
-        return iter((self.S,self.P,self.helicities,self.X,self.M0,self.d,self.p0))
+        return iter((self.S,self.P,self.helicities,self._X,self.M0,self.d,self.p0))
     
     @property
     def helicities(self) -> list:
@@ -80,15 +80,13 @@ class BaseResonance:
         raise NotImplementedError("Please implement, so the Tree fitter still works")
 
 class BWresonance(BaseResonance):
-    def __init__(self,S,P,m0,gamma0,bls_in : dict, bls_out :dict,ma,mb,d=5./1000.,s=None):
+    def __init__(self,S,P,m0,gamma0,bls_in : dict, bls_out :dict,ma,mb,s,d=5./1000.):
         self.m0 = m0 # atfi.const(m0)
-        self.gamma0 = gamma0
+        self.gamma0 = atfi.const(gamma0)
         self._masses = (atfi.const(ma),atfi.const(mb))
         self._p0 = two_body_momentum(self.M0, *self._masses)
-        if s is not None:
-            self._X = self.X(s,0) # angular momentum not relevant for pure lineshape
-        else:
-            self._X = None
+        self._X = None
+        self._X = self.X(s) # angular momentum not relevant for pure lineshape
         super().__init__(S,P,bls_in,bls_out,d)
 
     def update(self,S,P,m0,gamma0,bls_in : dict, bls_out :dict,ma,mb,d=5./1000.):
@@ -111,48 +109,44 @@ class BWresonance(BaseResonance):
         return self._p0
 
     @atfi.function
-    def X(self,s,L):
+    def X(self,s):
         if self._X is not None:
             return self._X
         # L will be given doubled, but bw needs it normal
-        L = L/2
-        ma,mb = self.masses
-        m = atfi.sqrt(s)
-        p = two_body_momentum(m, ma, mb)
-        ffr = atfi.cast_real(blatt_weisskopf_ff(p, self.p0, self.d, atfi.const(L)))
-        width = mass_dependent_width(m, self.m0, self.gamma0, p, self.p0, ffr, L)
-        return relativistic_breit_wigner(s,self.m0, width)
-    
+        # L = L/2
+        # ma,mb = self.masses
+        # m = atfi.sqrt(s)
+        # p = two_body_momentum(m, ma, mb)
+        # ffr = atfi.cast_real(blatt_weisskopf_ff(p, self.p0, self.d, atfi.const(L)))
+        # width = mass_dependent_width(m, self.m0, self.gamma0, p, self.p0, ffr, L)
+        return relativistic_breit_wigner(s,self.m0, self.gamma0)
+ 
     def __ne__(self, other):
         return self.gamma != other.gamma or self.M0 != other.M0
 
 class subThresholdBWresonance(BWresonance):
-    def __init__(self, S, P, m0, gamma0, bls_in: dict, bls_out: dict, ma, mb,mc,md, d=5 / 1000):
+    def __init__(self, S, P, m0, gamma0, bls_in: dict, bls_out: dict, ma, mb,mc,md,s, d=5 / 1000):
         """A variation of the BW resonance, that sits beneeth a threshold for our decay products"""
-        super().__init__(S, P, m0, gamma0, bls_in, bls_out, ma, mb, d)
+        super().__init__(S, P, m0, gamma0, bls_in, bls_out, ma, mb, s, d)
         p0_2 = two_body_momentum_squared(self.M0, ma , mb)
         self._p0 = atfi.sqrt(atfi.cast_complex(p0_2))
         self.d = atfi.cast_complex(self.d)
-
-    def update(self, S, P, m0, gamma0, bls_in: dict, bls_out: dict, ma, mb,mc,md, d=5 / 1000):
-        super().update(S, P, m0, gamma0, bls_in, bls_out, ma, mb, d)
-        p0_2 = two_body_momentum_squared(self.M0, ma , mb)
-        self._p0 = atfi.sqrt(atfi.cast_complex(p0_2))
-        self.d = atfi.cast_complex(self.d)
+        self._X = None
+        self._X = self.X(s)
 
     def breakup_momentum(self,md,s,mbachelor):
         return atfi.cast_complex(two_body_momentum(md,s,mbachelor))
 
     @atfi.function
-    def X(self,s,L):
+    def X(self,s):
         # L will be given doubled, but bw needs it normal
-        L = L/2
-        ma,mb = self.masses
-        m = atfi.cast_complex(atfi.sqrt(s))
-        p = atfi.cast_complex(two_body_momentum(m, atfi.cast_complex(ma), atfi.cast_complex(mb)))
-        ffr = blatt_weisskopf_ff(p, self.p0, atfi.cast_complex(self.d), atfi.const(L))
-        width = mass_dependent_width(m, atfi.cast_complex(self.m0), atfi.cast_complex(self.gamma0), p, self.p0, ffr, L)
-        return relativistic_breit_wigner(atfi.cast_complex(s),self.m0, atfi.cast_complex(width))
+        # L = L/2
+        # ma,mb = self.masses
+        # m = atfi.cast_complex(atfi.sqrt(s))
+        # p = atfi.cast_complex(two_body_momentum(m, atfi.cast_complex(ma), atfi.cast_complex(mb)))
+        # ffr = blatt_weisskopf_ff(p, self.p0, atfi.cast_complex(self.d), atfi.const(L))
+        # width = mass_dependent_width(m, atfi.cast_complex(self.m0), atfi.cast_complex(self.gamma0), p, self.p0, ffr, L)
+        return relativistic_breit_wigner(atfi.cast_complex(s),self.m0, atfi.cast_complex(self.gamma0))
 
 class KmatChannel:
     def __init__(self, m1,m2,L,bg,index):
@@ -307,9 +301,9 @@ class kmatrix(BaseResonance):
         return a_h
 
     @atfi.function
-    def X(self,s,L):
+    def X(self,s):
         # return the Lineshape for the specific outchannel
-        channel_number = self.get_channel(self.out_channel,L)
+        channel_number = self.out_channel
         s = atfi.cast_complex(s)
         self.build_D(s)
         return self.A_H(s,channel_number) 

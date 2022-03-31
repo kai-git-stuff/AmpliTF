@@ -42,7 +42,7 @@ def bls_out_func(bls,X,s,masses,p0,d):
     """WARNING: do not use d != None, if the Blatt-Weisskopf FF are already used in the resonance function!"""
     q0 = p0
     q = atfi.cast(two_body_momentum(s,*masses),p0.dtype)
-    bls = {LS : b * X(s,LS[0]) * 
+    bls = {LS : b * X * 
             orbital_barrier_factor(atfi.cast_complex(q), atfi.cast_complex(q0), LS[0]/2) 
             for LS, b in bls.items()}
     bls = {LS : b * blatt_weisskopf_ff(q, q0, d, atfi.const(LS[0]/2))  for LS, b in bls.items()}
