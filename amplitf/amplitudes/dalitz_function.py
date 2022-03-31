@@ -116,6 +116,26 @@ class dalitz_decay:
                 "zeta_3": atfi.acos(cos_zeta_3_aligned_3_in_frame_1(self.md,self.ma,self.mb,self.mc,sgma1,sgma2,sgma3))
             }
             }
+        self.Hout = {
+            1:  {(la_,lb_,lc_,la,lb,lc): (-1)**((lc - lc_)/2) * (   # prefactors for index switches  
+                         atfi.cast_complex(wigner_small_d(self.chainVars[1]["zeta_3"] ,self.sc,lc_,lc)) * 
+                         atfi.cast_complex(wigner_small_d(self.chainVars[1]["zeta_2"],self.sb,lb_,lb)) ) 
+                         for la_,lb_,lc_ in helicity_options(0,self.sa,self.sb,self.sc)
+                         for la,lb,lc in helicity_options(0,self.sa,self.sb,self.sc)
+                         },
+            2: {(la_,lb_,lc_,la,lb,lc):    (-1)**((la_ - la)/2) * ( # prefactors for index switches
+                        atfi.cast_complex(wigner_small_d(self.chainVars[2]["zeta_1"],self.sa,la_,la)) *  
+                        atfi.cast_complex(wigner_small_d(self.chainVars[2]["zeta_3"],self.sc,lc_,lc)) )
+                        for la_,lb_,lc_ in helicity_options(0,self.sa,self.sb,self.sc)
+                         for la,lb,lc in helicity_options(0,self.sa,self.sb,self.sc)
+                         },
+            3: {(la_,lb_,lc_,la,lb,lc):(-1)**((lb_-lb)/2) * (       # prefactors for index switches
+                        atfi.cast_complex(wigner_small_d(self.chainVars[3]["zeta_1"],self.sa,la_,la)) * 
+                        atfi.cast_complex(wigner_small_d(self.chainVars[3]["zeta_2"],self.sb,lb_,lb)) )
+                        for la_,lb_,lc_ in helicity_options(0,self.sa,self.sb,self.sc)
+                         for la,lb,lc in helicity_options(0,self.sa,self.sb,self.sc)
+                         },
+        }
 
     def chain3(self,smp:PhaseSpaceSample,ld,la,lb,lc,resonances,bls_ins:dict,bls_outs:dict):
         """
@@ -152,9 +172,8 @@ class dalitz_decay:
                     # Rotation in the isobar system
                     # angle between A momentum (isobar) and lmbda_c in rest frame of Isobar 
                     H_a_b =  helicity_coupling_times_d(theta,sA,self.sa,self.sb,la_,lb_,lA,bls_out)
-                    H_a_b *= (-1)**((lb_-lb)/2) * (       # prefactors for index switches
-                        atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) * 
-                        atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) )
+        
+                    H_a_b *= self.Hout[3][(la_,lb_,lc_,la,lb,lc)]
                     ampl +=nj * ns* H_A_c * H_a_b 
         return ampl
 
@@ -186,10 +205,8 @@ class dalitz_decay:
                     if lb_ != lb : continue #   atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) yields delta, bc zeta_2 = 0
                     # Rotation in the isobar system
                     H_B_b = phsp_factor * helicity_coupling_times_d(theta_hat,self.sd,sB,self.sb,lB,lb_,ld,bls_in) # ToDo why the other way arround then in the paper? 
-                    H_a_c =   helicity_coupling_times_d(theta,sB,self.sc,self.sa,lc_,la_,lB,bls_out)
-                    H_a_c *= (-1)**((ld - lB + lb_)/2)  * (-1)**((la_ - la)/2) * ( # prefactors for index switches
-                        atfi.cast_complex(wigner_small_d(zeta_1,self.sa,la_,la)) *  
-                        atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc_,lc)) )
+                    H_a_c =   helicity_coupling_times_d(theta,sB,self.sc,self.sa,lc_,la_,lB,bls_out) * (-1)**((ld - lB + lb_)/2)
+                    H_a_c *= self.Hout[2][(la_,lb_,lc_,la,lb,lc)] 
                     ampl += nj * ns * H_B_b * H_a_c 
         return ampl
 
@@ -229,9 +246,7 @@ class dalitz_decay:
                             atfi.cast_complex(helicity_couplings_from_ls(self.sd,sC,self.sa,lC,la_,bls_in))  )
                     H_b_c =  helicity_coupling_times_d(theta,sC,self.sb,self.sc,lb_,lc_,lC,bls_out)
                     # symmetry of the d matrices
-                    H_b_c *=  (-1)**((lc - lc_)/2) * (   # prefactors for index switches  
-                         atfi.cast_complex(wigner_small_d(zeta_3,self.sc,lc_,lc)) * 
-                         atfi.cast_complex(wigner_small_d(zeta_2,self.sb,lb_,lb)) )
+                    H_b_c *= self.Hout[1][(la_,lb_,lc_,la,lb,lc)]
                     ampl += ns * nj * H_A_c * H_b_c 
         return ampl
 

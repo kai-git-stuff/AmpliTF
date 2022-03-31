@@ -4,6 +4,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 print(sys.path)
 from amplitf.phasespace.dalitz_phasespace import DalitzPhaseSpace
 from amplitf.phasespace.base_phasespace import PhaseSpaceSample
+from amplitf.likelihood import unbinned_nll, integral
 from amplitf.kinematics import *
 from amplitf.dalitz_decomposition import *
 import amplitf.interface as atfi
@@ -15,7 +16,9 @@ import tensorflow as tf
 import json
 from tqdm import tqdm
 from amplitf.amplitudes.dalitz_function import *
-from amplitf.amplitudes.resonances import *
+from amplitf.amplitudes.resonances import BaseResonance,subThresholdBWresonance,BWresonance
+from amplitf.amplitudes.functional_resonances import kmatrix
+
 
 # tf.compat.v1.enable_eager_execution()
 
@@ -60,14 +63,20 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
     g0,g1,g2,g3 = kwargs["KmatG_factors"]
     bg1, bg2 = kwargs["Kmatbg_values"]
     m11,m12,m21,m22 = mb,mc,2006.85,mc 
-    channels = [
-        KmatChannel(m11,m12,2,bg1,index=0), # this is the decay channel we will see
-        KmatChannel(m21,m22,2,bg2,index=1) # this is the channel that may cause interference
-    ]
-    resonances = [
-        KmatPole(2713.6,[g0,g1]),  # D^*_s1(2700)
-        KmatPole(2967.1,[g2,g3])  # D^*_s1(2860)    # ToDo find if we assigned the g values correctly #D^*_s1(2860)
-    ]
+
+    channels = [(0,2,bg1,m11,m12),
+                (1,2,bg2,m21,m22)]
+    resonances = [(2713.6,[g0,g1],
+                    (2967.1,[g2,g3]))]
+    # channels = [
+    #     KmatChannel(m11,m12,2,bg1,index=0), # this is the decay channel we will see
+    #     KmatChannel(m21,m22,2,bg2,index=1) # this is the channel that may cause interference
+    # ]
+    # resonances = [
+    #     KmatPole(2713.6,[g0,g1]),  # D^*_s1(2700)
+    #     KmatPole(2967.1,[g2,g3])  # D^*_s1(2860)    # ToDo find if we assigned the g values correctly #D^*_s1(2860)
+    # ]
+
     D_kma = kmatrix(sp.SPIN_1,-1,5./1000.,alphas,channels,resonances,
                         bls_ds_kmatrix_in,bls_ds_kmatrix_out,out_channel=0)
     
@@ -88,7 +97,8 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
                     BWresonance(sp.SPIN_HALF,-1,atfi.cast_real(2791.9),8.9,bls_L_2791_in,bls_L_2791_out,*masses2,d_mesons), # xi_c (2790)
                     BWresonance(sp.SPIN_3HALF,-1,atfi.cast_real(2815), 2.43,{},{},*masses2,d_mesons)  # xi_c (2815) no bls couplings given :(
                     ] 
-    def f(kwargs):
+    def f(args):
+        kwargs = get_kwargs_from_args(args)
         bls_ds_kmatrix_in = kwargs['bls_ds_kmatrix_in']
         bls_ds_kmatrix_out = kwargs['bls_ds_kmatrix_out']
 
@@ -111,27 +121,36 @@ def three_body_decay_Daliz_plot_function(smp,phsp:DalitzPhaseSpace,**kwargs):
         g0,g1,g2,g3 = kwargs["KmatG_factors"]
         bg1, bg2 = kwargs["Kmatbg_values"]
         m11,m12,m21,m22 = mb,mc,2006.85,mc 
+        '''channels = [(index,L,bg,m1,m2)]
+        resonances = [(M,couplings)]'''
+        channels = [(0,2,bg1,m11,m12),
+                    (1,2,bg2,m21,m22)]
+        resonances = [(2713.6,[g0,g1]),
+                      (2967.1,[g2,g3])]
+        resonances1[1].alphas = alphas
+        resonances1[1].channels = channels
+        resonances1[1].resonances = resonances
 
         # channels[0].update(m11,m12,2,bg1,index=0)
         # channels[1].update(m21,m22,2,bg2,index=1)
         # resonances[0].update(2713.6,[g0,g1])
         # resonances[1].update(2967.1,[g2,g3])
-        channels = [
-        KmatChannel(m11,m12,2,bg1,index=0), # this is the decay channel we will see
-        KmatChannel(m21,m22,2,bg2,index=1) # this is the channel that may cause interference
-        ]
-        resonances = [
-            KmatPole(2713.6,[g0,g1]),  # D^*_s1(2700)
-            KmatPole(2967.1,[g2,g3])  # D^*_s1(2860)    # ToDo find if we assigned the g values correctly #D^*_s1(2860)
-        ]
+        # channels = [
+        # KmatChannel(m11,m12,2,bg1,index=0), # this is the decay channel we will see
+        # KmatChannel(m21,m22,2,bg2,index=1) # this is the channel that may cause interference
+        # ]
+        # resonances = [
+        #     KmatPole(2713.6,[g0,g1]),  # D^*_s1(2700)
+        #     KmatPole(2967.1,[g2,g3])  # D^*_s1(2860)    # ToDo find if we assigned the g values correctly #D^*_s1(2860)
+        # ]
         # resonances1[1].update(sp.SPIN_1,-1,5./1000.,alphas,channels,resonances,
         #              bls_ds_kmatrix_in,bls_ds_kmatrix_out,out_channel=0)
 
         # resonances1[1].update(sp.SPIN_1,-1,5./1000.,alphas,channels,resonances,
         #         bls_ds_kmatrix_in,bls_ds_kmatrix_out,out_channel=0)
-        D_kma = kmatrix(sp.SPIN_1,-1,5./1000.,alphas,channels,resonances,
-                     bls_ds_kmatrix_in,bls_ds_kmatrix_out,out_channel=0)
-        resonances1[1] = D_kma
+        # D_kma = kmatrix(sp.SPIN_1,-1,5./1000.,alphas,channels,resonances,
+        #              bls_ds_kmatrix_in,bls_ds_kmatrix_out,out_channel=0)
+        # resonances1[1] = D_kma
         
         def O(nu,lambdas):
             return decay.chain3(smp,nu,*lambdas,[],[],[]) + decay.chain2(smp,nu,*lambdas,resonances2,bls_in_2,bls_out_2) + decay.chain1(smp,nu,*lambdas,resonances1,bls_in_1,bls_out_1)
@@ -190,7 +209,13 @@ if __name__ == "__main__":
     model = three_body_decay_Daliz_plot_function(smp,phsp,**kwargs)
     
     for i in tqdm(range(100)):
-        ampl = model(kwargs)
+        with tf.GradientTape() as t:
+            ampl = unbinned_nll(model(args),integral(model(args)))
+        
+        grad = t.gradient(ampl,args)
+        print(any(v is None for v in grad))
+
+        args[-1].assign_add(1.0)
 
     
     sgma3 = phsp.m2ab(smp) # lmbda_c , D_bar
