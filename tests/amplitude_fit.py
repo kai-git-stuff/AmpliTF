@@ -21,25 +21,28 @@ def run_fit():
     md = 5619.60  # lambda_b  spin = 0.5 parity = +1
 
     data = read_data_numpy()
+    data = read_data_numpy("15296020LcD0K15D.root",MC=True)
+
     s1,s2,s3,md_dat,_,_,_ = data
     md_tensor = atfi.convert_to_tensor(md_dat)
     phsp = DalitzPhaseSpace(ma,mb,mc,md)
     tensor_data = atfi.cast_real(atfi.stack([atfi.convert_to_tensor(s3.values),atfi.convert_to_tensor(s1.values)],axis=1))
     # filtered_data,ma,mb,mc,md = phsp.filter_with_masses(tensor_data)
-    # phsp = DalitzPhaseSpace(ma,mb,mc,md)  
+    phsp = DalitzPhaseSpace(ma,mb,mc,md)  
     filtered_data = phsp.filter(tensor_data)  
     print(tensor_data.shape,filtered_data.shape)
     smp = PhaseSpaceSample(phsp,filtered_data)
     
     data = read_data_numpy("15296020LcD0K15D.root",MC=True)
-    data = read_data_numpy()
+    # data = read_data_numpy()
     s1,s2,s3,md_dat,_,_,_ = data
     md_tensor = atfi.convert_to_tensor(md_dat)
     norm_phsp = DalitzPhaseSpace(ma,mb,mc,md)
     tensor_data = atfi.cast_real(atfi.stack([atfi.convert_to_tensor(s3.values),atfi.convert_to_tensor(s1.values)],axis=1))
     # filtered_data,ma,mb,mc,md = norm_phsp.filter_with_masses(tensor_data)
     # norm_phsp = DalitzPhaseSpace(ma,mb,mc,md)
-    filtered_data = norm_phsp.filter(tensor_data)  
+    filtered_data = norm_phsp.filter(tensor_data)
+    # filtered_data =   norm_phsp.rectangular_grid_sample(300,300,"LP")
     print(tensor_data.shape,filtered_data.shape)
     norm_smp = PhaseSpaceSample(norm_phsp,filtered_data)
     # phsp = DalitzPhaseSpace(ma,mb,mc,md)
@@ -87,12 +90,12 @@ def run_fit():
         norm_Amplitude = three_body_decay_Daliz_plot_function(norm_smp.data,norm_phsp,**kwargs)
         def f(args):
             kwargs = get_kwargs_from_args(args)
-            L = atfi.nansum(atfi.log(amplitude(kwargs))/atfi.nansum(norm_Amplitude(kwargs)))
+            L = atfi.nansum(atfi.log(amplitude(kwargs)/atfi.nansum(norm_Amplitude(kwargs))))
             return -L
         return f
-
+    start = [2.8269356393438216, 2.7724791167532095, 1.182905831715495, 1.839606031631334, 2.6271027771690636, 1.4167113225346324, 8.20081121448173, 1.5545658239449545, 0.41775252645568356, 0.9257674072339498, 0.6402573728807579, 0.20414370227146444, 0.9863880321341799, 0.2806256713659427, 0.6200527921748713, 0.1884362552888675, 0.8342130712080955, 0.30996343003269144, 0.3016815246047786, 0.5511178681941199, 0.35078352118268813, 0.26701386153467443, 44.45471569284996, 0.42773486147221146]
     start = [-1.8,4.4,-7.05,-4.06,4.96,-4.73,-1.064,-0.722,-0.017,-0.1256,-0.53,0.69,-0.0149,-0.0259,0.32,-0.33,-0.00111,0.00394,-8.73, 6.54,6.6,-3.38,0.0135,0.0867]
-    # start = np.random.random(24)
+    start = np.random.uniform(-0.2,0.2,24) 
     # start = (-4.0997390647818905, -8.569145833770673, -7.050187572578236, -4.060037351162219, 4.9597607808060955, -4.730072126808973, -0.21160013324459656, -0.86648314691716, 
     # -7.180039890338165, 22.996448656493513, -0.08747872885883322, -0.566200303177854, -0.37518335023873656, 0.13094320460476175, -751.5674862877551, -1970.1003751657167, -24200.672340184457, 
     #-3181.350661796871, -8.051330172840395, -14.09372484324325, 15.281755542857619, -43.79566512218444, 0.11042225014323345, -0.5304791850986086)
@@ -109,21 +112,32 @@ def run_fit():
     #     print(gradient)
     #     print(grads)
     #     vars[-1].assign_add(0.1)
-    optimizer = tf.keras.optimizers.SGD()
+    k = 0
+    def lr():
+        nonlocal k
+        m = 1+ k/10.
+        return 0.01 +  0.2/(m)
+    optimizer = tf.keras.optimizers.SGD(momentum=0.1,learning_rate=lr)
     def step():
+        nonlocal k
+        k += 1
         with tf.GradientTape(persistent=False) as tape:
             L = f(vars)
         grads = tape.gradient(L, vars)
         gradient = [g.numpy() for g in grads]
-        print(L)
+        # print(L)
         # print(gradient)
         optimizer.apply_gradients(zip(grads,vars))
+        return L.numpy()
 
-    for i in tqdm(range(1000)):
+    progressbar = tqdm(range(10000))
+
+    for i in progressbar:
         if i %10 == 0:
             with open("fit_state.json","w") as j_file:
                 json.dump([v.numpy() for v in vars],j_file)
-        step()
+        L = step()
+        progressbar.set_description("Log(L) = %.3f" % L)
 
     # class fit_func:
     #     def __init__(self) -> None:
@@ -230,13 +244,10 @@ def amplitude_from_fit_Kmat(args):
         plt.close('all')
     
 if __name__=="__main__":
-    # run_fit()
+    run_fit()
     with open("fit_state.json","r") as f:
         vars = json.load(f)
     print(vars)
+    # [3.1393907684339877, 2.18599378658197, -2.0667893676504105, -2.280135086706961, -5.489799476984168, 1.2318093426085117, 0.8697135021549528, 0.6068632489614346, 0.2524612850345706, 0.1807919094073108, 0.6903196563769092, 0.43186060745616306, 0.8861232961438176, 0.487073350988142, 0.25516476180314485, 0.5407085691237533, 0.93451302546253, 0.20421973650072534, 0.07232632206612959, -0.9385519146199763, 6.916616063174001, -17.15035407046202, -1129.8326743890873, 4.225882787231743]
     vars = [atfi.const(v) for v in vars]
     amplitude_from_fit_Kmat(vars)
-        
-
-
-    

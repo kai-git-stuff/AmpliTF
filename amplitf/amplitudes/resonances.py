@@ -20,7 +20,6 @@ class BaseResonance:
         self._bls_out = bls_out
         self.S,self.P = S,P
         self.d = atfi.cast_real(d)   # resonance radius (if None)
-        print("Update")
 
     @property
     def masses(self):
