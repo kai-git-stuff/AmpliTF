@@ -5,6 +5,7 @@ from amplitf.kinematics import two_body_momentum, two_body_momentum_squared,two_
 from amplitf.constants import spin as sp, angular as angular_constant
 import numpy as np
 from amplitf.amplitudes.resonances import BaseResonance
+import sympy as sym
 
 
 @atfi.function
@@ -14,6 +15,7 @@ def masses(channels,alphas,resonances,out_channel):
             return channel[3],channel[4]
     raise(ValueError("No channel for given index %s found!"%out_channel))
     return None
+
 @atfi.function
 def M0(channels,alphas,resonances):
     """Mean of pole positions"""
@@ -63,6 +65,10 @@ def phaseSpaceFactor(channels,alphas,resonances,s,a):
 def V(channels,alphas,resonances,s,a,b):
     # R = resonance index
     # a,b = channel indices
+    # sm = atfi.complex(atfi.const(0), atfi.const(0))
+    # for res in resonances:
+    #     sm += (res[1][a] * res[1][b])/(res[0]*res[0]-s)
+    # return sm
     return atfi.cast_complex(sum((res[1][a] * res[1][b])/(res[0]*res[0]-s) for res in resonances))
 
 @atfi.function
@@ -112,13 +118,24 @@ def A_H(channels,alphas,resonances,s,a):
     # s: squared energy
     # a: channel number
     #a_h = self.gamma(s,a) * sum( self.D(s,a,b) * self.P_func(s,b) for b in range(len(self.channels)))
-    a_h = sum( D(channels,alphas,resonances,s,a,b) * P_func(channels,alphas,resonances,s,b) for b in range(len(channels))) # because The barrier factors are sourced out of the resonance lineshape
+    D_mat = build_D(channels,alphas,resonances,s)
+
+    a_h = sum( D_mat[...,a,b] * P_func(channels,alphas,resonances,s,b) for b in range(len(channels))) # because The barrier factors are sourced out of the resonance lineshape
     return a_h
 
 @atfi.function
 def KmatX(channels,alphas,resonances,s,L,out_channel):
     # return the Lineshape for the specific outchannel
-    channel_number = get_channel(channels,alphas,resonances,out_channel,L)
+    # channel_number = get_channel(channels,alphas,resonances,out_channel,L)
     s = atfi.cast_complex(s)
-    return A_H(channels,alphas,resonances,s,channel_number) 
+    return A_H(channels,alphas,resonances,s,out_channel) 
 
+
+def Kmatrix_SymPy(channels,alphas,resonances,s,a):
+    V = []
+    for n,r in enumerate(resonances):
+        g_n = sym.symbols(" ".join(["g_{%s%s}"%(n,i) for i in range(len(r[1]))]))
+        V.append(g_n)
+    V = sym.Matrix(V)
+    print(V)
+    sigma, V, rho, gamma = sym.symbols('sigma V rho gamma')

@@ -223,44 +223,44 @@ class kmatrix(BaseResonance):
     @property
     def p0(self):
         return self._p0
-
+    @atfi.function
     def get_m(self,a):
         return self.channels[a].masses
-
+    @atfi.function
     def q(self,s,a):
         m1,m2 = self.get_m(a)
         # return atfi.cast_complex(two_body_momentum(s,atfi.cast_complex(m1),atfi.cast_complex(m2)))
         s_a = atfi.cast_complex(m1 + m2)
         d_a = atfi.cast_complex(m1-m2)
         return atfi.sqrt(atfi.cast_complex((s-s_a**2) * (s-d_a**2)/(4*s) ))
-
+    @atfi.function
     def get_channel(self,index,L):
         return self.channel_LS[(index,L)]
-
+    @atfi.function
     def L(self,channel):
         # L is doubled, so for calculations we need L/2
-        return self.channels[channel].L/2
-
+        return atfi.cast_complex(atfi.const(self.channels[channel].L/2))
+    @atfi.function
     def BWF(self,s,a):
         q = self.q(s,a)
         q0 = self.q(self.M0**2,a)
         return blatt_weisskopf_ff(q,q0,self.d,atfi.const(self.L(a)))
-
+    @atfi.function
     def gamma(self,s,a):
         return (self.q(s,a))**self.L(a) 
-
+    @atfi.function
     def phaseSpaceFactor(self,s,a):
         return atfi.complex(1/(8* atfi.pi()), atfi.const(0))* self.q(s,a)/atfi.cast_complex(atfi.sqrt(s))
-
+    @atfi.function
     def V(self,s,a,b):
         # R = resonance index
         # a,b = channel indices
         return atfi.cast_complex(sum((res.coupling(a) * res.coupling(b))/(res.M2-s) for res in self.resonances))
-
+    @atfi.function
     def Sigma(self,s,a):
         sigma = self.phaseSpaceFactor(s,a) * self.gamma(s,a)**2 
         return atfi.complex(atfi.const(0),atfi.const(1.))*(atfi.cast_complex(sigma) + self.width_factors[a])
-
+    @atfi.function
     def build_D(self,s):
         # we calculate v directly  as 1 - v * Sigma
         # ToDo do this with tf.stack
@@ -277,17 +277,18 @@ class kmatrix(BaseResonance):
                     temp.append(-self.V(s,a,b)*self.Sigma(s,b))
             v.append(atfi.stack(temp,-1))
         v = atfi.stack(v,-2)
-        self._D = atfi.linalg_inv(v)
-
+        D = atfi.linalg_inv(v)
+        return D
+    @atfi.function
     def g(self,n,b):
         return self.resonances[n].coupling(b)
-    
+    @atfi.function
     def alpha(self,n):
         return self.alphas[n]
-
+    @atfi.function
     def D(self,s,a,b):            
-        return self._D[...,a,b]
-    
+        return self.build_D(s)[...,a,b]
+    @atfi.function
     def P_func(self,s,b):
         p  = self.channels[b].background + sum( (res.coupling(b) * alpha )/atfi.cast_complex(res.M2-s)   for res,alpha in zip(self.resonances,self.alphas))
         return p
