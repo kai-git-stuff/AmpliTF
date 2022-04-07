@@ -1,4 +1,5 @@
-
+import amplitf.interface as atfi
+import tensorflow as tf
 class spin:
     # doubled
     SPIN_0 = 0
@@ -16,6 +17,9 @@ class spin:
     @staticmethod
     def direction_options(s):
         return [s_z for s_z in range(-s,s+1,2)]
+    @staticmethod
+    def direction_options_tf(s):
+        return tf.data.Dataset.range(-s,s+1,2)
              
 
 class angular:

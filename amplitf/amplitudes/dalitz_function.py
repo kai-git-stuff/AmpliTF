@@ -136,7 +136,7 @@ class dalitz_decay:
                          for la,lb,lc in helicity_options(0,self.sa,self.sb,self.sc)
                          },
         }
-
+    @tf.function
     def chain3(self,smp:PhaseSpaceSample,ld,la,lb,lc,resonances,bls_ins:dict,bls_outs:dict):
         """
         ld: helicity of mother particle in CMS sytem of mother (see https://arxiv.org/pdf/1910.04566.pdf)
@@ -176,7 +176,7 @@ class dalitz_decay:
                     H_a_b *= self.Hout[3][(la_,lb_,lc_,la,lb,lc)]
                     ampl +=nj * ns* H_A_c * H_a_b 
         return ampl
-
+    @tf.function
     def chain2(self,smp:PhaseSpaceSample,ld,la,lb,lc,resonances,bls_ins:dict,bls_outs:dict):
         """For explanation see chain3"""
         # channel 2
@@ -206,10 +206,11 @@ class dalitz_decay:
                     # Rotation in the isobar system
                     H_B_b = phsp_factor * helicity_coupling_times_d(theta_hat,self.sd,sB,self.sb,lB,lb_,ld,bls_in) # ToDo why the other way arround then in the paper? 
                     H_a_c =   helicity_coupling_times_d(theta,sB,self.sc,self.sa,lc_,la_,lB,bls_out) * (-1)**((ld - lB + lb_)/2)
+
                     H_a_c *= self.Hout[2][(la_,lb_,lc_,la,lb,lc)] 
                     ampl += nj * ns * H_B_b * H_a_c 
         return ampl
-
+    @tf.function
     def chain1(self,smp:PhaseSpaceSample,ld,la,lb,lc,resonances,bls_ins:dict,bls_outs:dict):
         """For explanation see chain3"""
         # channel 1

@@ -156,9 +156,9 @@ def build_DnonUnitary(channels,alphas,resonances,width_summands,s):
     return D
 
 @atfi.function
-def KmatXnonUnitatry(channels,alphas,resonances,width_summands,s,L,out_channel):
+def KmatXnonUnitary(channels,alphas,resonances,width_summands,s,L,out_channel):
     s = atfi.cast_complex(s)
-    return A_HnonUnitary(channels,alphas,resonances,s,out_channel) 
+    return A_HnonUnitary(channels,alphas,resonances,width_summands,s,out_channel) 
 
 @atfi.function
 def A_HnonUnitary(channels,alphas,resonances,width_summands,s,a):
