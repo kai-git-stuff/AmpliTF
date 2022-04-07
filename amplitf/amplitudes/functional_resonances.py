@@ -130,6 +130,46 @@ def KmatX(channels,alphas,resonances,s,L,out_channel):
     s = atfi.cast_complex(s)
     return A_H(channels,alphas,resonances,s,out_channel) 
 
+@atfi.function
+def SigmanonUnitary(channels,alphas,resonances,width_summands,s,a):
+    sigma = phaseSpaceFactor(channels,alphas,resonances,s,a) * gamma(channels,alphas,resonances,s,a)**2 + width_summands[a]
+    return atfi.complex(atfi.const(0),atfi.const(1.))*(atfi.cast_complex(sigma))#  + width_factors[a])
+
+@atfi.function
+def build_DnonUnitary(channels,alphas,resonances,width_summands,s):
+    # we calculate v directly  as 1 - v * Sigma
+    # ToDo do this with tf.stack
+    # v = atfi.zeros(list(s.shape) + [len(self.channels),len(self.channels)] )
+    v = list()
+    for a in range(len(channels)):
+        temp = list()
+        for b in range(len(channels)):
+            if a == b:
+                # temp.append(atfi.ones(s) * b)
+                temp.append(1 -V(channels,alphas,resonances,s,a,b)*SigmanonUnitary(channels,alphas,resonances,width_summands,s,b) )
+            else:
+                # temp.append(atfi.ones(s) * b)
+                temp.append(-V(channels,alphas,resonances,s,a,b)*SigmanonUnitary(channels,alphas,resonances,width_summands,s,b))
+        v.append(atfi.stack(temp,-1))
+    v = atfi.stack(v,-2)
+    D = atfi.linalg_inv(v)
+    return D
+
+@atfi.function
+def KmatXnonUnitatry(channels,alphas,resonances,width_summands,s,L,out_channel):
+    s = atfi.cast_complex(s)
+    return A_HnonUnitary(channels,alphas,resonances,s,out_channel) 
+
+@atfi.function
+def A_HnonUnitary(channels,alphas,resonances,width_summands,s,a):
+    # s: squared energy
+    # a: channel number
+    #a_h = self.gamma(s,a) * sum( self.D(s,a,b) * self.P_func(s,b) for b in range(len(self.channels)))
+    D_mat = build_DnonUnitary(channels,alphas,resonances,width_summands,s)
+
+    a_h = sum( D_mat[...,a,b] * P_func(channels,alphas,resonances,s,b) for b in range(len(channels))) # because The barrier factors are sourced out of the resonance lineshape
+    return a_h
+
 
 def Kmatrix_SymPy(channels,alphas,resonances,s,a):
     V = []
