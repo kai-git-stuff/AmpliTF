@@ -193,6 +193,7 @@ class dalitz_decay:
         theta = self.chainVars[2]["theta"]
         phsp_factor = atfi.sqrt(phasespace_factor(sgma2,self.ma,self.mc)* phasespace_factor(self.md,sgma2,self.mb))
         for (sB,pB,helicities_B,X,M0,d,p0),bls_in,bls_out, in zip(resonances,bls_ins,bls_outs):
+            #print(bls_in,bls_out,X)
             ns = atfi.cast_complex(atfi.sqrt(atfi.const(sB+1)))
             nj = atfi.cast_complex(atfi.sqrt(atfi.const(self.sd+1)))
             bls_in = bls_in_func(bls_in,sgma2,M0, self.d ,self.md ,self.mb)

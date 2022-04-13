@@ -72,6 +72,16 @@ def V(channels,alphas,resonances,s,a,b):
     return atfi.cast_complex(sum((res[1][a] * res[1][b])/(res[0]*res[0]-s) for res in resonances))
 
 @atfi.function
+def V_nonUnitary(channels,alphas,resonances,width_summands,s,a,b):
+    # R = resonance index
+    # a,b = channel indices
+    # sm = atfi.complex(atfi.const(0), atfi.const(0))
+    # for res in resonances:
+    #     sm += (res[1][a] * res[1][b])/(res[0]*res[0]-s)
+    # return sm
+    return atfi.cast_complex(sum((res[1][a] * res[1][b])/(res[0]*res[0]-s + width_summands[i]) for i,res in enumerate(resonances)))
+
+@atfi.function
 def Sigma(channels,alphas,resonances,s,a):
     sigma = phaseSpaceFactor(channels,alphas,resonances,s,a) * gamma(channels,alphas,resonances,s,a)**2 
     return atfi.complex(atfi.const(0),atfi.const(1.))*(atfi.cast_complex(sigma))#  + width_factors[a])
@@ -112,6 +122,11 @@ def D(channels,alphas,resonances,s,a,b):
 def P_func(channels,alphas,resonances,s,b):
     p  = channels[b][2] + sum( (res[1][b] * alpha )/atfi.cast_complex(res[0] * res[0]-s)   for res,alpha in zip(resonances,alphas))
     return p
+
+@atfi.function
+def P_func_nonUnitary(channels,alphas,resonances,width_summands,s,b):
+    p  = channels[b][2] + sum( (res[1][b] * alpha )/atfi.cast_complex(res[0] * res[0]-s + width_summand)   for res,alpha,width_summand in zip(resonances,alphas,width_summands))
+    return p
     
 @atfi.function
 def A_H(channels,alphas,resonances,s,a):
@@ -132,7 +147,7 @@ def KmatX(channels,alphas,resonances,s,L,out_channel):
 
 @atfi.function
 def SigmanonUnitary(channels,alphas,resonances,width_summands,s,a):
-    sigma = phaseSpaceFactor(channels,alphas,resonances,s,a) * gamma(channels,alphas,resonances,s,a)**2 + width_summands[a]
+    sigma = phaseSpaceFactor(channels,alphas,resonances,s,a) * gamma(channels,alphas,resonances,s,a)**2  
     return atfi.complex(atfi.const(0),atfi.const(1.))*(atfi.cast_complex(sigma))#  + width_factors[a])
 
 @atfi.function
@@ -167,7 +182,7 @@ def A_HnonUnitary(channels,alphas,resonances,width_summands,s,a):
     #a_h = self.gamma(s,a) * sum( self.D(s,a,b) * self.P_func(s,b) for b in range(len(self.channels)))
     D_mat = build_DnonUnitary(channels,alphas,resonances,width_summands,s)
 
-    a_h = sum( D_mat[...,a,b] * P_func(channels,alphas,resonances,s,b) for b in range(len(channels))) # because The barrier factors are sourced out of the resonance lineshape
+    a_h = sum( D_mat[...,a,b] * P_func_nonUnitary(channels,alphas,resonances,width_summands,s,b) for b in range(len(channels))) # because The barrier factors are sourced out of the resonance lineshape
     return a_h
 
 
